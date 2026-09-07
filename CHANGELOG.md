@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.7 – 2026-09-07
+
+- In den Einstellungen einen eigenen Bereich „App“ mit „App neu laden“ ergänzt.
+- Das vollständige Neuladen startet nur die App-Oberfläche neu; lokal gespeicherte Buchungen, Kategorien, Budgets und Einstellungen bleiben erhalten.
+- Pull-to-refresh bleibt davon getrennt und aktualisiert weiterhin nur die Daten der laufenden App.
+- Versionsanzeige und Service-Worker-Cache auf Version 2.0.7 angehoben.
+
 ## 2.0.6 – 2026-09-07
 
 - Eigenes Pull-to-refresh für Moneta ergänzt: Herunterziehen am oberen Rand aktualisiert nur die App-Daten und löst keinen vollständigen Seitenreload aus.

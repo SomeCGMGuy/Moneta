@@ -41,6 +41,14 @@ export function renderSettings({ categoryMap, theme }) {
         </div>
       </section>
 
+      <section class="section settings-section">
+        <div class="section-heading"><div><h2>App</h2><p class="section-subtitle">Moneta vollständig neu laden, zum Beispiel nach einem App-Update.</p></div></div>
+        <div class="card theme-setting">
+          <div><strong>App neu laden</strong><p>Startet nur die App-Oberfläche neu. Deine lokal gespeicherten Buchungen, Kategorien, Budgets und Einstellungen bleiben erhalten.</p></div>
+          <button class="btn btn-secondary" type="button" onclick="location.reload()">Neu laden</button>
+        </div>
+      </section>
+
       <section class="section">
         <div class="section-heading"><h2>Über Moneta</h2></div>
         <div class="card settings-list">
