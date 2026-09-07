@@ -182,6 +182,10 @@
             /** @type {HTMLElement} */
             (document.querySelector("#category-summary")),
 
+        mobileFilters:
+            /** @type {HTMLElement} */
+            (document.querySelector("#mobile-category-filters")),
+
         manageButton:
             /** @type {HTMLButtonElement} */
             (document.querySelector("#button-manage-categories")),
@@ -278,6 +282,47 @@
     }
 
     /**
+     * DOM-Referenzen der kompakten mobilen Navigation.
+     */
+    const mobile = {
+        overviewButton:
+            /** @type {HTMLButtonElement} */
+            (document.querySelector("#button-mobile-overview")),
+
+        newTransactionButton:
+            /** @type {HTMLButtonElement} */
+            (document.querySelector("#button-mobile-new-transaction")),
+
+        toolsButton:
+            /** @type {HTMLButtonElement} */
+            (document.querySelector("#button-mobile-tools")),
+
+        toolsCloseButton:
+            /** @type {HTMLButtonElement} */
+            (document.querySelector("#button-mobile-tools-close")),
+
+        toolsBackdrop:
+            /** @type {HTMLElement} */
+            (document.querySelector("#mobile-tools-backdrop")),
+
+        overviewIcon:
+            /** @type {HTMLElement} */
+            (document.querySelector("#icon-mobile-overview")),
+
+        newTransactionIcon:
+            /** @type {HTMLElement} */
+            (document.querySelector("#icon-mobile-new-transaction")),
+
+        toolsIcon:
+            /** @type {HTMLElement} */
+            (document.querySelector("#icon-mobile-tools")),
+
+        toolsCloseIcon:
+            /** @type {HTMLElement} */
+            (document.querySelector("#icon-mobile-tools-close"))
+    }
+
+    /**
      * DOM-Platzhalter für statische Icons.
      */
     const icons = {
@@ -298,6 +343,7 @@
         categories,
         messageDialog,
         theme,
+        mobile,
         icons
     }
 

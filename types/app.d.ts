@@ -55,6 +55,7 @@ interface AppDomExpense {
 
 interface AppDomCategories {
     summaryElement: HTMLElement
+    mobileFilters: HTMLElement
 
     manageButton: HTMLButtonElement
 
@@ -142,6 +143,13 @@ interface RenderCategorySummaryOptions {
     container: HTMLElement
 }
 
+interface RenderMobileCategoryFiltersOptions {
+    container: HTMLElement
+    categories: Category[]
+    selectedCategoryId: string | null
+    onSelect: (categoryId: string | null) => void
+}
+
 /**
  * Dialog
  */
@@ -210,6 +218,7 @@ interface AppNamespace {
     expenseController: AppExpenseController
     transactions: AppTransactions
     transactionController: AppTransactionController
+    mobile: AppMobile
 }
 
 
@@ -261,6 +270,7 @@ interface RenderTransactionsOptions {
     transactionList: HTMLElement
     onEdit: TransactionHandler
     onDelete: TransactionHandler
+    categoryId?: string | null
 }
 
 interface AppTransactions {
@@ -303,6 +313,7 @@ interface AppTransactions {
 interface TransactionControllerOptions {
     getTransactions: () => Transaction[]
     getSelectedMonth: () => string
+    getCategoryFilter?: () => string | null
     onChange?: () => void
 }
 
@@ -321,6 +332,7 @@ interface AppDom {
     expense: AppDomExpense
     categories: AppDomCategories
     messageDialog: AppDomMessageDialog,
+    mobile: AppDomMobile
     icons: AppDomIcons
 }
 
@@ -442,12 +454,33 @@ interface AppUI {
         categories: Category[]
     ): void
 
+    renderMobileCategoryFilters(
+        options: RenderMobileCategoryFiltersOptions
+    ): void
+
     renderCategoryDialogList(
         container: HTMLElement,
         categories: Category[],
         onEdit: (category: Category) => void,
         onDelete: (category: Category) => void
     ): void
+}
+
+interface AppDomMobile {
+    overviewButton: HTMLButtonElement
+    newTransactionButton: HTMLButtonElement
+    toolsButton: HTMLButtonElement
+    toolsCloseButton: HTMLButtonElement
+    toolsBackdrop: HTMLElement
+    overviewIcon: HTMLElement
+    newTransactionIcon: HTMLElement
+    toolsIcon: HTMLElement
+    toolsCloseIcon: HTMLElement
+}
+
+interface AppMobile {
+    initialize(): void
+    setToolsOpen(isOpen: boolean): void
 }
 
 interface AppDomTheme {
@@ -462,6 +495,7 @@ interface AppDom {
     categories: AppDomCategories
     messageDialog: AppDomMessageDialog
     theme: AppDomTheme
+    mobile: AppDomMobile
 }
 
 type AppThemeName =

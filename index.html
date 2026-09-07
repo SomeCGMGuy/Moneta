@@ -6,7 +6,7 @@
 
     <meta
         name="viewport"
-        content="width=device-width, initial-scale=1.0"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     >
 
     <title>Moneta</title>
@@ -31,7 +31,7 @@
 
 
 <body
-    class="min-h-screen
+    class="moneta-app-body min-h-screen
            bg-gradient-to-br from-slate-100 via-white to-emerald-50
            text-slate-900
            transition-colors duration-300
@@ -40,7 +40,7 @@
 >
 
     <main
-        class="mx-auto max-w-[1500px] px-4 py-8 sm:px-6 lg:px-8"
+        class="moneta-main mx-auto max-w-[1500px] px-4 py-8 sm:px-6 lg:px-8"
     >
 
         <!-- =========================================================
@@ -48,7 +48,7 @@
         ========================================================== -->
 
         <header
-            class="mb-8 rounded-3xl
+            class="moneta-app-header mb-8 rounded-3xl
                    border border-white/70
                    bg-white/85
                    p-6 shadow-sm backdrop-blur
@@ -66,7 +66,7 @@
 
                     <!-- Moneta Icon -->
                     <div
-                        class="flex h-14 w-14 shrink-0
+                        class="moneta-brand-icon flex h-14 w-14 shrink-0
                                items-center justify-center
                                rounded-2xl
                                bg-emerald-500/10
@@ -107,7 +107,7 @@
                     <div>
 
                         <p
-                            class="text-sm font-semibold uppercase
+                            class="moneta-brand-name text-sm font-semibold uppercase
                                    tracking-[0.2em]
                                    text-emerald-600
                                    dark:text-emerald-400"
@@ -117,7 +117,7 @@
 
                         <h1
                             id="current-month-title"
-                            class="mt-1 text-3xl font-bold
+                            class="moneta-current-month mt-1 text-3xl font-bold
                                    tracking-tight text-slate-900
                                    sm:text-4xl
                                    dark:text-slate-100"
@@ -126,7 +126,7 @@
                         </h1>
 
                         <p
-                            class="mt-1 text-sm text-slate-500
+                            class="moneta-tagline mt-1 text-sm text-slate-500
                                    sm:text-base
                                    dark:text-slate-400"
                         >
@@ -140,14 +140,14 @@
 
                 <!-- Monat + Theme -->
                 <div
-                    class="flex w-full items-end gap-2 lg:w-auto"
+                    class="moneta-header-actions flex w-full items-end gap-2 lg:w-auto"
                 >
 
                     <div class="min-w-0 flex-1 lg:w-64">
 
                         <label
                             for="month"
-                            class="mb-2 block text-sm font-medium
+                            class="moneta-month-label mb-2 block text-sm font-medium
                                    text-slate-700
                                    dark:text-slate-300"
                         >
@@ -158,7 +158,8 @@
                             id="month"
                             name="month"
                             type="month"
-                            class="w-full rounded-2xl
+                            aria-label="Monat auswählen"
+                            class="moneta-month-input w-full rounded-2xl
                                    border border-slate-200
                                    bg-white px-4 py-3
                                    text-slate-900 shadow-sm
@@ -179,13 +180,13 @@
                     <button
                         id="button-theme-toggle"
                         type="button"
-                        aria-label="Farbschema wechseln"
-                        title="Farbschema wechseln"
-                        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl
+                        class="moneta-theme-button flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl
                             border border-slate-200 bg-white text-slate-600 shadow-sm transition
                             hover:bg-slate-50 hover:text-slate-900
                             dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300
                             dark:hover:bg-slate-700 dark:hover:text-white"
+                        aria-label="Farbschema wechseln"
+                        title="Farbschema wechseln"
                     >
                     </button>
 
@@ -200,13 +201,13 @@
              MONATSÜBERSICHT
         ========================================================== -->
 
-        <section>
+        <section class="moneta-summary">
 
-            <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div class="moneta-summary-grid grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
                 <!-- Monatsbudget -->
                 <div
-                    class="rounded-3xl border border-slate-200
+                    class="moneta-summary-card moneta-summary-budget rounded-3xl border border-slate-200
                         bg-white p-5 shadow-sm
                         dark:border-slate-800 dark:bg-slate-900"
                 >
@@ -229,7 +230,7 @@
 
                 <!-- Ausgaben -->
                 <div
-                    class="rounded-3xl border border-slate-200
+                    class="moneta-summary-card moneta-summary-expenses rounded-3xl border border-slate-200
                         bg-white p-5 shadow-sm
                         dark:border-slate-800 dark:bg-slate-900"
                 >
@@ -252,7 +253,7 @@
 
                 <!-- Einnahmen -->
                 <div
-                    class="rounded-3xl border border-slate-200
+                    class="moneta-summary-card moneta-summary-income rounded-3xl border border-slate-200
                         bg-white p-5 shadow-sm
                         dark:border-slate-800 dark:bg-slate-900"
                 >
@@ -276,7 +277,7 @@
 
                 <!-- Saldo -->
                 <div
-                    class="rounded-3xl border border-slate-200
+                    class="moneta-summary-card moneta-summary-balance rounded-3xl border border-slate-200
                         bg-white p-5 shadow-sm
                         dark:border-slate-800 dark:bg-slate-900"
                 >
@@ -306,18 +307,18 @@
         ========================================================== -->
 
         <div
-            class="mt-6 grid gap-6
+            class="moneta-dashboard mt-6 grid gap-6
                    xl:grid-cols-[minmax(0,2fr)_minmax(360px,1fr)]"
         >
 
             <!-- Linke Spalte -->
-            <div class="min-w-0 space-y-6">
+            <div class="moneta-primary min-w-0 space-y-6">
 
                 <!-- Ausgaben -->
                 <section>
 
                     <div
-                        class="mb-4 flex items-center justify-between gap-4"
+                        class="moneta-transaction-heading mb-4 flex items-center justify-between gap-4"
                     >
 
                         <div>
@@ -345,7 +346,7 @@
                         <button
                             id="button-new-transaction"
                             type="button"
-                            class="flex shrink-0 items-center gap-2
+                            class="moneta-desktop-new-transaction flex shrink-0 items-center gap-2
                                    rounded-2xl bg-emerald-600
                                    px-4 py-2.5
                                    text-sm font-semibold text-white
@@ -369,8 +370,14 @@
 
 
                     <div
+                        id="mobile-category-filters"
+                        class="moneta-mobile-category-filters"
+                        aria-label="Buchungen nach Kategorie filtern"
+                    ></div>
+
+                    <div
                         id="expense-list"
-                        class="space-y-4"
+                        class="moneta-transaction-list space-y-4"
                     ></div>
 
                 </section>
@@ -380,9 +387,26 @@
 
             <!-- Rechte Spalte -->
             <aside
-                class="space-y-6 self-start
+                id="secondary-panel"
+                class="moneta-secondary-panel space-y-6 self-start
                        xl:sticky xl:top-6"
             >
+
+                <div class="moneta-mobile-tools-header">
+                    <div>
+                        <p class="moneta-mobile-tools-kicker">Moneta</p>
+                        <h2 class="moneta-mobile-tools-title">Budget & Kategorien</h2>
+                    </div>
+
+                    <button
+                        id="button-mobile-tools-close"
+                        type="button"
+                        class="moneta-mobile-tools-close"
+                        aria-label="Budget und Kategorien schließen"
+                    >
+                        <span id="icon-mobile-tools-close"></span>
+                    </button>
+                </div>
 
             <!-- Budget -->
             <section
@@ -592,6 +616,46 @@
 
     </main>
 
+    <div
+        id="mobile-tools-backdrop"
+        class="moneta-mobile-tools-backdrop"
+        aria-hidden="true"
+    ></div>
+
+    <nav
+        class="moneta-mobile-bottom-nav"
+        aria-label="Hauptnavigation"
+    >
+        <button
+            id="button-mobile-overview"
+            type="button"
+            class="moneta-mobile-nav-item is-active"
+            aria-label="Zur Übersicht"
+        >
+            <span id="icon-mobile-overview" class="moneta-mobile-nav-icon"></span>
+            <span>Übersicht</span>
+        </button>
+
+        <button
+            id="button-mobile-new-transaction"
+            type="button"
+            class="moneta-mobile-fab"
+            aria-label="Neue Buchung"
+        >
+            <span id="icon-mobile-new-transaction"></span>
+        </button>
+
+        <button
+            id="button-mobile-tools"
+            type="button"
+            class="moneta-mobile-nav-item"
+            aria-label="Budget und Kategorien öffnen"
+        >
+            <span id="icon-mobile-tools" class="moneta-mobile-nav-icon"></span>
+            <span>Einstellungen</span>
+        </button>
+    </nav>
+
 
 
     <!-- =============================================================
@@ -680,7 +744,7 @@
                     class="space-y-5"
                 >
                     <!-- Buchungstyp -->
-                    <div>
+                    <div class="moneta-field-type">
                         <div
                             id="transaction-type-switch"
                             class="inline-flex rounded-2xl bg-slate-100 p-1 dark:bg-slate-800"
@@ -709,8 +773,8 @@
 
 
                     <!-- Datum + Betrag -->
-                    <div class="grid gap-4 sm:grid-cols-2">
-                        <div>
+                    <div class="moneta-fields-date-amount grid gap-4 sm:grid-cols-2">
+                        <div class="moneta-field-date">
                             <label
                                 for="expense-date"
                                 class="mb-2 block text-sm font-medium
@@ -737,7 +801,7 @@
                             >
                         </div>
 
-                        <div>
+                        <div class="moneta-field-amount">
                             <label
                                 for="expense-amount"
                                 class="mb-2 block text-sm font-medium
@@ -783,7 +847,7 @@
 
 
                     <!-- Beschreibung -->
-                    <div>
+                    <div class="moneta-field-description">
                         <label
                             for="expense-description"
                             class="mb-2 block text-sm font-medium
@@ -816,7 +880,7 @@
 
 
                     <!-- Kategorie -->
-                    <div>
+                    <div class="moneta-field-category">
                         <label
                             for="expense-category"
                             class="mb-2 block text-sm font-medium
@@ -853,7 +917,7 @@
 
 
                     <!-- Aktionen -->
-                    <div class="flex flex-wrap items-center gap-3">
+                    <div class="moneta-form-actions flex flex-wrap items-center gap-3">
                         <button
                             id="button-add-expense"
                             type="submit"
@@ -1351,6 +1415,7 @@
 
     <script src="./js/category-controller.js"></script>
     <script src="./js/transaction-controller.js"></script>
+    <script src="./js/mobile.js"></script>
 
     <script src="./js/app.js"></script>
     <script src="./js/pwa.js"></script>

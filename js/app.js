@@ -34,7 +34,8 @@ const {
     },
 
     categories: {
-        summaryElement: categorySummaryElement
+        summaryElement: categorySummaryElement,
+        mobileFilters: mobileCategoryFilters
     }
 } = window.App.dom
 
@@ -76,6 +77,7 @@ const {
     renderTransactionGroup,
     renderCategorySummary,
     renderCategoryOptions,
+    renderMobileCategoryFilters,
     renderCategoryDialogList
 } = window.App.ui;
 
@@ -90,6 +92,10 @@ const {
 const {
     initialize: initializeTheme
 } = window.App.theme
+
+const {
+    initialize: initializeMobile
+} = window.App.mobile
 
 const {
     mount: mountIcon
@@ -115,6 +121,10 @@ let monthlyBudgetCents = 270000;
 // ausgewählter Monat
 let selectedMonth = getToday().slice(0, 7)
 
+// Optionaler Kategorie-Filter der mobilen Übersicht.
+/** @type {string | null} */
+let selectedCategoryId = null
+
 // Der UI mitteilen welcher Monat ausgewählt wurde
 monthInput.value = selectedMonth
 
@@ -134,6 +144,42 @@ const refreshCategorySummary = () => {
         transactions,
         selectedMonth,
         container: categorySummaryElement
+    })
+}
+
+/**
+ * Aktualisiert die horizontale Kategorie-Filterleiste
+ * der mobilen PWA-Ansicht.
+ *
+ * @returns {void}
+ */
+const refreshMobileCategoryFilters = () => {
+    const categories =
+        getAllCategories()
+
+    const selectedCategoryStillExists =
+        selectedCategoryId === null ||
+        categories.some(
+            (category) =>
+                category.id ===
+                selectedCategoryId
+        )
+
+    if (!selectedCategoryStillExists) {
+        selectedCategoryId = null
+    }
+
+    renderMobileCategoryFilters({
+        container: mobileCategoryFilters,
+        categories,
+        selectedCategoryId,
+        onSelect: (categoryId) => {
+            selectedCategoryId =
+                categoryId
+
+            refreshMobileCategoryFilters()
+            refreshTransactions()
+        }
     })
 }
 
@@ -201,6 +247,7 @@ const refreshAndReset = () => {
     refreshBudgetForm()
     refreshTransactions()
     refreshCategorySummary()
+    refreshMobileCategoryFilters()
 }
 
 /**
@@ -294,6 +341,7 @@ monthInput.addEventListener(
     refreshTransactions()
     refreshSummary()
     refreshCategorySummary()
+    refreshMobileCategoryFilters()
 })
 
 // END /js/logic.js
@@ -324,6 +372,8 @@ const initApp = async () => {
             onChange: () => {
                 refreshSummary()
                 refreshCategorySummary()
+                refreshMobileCategoryFilters()
+                refreshTransactions()
             }
         })
 
@@ -350,15 +400,22 @@ const initApp = async () => {
             getSelectedMonth: () =>
                 selectedMonth,
 
+            getCategoryFilter: () =>
+                selectedCategoryId,
+
             onChange: () => {
                 refreshSummary()
                 refreshCategorySummary()
             }
         })
 
+        initializeMobile()
+
         refreshBudgetForm()
         refreshSummary()
         refreshCategorySummary()
+        refreshMobileCategoryFilters()
+        refreshTransactions()
         
 
     } catch (error) {

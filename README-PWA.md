@@ -37,3 +37,19 @@ Der Service Worker nutzt für Monetas eigene Dateien **Network First**:
 
 Damit bleiben Updates während der Entwicklung sichtbar und Moneta funktioniert
 trotzdem offline.
+
+## Mobile Oberfläche
+
+Für Smartphone/PWA wurde die Übersicht zusätzlich verdichtet:
+
+- kompakter App-Header
+- Einnahmen, Ausgaben und Saldo in einer gemeinsamen Zeile
+- horizontal scrollbare Kategorie-Filter
+- deutlich kompaktere Buchungskarten mit Tages-Summen
+- feste Bottom-Navigation
+- zentraler `+`-Button für neue Buchungen
+- Budget und Kategorien als mobiles Bottom-Sheet
+- Buchungsformular auf Smartphones ebenfalls als Bottom-Sheet
+
+Die Desktop-Darstellung bleibt weiterhin erhalten. Die mobile Darstellung wird
+per Responsive CSS bei Bildschirmbreiten bis 767 px aktiviert.

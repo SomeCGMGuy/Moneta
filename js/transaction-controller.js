@@ -54,6 +54,9 @@
     /** @type {() => string} */
     let getSelectedMonth = () => ""
 
+    /** @type {() => string | null} */
+    let getCategoryFilter = () => null
+
     /** @type {() => void} */
     let onTransactionsChanged = () => {}
 
@@ -195,7 +198,8 @@
             selectedMonth: getSelectedMonth(),
             transactionList: list,
             onEdit: handleEditTransaction,
-            onDelete: handleDeleteTransaction
+            onDelete: handleDeleteTransaction,
+            categoryId: getCategoryFilter()
         })
     }
 
@@ -716,6 +720,7 @@
     const initialize = ({
         getTransactions: transactionProvider,
         getSelectedMonth: monthProvider,
+        getCategoryFilter: categoryFilterProvider = () => null,
         onChange = () => {}
     }) => {
         getTransactions =
@@ -723,6 +728,9 @@
 
         getSelectedMonth =
             monthProvider
+
+        getCategoryFilter =
+            categoryFilterProvider
 
         onTransactionsChanged =
             onChange

@@ -337,30 +337,53 @@
             document.createElement("article")
 
         item.className =
-            "moneta-transaction group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm " +
+            `moneta-transaction ${isIncome ? "is-income" : "is-expense"} ` +
+            "group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm " +
             "transition duration-200 hover:border-slate-300 hover:shadow-md " +
             "dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
+
+        item.dataset.categoryId =
+            transaction.categoryId
 
 
         const content =
             document.createElement("div")
 
         content.className =
-            "flex items-start justify-between gap-4"
+            "moneta-transaction-content flex items-start justify-between gap-4"
+
+
+        const avatar =
+            document.createElement("div")
+
+        avatar.className =
+            "moneta-transaction-avatar"
+
+        avatar.setAttribute(
+            "aria-hidden",
+            "true"
+        )
+
+        avatar.textContent =
+            categoryName
+                .trim()
+                .charAt(0)
+                .toUpperCase() ||
+            "•"
 
 
         const information =
             document.createElement("div")
 
         information.className =
-            "min-w-0 flex-1"
+            "moneta-transaction-information min-w-0 flex-1"
 
 
         const description =
             document.createElement("p")
 
         description.className =
-            "truncate font-semibold text-slate-900 dark:text-slate-100"
+            "moneta-transaction-description truncate font-semibold text-slate-900 dark:text-slate-100"
 
         description.textContent =
             transaction.description
@@ -370,7 +393,7 @@
             document.createElement("p")
 
         categoryElement.className =
-            "mt-1 text-sm text-slate-500 dark:text-slate-400"
+            "moneta-transaction-category mt-1 text-sm text-slate-500 dark:text-slate-400"
 
         categoryElement.textContent =
             categoryName
@@ -387,14 +410,15 @@
 
         amount.className =
             isIncome
-                ? "shrink-0 text-base font-bold text-emerald-600 dark:text-emerald-400"
-                : "shrink-0 text-base font-bold text-slate-900 dark:text-slate-100"
+                ? "moneta-transaction-amount shrink-0 text-base font-bold text-emerald-600 dark:text-emerald-400"
+                : "moneta-transaction-amount shrink-0 text-base font-bold text-slate-900 dark:text-slate-100"
 
         amount.textContent =
             `${isIncome ? "+" : "−"} ${formatCurrency(transaction.amountCents)}`
 
 
         content.append(
+            avatar,
             information,
             amount
         )
@@ -404,7 +428,7 @@
             document.createElement("div")
 
         actions.className =
-            "mt-3 flex items-center gap-1 border-t border-slate-100 pt-3 " +
+            "moneta-transaction-actions mt-3 flex items-center gap-1 border-t border-slate-100 pt-3 " +
             "dark:border-slate-800"
 
 
@@ -520,39 +544,58 @@
             document.createElement("section")
 
         section.className =
-            "space-y-3"
+            "moneta-day-group space-y-3"
 
 
         const header =
             document.createElement("div")
 
         header.className =
-            "flex items-center justify-between gap-4 px-1"
+            "moneta-day-header flex items-center justify-between gap-4 px-1"
 
 
         const dateElement =
             document.createElement("h3")
 
         dateElement.className =
-            "font-semibold text-slate-800 dark:text-slate-200"
+            "moneta-day-date font-semibold text-slate-800 dark:text-slate-200"
 
         dateElement.textContent =
             formatExpenseDate(date)
 
 
-        const transactionCount =
+        const dayBalanceCents =
+            dayTransactions.reduce(
+                (sum, transaction) =>
+                    sum +
+                    (transaction.type === "income"
+                        ? transaction.amountCents
+                        : -transaction.amountCents),
+                0
+            )
+
+
+        const dayTotal =
             document.createElement("span")
 
-        transactionCount.className =
-            "text-sm font-medium text-slate-500 dark:text-slate-400"
+        const isPositiveDay =
+            dayBalanceCents >= 0
 
-        transactionCount.textContent =
-            `${dayTransactions.length} Buchung${dayTransactions.length === 1 ? "" : "en"}`
+        dayTotal.className =
+            "moneta-day-total text-sm font-semibold " +
+            (isPositiveDay
+                ? "text-emerald-600 dark:text-emerald-400"
+                : "text-red-600 dark:text-red-400")
+
+        dayTotal.textContent =
+            `${isPositiveDay ? "+" : "−"} ${formatCurrency(
+                Math.abs(dayBalanceCents)
+            )}`
 
 
         header.append(
             dateElement,
-            transactionCount
+            dayTotal
         )
 
 
@@ -587,16 +630,29 @@
         selectedMonth,
         transactionList,
         onEdit,
-        onDelete
+        onDelete,
+        categoryId = null
     }) => {
         transactionList.replaceChildren()
 
+        const monthlyTransactions =
+            getByMonth(
+                transactions,
+                selectedMonth
+            )
+
+        const categoryTransactions =
+            categoryId
+                ? monthlyTransactions.filter(
+                    (transaction) =>
+                        transaction.categoryId ===
+                        categoryId
+                )
+                : monthlyTransactions
+
         const filteredTransactions =
             sortByDate(
-                getByMonth(
-                    transactions,
-                    selectedMonth
-                )
+                categoryTransactions
             )
 
         if (
@@ -927,6 +983,72 @@
 
 
     /**
+     * Rendert die kompakte Kategorie-Navigation
+     * der mobilen Übersicht.
+     *
+     * @param {Object} options - Optionen der Filterleiste.
+     * @param {HTMLElement} options.container - Zielcontainer.
+     * @param {Category[]} options.categories - Verfügbare Kategorien.
+     * @param {string | null} options.selectedCategoryId - Aktiver Filter.
+     * @param {(categoryId: string | null) => void} options.onSelect - Auswahl-Callback.
+     * @returns {void}
+     */
+    const renderMobileCategoryFilters = ({
+        container,
+        categories,
+        selectedCategoryId,
+        onSelect
+    }) => {
+        container.replaceChildren()
+
+        const filters = [
+            {
+                id: null,
+                name: "Alle"
+            },
+            ...categories
+        ]
+
+        const buttons =
+            filters.map(
+                (filter) => {
+                    const button =
+                        document.createElement("button")
+
+                    button.type =
+                        "button"
+
+                    const isActive =
+                        filter.id ===
+                        selectedCategoryId
+
+                    button.className =
+                        `moneta-category-filter${isActive ? " is-active" : ""}`
+
+                    button.textContent =
+                        filter.name
+
+                    button.setAttribute(
+                        "aria-pressed",
+                        String(isActive)
+                    )
+
+                    button.addEventListener(
+                        "click",
+                        () => onSelect(filter.id)
+                    )
+
+                    return button
+                }
+            )
+
+        container.append(
+            ...buttons
+        )
+    }
+
+
+    /**
      * Rendert die vorhandenen Kategorien
      * im Kategorien-Dialog.
      *
@@ -1073,6 +1195,7 @@
         renderTransactions,
         renderCategorySummary,
         renderCategoryOptions,
+        renderMobileCategoryFilters,
         renderCategoryDialogList
     }
 })()

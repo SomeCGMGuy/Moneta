@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "moneta-pwa-v1";
+const CACHE_NAME = "moneta-pwa-v2";
 const CACHE_PREFIX = "moneta-pwa-";
 
 const APP_SHELL = [
@@ -21,6 +21,7 @@ const APP_SHELL = [
     "./js/ui.js",
     "./js/category-controller.js",
     "./js/transaction-controller.js",
+    "./js/mobile.js",
     "./js/app.js",
     "./js/pwa.js",
     "./icons/favicon.svg",

@@ -245,3 +245,765 @@ dialog[open]::backdrop {
         animation: none;
     }
 }
+/* ---------------------------------------------------------
+   Mobile PWA layout
+   --------------------------------------------------------- */
+
+.moneta-mobile-category-filters,
+.moneta-mobile-bottom-nav,
+.moneta-mobile-tools-header,
+.moneta-mobile-tools-backdrop {
+    display: none;
+}
+
+@keyframes moneta-mobile-drawer-in {
+    from {
+        opacity: 0;
+        transform: translateY(100%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes moneta-mobile-drawer-out {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(100%);
+    }
+}
+
+@media (max-width: 767px) {
+    html {
+        min-height: 100%;
+        background: #f8fafc;
+    }
+
+    html.dark {
+        background: #020617;
+    }
+
+    .moneta-app-body {
+        min-height: 100dvh;
+        overflow-x: hidden;
+        padding-bottom: calc(82px + env(safe-area-inset-bottom));
+    }
+
+    .moneta-main {
+        width: 100%;
+        max-width: none;
+        padding: 0 14px 24px;
+    }
+
+    /* Kompakter App-Header */
+    .moneta-app-header {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        margin: 0 -14px 10px;
+        padding: calc(10px + env(safe-area-inset-top)) 14px 10px;
+        border: 0;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+        border-radius: 0 0 22px 22px;
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 8px 28px rgba(15, 23, 42, 0.06);
+        backdrop-filter: blur(18px);
+    }
+
+    .dark .moneta-app-header {
+        border-bottom-color: rgba(71, 85, 105, 0.4);
+        background: rgba(2, 6, 23, 0.93);
+        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+    }
+
+    .moneta-app-header > div {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .moneta-app-header > div > .flex.items-center {
+        min-width: 0;
+        gap: 10px;
+    }
+
+    .moneta-brand-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+    }
+
+    .moneta-brand-icon svg {
+        width: 23px;
+        height: 23px;
+    }
+
+    .moneta-brand-name {
+        font-size: 1.2rem;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        text-transform: none;
+    }
+
+    .moneta-current-month {
+        margin-top: 2px;
+        font-size: 0.8rem;
+        line-height: 1.2;
+        font-weight: 500;
+        letter-spacing: 0;
+        color: #64748b;
+    }
+
+    .dark .moneta-current-month {
+        color: #94a3b8;
+    }
+
+    .moneta-tagline,
+    .moneta-month-label {
+        display: none;
+    }
+
+    .moneta-header-actions {
+        width: auto;
+        flex: 0 0 auto;
+        align-items: center;
+        gap: 7px;
+    }
+
+    .moneta-header-actions > div {
+        width: 42px;
+        min-width: 42px;
+        flex: 0 0 42px;
+    }
+
+    .moneta-month-input,
+    .moneta-theme-button {
+        width: 42px;
+        height: 42px;
+        min-height: 42px;
+        border-radius: 14px;
+        padding: 0;
+    }
+
+    .moneta-month-input {
+        text-align: center;
+        font-size: 0;
+        color: transparent;
+        cursor: pointer;
+    }
+
+    .moneta-month-input::-webkit-calendar-picker-indicator {
+        width: 22px;
+        height: 22px;
+        margin: 0 auto;
+        padding: 9px;
+        opacity: 0.68;
+        cursor: pointer;
+    }
+
+    .dark .moneta-month-input::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+    }
+
+    /* Monatswerte wie in einer App in einer einzigen Zeile */
+    .moneta-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0;
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+    }
+
+    .dark .moneta-summary-grid {
+        border-color: #1e293b;
+        background: rgba(15, 23, 42, 0.88);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
+    }
+
+    .moneta-summary-card {
+        min-width: 0;
+        padding: 10px 9px 11px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .moneta-summary-budget {
+        display: none;
+    }
+
+    .moneta-summary-income {
+        order: 1;
+    }
+
+    .moneta-summary-expenses {
+        order: 2;
+        border-left: 1px solid #e2e8f0;
+    }
+
+    .moneta-summary-balance {
+        order: 3;
+        border-left: 1px solid #e2e8f0;
+    }
+
+    .dark .moneta-summary-expenses,
+    .dark .moneta-summary-balance {
+        border-left-color: #334155;
+    }
+
+    .moneta-summary-card > p:first-child {
+        overflow: hidden;
+        font-size: 0.68rem;
+        line-height: 1.2;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .moneta-summary-card > p:last-child {
+        overflow: hidden;
+        margin-top: 4px;
+        font-size: clamp(0.82rem, 4vw, 1rem);
+        line-height: 1.2;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    #total-expenses {
+        color: #e11d48;
+    }
+
+    .dark #total-expenses {
+        color: #fb7185;
+    }
+
+    /* Hauptinhalt */
+    .moneta-dashboard {
+        display: block;
+        margin-top: 10px;
+    }
+
+    .moneta-primary {
+        margin: 0;
+    }
+
+    .moneta-transaction-heading {
+        display: none;
+    }
+
+    .moneta-mobile-category-filters {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        margin: 0 -14px 10px;
+        padding: 2px 14px 4px;
+        overscroll-behavior-inline: contain;
+        scrollbar-width: none;
+    }
+
+    .moneta-mobile-category-filters::-webkit-scrollbar {
+        display: none;
+    }
+
+    .moneta-category-filter {
+        flex: 0 0 auto;
+        min-height: 36px;
+        padding: 0 14px;
+        border: 1px solid #dbe3ed;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.82);
+        color: #475569;
+        font-size: 0.78rem;
+        font-weight: 600;
+        line-height: 1;
+        white-space: nowrap;
+        transition: background-color 160ms ease,
+                    border-color 160ms ease,
+                    color 160ms ease,
+                    transform 120ms ease;
+    }
+
+    .moneta-category-filter:active {
+        transform: scale(0.97);
+    }
+
+    .moneta-category-filter.is-active {
+        border-color: #34d399;
+        background: #34d399;
+        color: #052e16;
+    }
+
+    .dark .moneta-category-filter {
+        border-color: #334155;
+        background: rgba(15, 23, 42, 0.86);
+        color: #cbd5e1;
+    }
+
+    .dark .moneta-category-filter.is-active {
+        border-color: #34d399;
+        background: #34d399;
+        color: #052e16;
+    }
+
+    .moneta-transaction-list {
+        padding-bottom: 8px;
+    }
+
+    .moneta-day-group {
+        margin-top: 0;
+    }
+
+    .moneta-day-group + .moneta-day-group {
+        margin-top: 14px;
+    }
+
+    .moneta-day-header {
+        margin-bottom: 6px;
+        padding: 0 2px;
+    }
+
+    .moneta-day-date,
+    .moneta-day-total {
+        font-size: 0.82rem;
+        line-height: 1.2;
+    }
+
+    .moneta-day-group > .moneta-transaction + .moneta-transaction {
+        margin-top: 6px;
+    }
+
+    .moneta-transaction {
+        position: relative;
+        padding: 10px 10px;
+        border-radius: 16px;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.045);
+    }
+
+    .dark .moneta-transaction {
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+    }
+
+    .moneta-transaction-content {
+        align-items: center;
+        gap: 9px;
+        min-height: 44px;
+        padding-right: 0;
+    }
+
+    .moneta-transaction-avatar {
+        display: grid;
+        width: 42px;
+        height: 42px;
+        flex: 0 0 42px;
+        place-items: center;
+        border-radius: 14px;
+        background: #eef2ff;
+        color: #4f46e5;
+        font-size: 0.92rem;
+        font-weight: 800;
+    }
+
+    .moneta-transaction.is-income .moneta-transaction-avatar {
+        background: #d1fae5;
+        color: #047857;
+    }
+
+    .dark .moneta-transaction-avatar {
+        background: rgba(99, 102, 241, 0.18);
+        color: #a5b4fc;
+    }
+
+    .dark .moneta-transaction.is-income .moneta-transaction-avatar {
+        background: rgba(52, 211, 153, 0.16);
+        color: #6ee7b7;
+    }
+
+    .moneta-transaction-information {
+        padding-right: 4px;
+    }
+
+    .moneta-transaction-description {
+        font-size: 0.9rem;
+        line-height: 1.15;
+    }
+
+    .moneta-transaction-category {
+        margin-top: 2px;
+        font-size: 0.72rem;
+        line-height: 1.2;
+    }
+
+    .moneta-transaction-amount {
+        align-self: flex-start;
+        margin-top: 2px;
+        font-size: 0.85rem;
+        line-height: 1.15;
+    }
+
+    .moneta-transaction.is-expense .moneta-transaction-amount {
+        color: #e11d48;
+    }
+
+    .dark .moneta-transaction.is-expense .moneta-transaction-amount {
+        color: #fb7185;
+    }
+
+    .moneta-transaction-actions {
+        position: absolute;
+        right: 5px;
+        bottom: 4px;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        gap: 0;
+        opacity: 0.68;
+    }
+
+    .moneta-transaction-actions button {
+        width: 29px;
+        height: 29px;
+        border-radius: 9px;
+    }
+
+    /* Rechte Desktop-Spalte wird auf dem Handy zum Bottom-Sheet. */
+    .moneta-secondary-panel {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 70;
+        display: block;
+        max-height: min(84dvh, 760px);
+        margin: 0;
+        padding: 12px 14px calc(24px + env(safe-area-inset-bottom));
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        border: 1px solid #e2e8f0;
+        border-bottom: 0;
+        border-radius: 24px 24px 0 0;
+        background: #f8fafc;
+        box-shadow: 0 -20px 50px rgba(15, 23, 42, 0.18);
+        transform: translateY(105%);
+        visibility: hidden;
+        transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1),
+                    visibility 240ms step-end;
+    }
+
+    .dark .moneta-secondary-panel {
+        border-color: #334155;
+        background: #020617;
+        box-shadow: 0 -20px 55px rgba(0, 0, 0, 0.5);
+    }
+
+    .moneta-tools-open .moneta-secondary-panel {
+        transform: translateY(0);
+        visibility: visible;
+        transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1),
+                    visibility 0ms step-start;
+    }
+
+    .moneta-tools-open {
+        overflow: hidden;
+    }
+
+    .moneta-mobile-tools-header {
+        position: sticky;
+        top: -12px;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin: -12px -14px 12px;
+        padding: 16px 14px 12px;
+        border-bottom: 1px solid #e2e8f0;
+        background: rgba(248, 250, 252, 0.96);
+        backdrop-filter: blur(16px);
+    }
+
+    .dark .moneta-mobile-tools-header {
+        border-bottom-color: #1e293b;
+        background: rgba(2, 6, 23, 0.96);
+    }
+
+    .moneta-mobile-tools-kicker {
+        color: #059669;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+    }
+
+    .dark .moneta-mobile-tools-kicker {
+        color: #34d399;
+    }
+
+    .moneta-mobile-tools-title {
+        margin-top: 2px;
+        font-size: 1.05rem;
+        font-weight: 750;
+        letter-spacing: -0.015em;
+    }
+
+    .moneta-mobile-tools-close {
+        display: grid;
+        width: 40px;
+        height: 40px;
+        flex: 0 0 40px;
+        place-items: center;
+        border-radius: 13px;
+        background: #e2e8f0;
+        color: #475569;
+    }
+
+    .dark .moneta-mobile-tools-close {
+        background: #1e293b;
+        color: #cbd5e1;
+    }
+
+    .moneta-secondary-panel > section {
+        border-radius: 20px;
+    }
+
+    .moneta-mobile-tools-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        display: block;
+        background: rgba(2, 6, 23, 0.55);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 180ms ease;
+    }
+
+    .moneta-tools-open .moneta-mobile-tools-backdrop {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* Untere App-Navigation */
+    .moneta-mobile-bottom-nav {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 50;
+        display: grid;
+        grid-template-columns: 1fr 74px 1fr;
+        align-items: end;
+        min-height: calc(68px + env(safe-area-inset-bottom));
+        padding: 6px 18px calc(7px + env(safe-area-inset-bottom));
+        border-top: 1px solid rgba(148, 163, 184, 0.28);
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 -8px 28px rgba(15, 23, 42, 0.08);
+        backdrop-filter: blur(20px);
+    }
+
+    .dark .moneta-mobile-bottom-nav {
+        border-top-color: rgba(71, 85, 105, 0.65);
+        background: rgba(2, 6, 23, 0.94);
+        box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.25);
+    }
+
+    .moneta-mobile-nav-item {
+        display: flex;
+        min-width: 0;
+        min-height: 50px;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        color: #64748b;
+        font-size: 0.65rem;
+        font-weight: 600;
+    }
+
+    .dark .moneta-mobile-nav-item {
+        color: #94a3b8;
+    }
+
+    .moneta-mobile-nav-item.is-active {
+        color: #059669;
+    }
+
+    .dark .moneta-mobile-nav-item.is-active {
+        color: #34d399;
+    }
+
+    .moneta-mobile-nav-icon {
+        display: flex;
+    }
+
+    .moneta-mobile-fab {
+        display: grid;
+        width: 58px;
+        height: 58px;
+        place-self: start center;
+        place-items: center;
+        margin-top: -20px;
+        border: 5px solid rgba(255, 255, 255, 0.96);
+        border-radius: 999px;
+        background: #34d399;
+        color: #052e16;
+        box-shadow: 0 10px 26px rgba(5, 150, 105, 0.3);
+        transition: transform 140ms ease,
+                    box-shadow 140ms ease;
+    }
+
+    .dark .moneta-mobile-fab {
+        border-color: rgba(2, 6, 23, 0.98);
+    }
+
+    .moneta-mobile-fab:active {
+        transform: scale(0.95);
+        box-shadow: 0 5px 16px rgba(5, 150, 105, 0.26);
+    }
+
+    /* Buchungsdialog als Bottom-Sheet statt rechter Seitenleiste. */
+    .moneta-drawer {
+        inset: auto 0 0 0;
+        width: 100%;
+        height: auto;
+        max-height: min(88dvh, 760px);
+        margin: auto 0 0;
+        border-radius: 24px 24px 0 0;
+    }
+
+    .moneta-drawer[open] {
+        animation: moneta-mobile-drawer-in 260ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .moneta-drawer[open].is-closing {
+        animation: moneta-mobile-drawer-out 220ms cubic-bezier(0.4, 0, 1, 1);
+    }
+
+    .moneta-drawer > div {
+        max-height: min(88dvh, 760px);
+    }
+
+    .moneta-drawer > div > div:first-child {
+        padding: 14px 16px 12px;
+    }
+
+    .moneta-drawer > div > div:first-child p {
+        display: none;
+    }
+
+    #transaction-drawer-title {
+        margin-top: 0;
+        font-size: 1.18rem;
+    }
+
+    .moneta-drawer > div > div:nth-child(2) {
+        padding: 14px 16px calc(18px + env(safe-area-inset-bottom));
+    }
+
+    #expense-form {
+        gap: 0;
+    }
+
+    #transaction-type-switch {
+        display: grid;
+        width: 100%;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    #button-transaction-expense,
+    #button-transaction-income {
+        min-height: 42px;
+    }
+
+    #button-add-expense {
+        width: 100%;
+        justify-content: center;
+    }
+
+    #button-cancel-edit {
+        width: 100%;
+        text-align: center;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .moneta-secondary-panel,
+        .moneta-mobile-tools-backdrop,
+        .moneta-mobile-fab {
+            transition: none;
+        }
+
+        .moneta-drawer[open],
+        .moneta-drawer[open].is-closing {
+            animation: none;
+        }
+    }
+}
+
+@media (max-width: 767px) {
+    #expense-form {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .moneta-fields-date-amount {
+        display: contents;
+    }
+
+    .moneta-field-type {
+        order: 1;
+    }
+
+    .moneta-field-amount {
+        order: 2;
+    }
+
+    .moneta-field-category {
+        order: 3;
+    }
+
+    .moneta-field-description {
+        order: 4;
+    }
+
+    .moneta-field-date {
+        order: 5;
+    }
+
+    #expense-form-error {
+        order: 6;
+    }
+
+    .moneta-form-actions {
+        order: 7;
+    }
+
+    #expense-form > * + *,
+    #expense-form > .moneta-fields-date-amount > * + * {
+        margin-block-start: 12px;
+    }
+
+    .moneta-form-actions {
+        margin-top: 14px;
+    }
+}
+
+@media (max-width: 767px) {
+    .moneta-field-amount,
+    .moneta-field-category,
+    .moneta-field-description,
+    .moneta-field-date,
+    #expense-form-error,
+    .moneta-form-actions {
+        margin-block-start: 12px;
+    }
+}
