@@ -21,6 +21,8 @@ import { showCategoryForm } from './components/category-form.js';
 import { showConfirmDialog } from './components/confirm-dialog.js';
 
 const app = document.querySelector('#app');
+const PULL_REFRESH_THRESHOLD = 72;
+const PULL_REFRESH_MAX = 112;
 const state = {
   view: location.hash.replace('#/', '') || 'overview',
   month: currentMonth(),
@@ -35,6 +37,11 @@ const state = {
 
 let viewRoot;
 let bottomNavRoot;
+let pullRefreshRoot;
+let pullStartY = null;
+let pullStartX = null;
+let pullDistance = 0;
+let pullRefreshBusy = false;
 
 await bootstrap();
 
@@ -64,7 +71,14 @@ async function bootstrap() {
 }
 
 function mountShell() {
-  app.innerHTML = '<div id="view-root"></div><div id="bottom-nav-root"></div>';
+  app.innerHTML = `
+    <div id="pull-refresh" class="pull-refresh" role="status" aria-live="polite" aria-atomic="true">
+      <span class="pull-refresh-icon" aria-hidden="true">↓</span>
+      <span data-pull-refresh-label>Zum Aktualisieren ziehen</span>
+    </div>
+    <div id="view-root"></div>
+    <div id="bottom-nav-root"></div>`;
+  pullRefreshRoot = app.querySelector('#pull-refresh');
   viewRoot = app.querySelector('#view-root');
   bottomNavRoot = app.querySelector('#bottom-nav-root');
   bottomNavRoot.innerHTML = renderBottomNav(state.view);
@@ -232,6 +246,108 @@ function bindGlobalEvents() {
     state.view = location.hash.replace('#/', '') || 'overview';
     render();
   });
+
+  bindPullToRefresh();
+}
+
+function bindPullToRefresh() {
+  if (!pullRefreshRoot) return;
+
+  app.addEventListener('touchstart', (event) => {
+    if (pullRefreshBusy || event.touches.length !== 1 || window.scrollY > 0) return;
+    if (document.querySelector('#modal-root')?.childElementCount) return;
+    if (event.target.closest('.bottom-nav, button, input, select, textarea, [contenteditable="true"]')) return;
+
+    pullStartY = event.touches[0].clientY;
+    pullStartX = event.touches[0].clientX;
+    pullDistance = 0;
+  }, { passive: true });
+
+  app.addEventListener('touchmove', (event) => {
+    if (pullStartY === null || pullRefreshBusy || event.touches.length !== 1) return;
+
+    const deltaY = event.touches[0].clientY - pullStartY;
+    const deltaX = event.touches[0].clientX - pullStartX;
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      resetPullGesture();
+      return;
+    }
+
+    if (deltaY <= 0 || window.scrollY > 0) return;
+
+    event.preventDefault();
+    pullDistance = Math.min(PULL_REFRESH_MAX, deltaY * 0.58);
+    updatePullIndicator(pullDistance);
+  }, { passive: false });
+
+  app.addEventListener('touchend', async () => {
+    if (pullStartY === null || pullRefreshBusy) return;
+    const shouldRefresh = pullDistance >= PULL_REFRESH_THRESHOLD;
+    pullStartY = null;
+    pullStartX = null;
+
+    if (!shouldRefresh) {
+      resetPullIndicator();
+      return;
+    }
+
+    await refreshCurrentView();
+  }, { passive: true });
+
+  app.addEventListener('touchcancel', () => {
+    if (!pullRefreshBusy) resetPullGesture();
+  }, { passive: true });
+}
+
+function updatePullIndicator(distance) {
+  const ready = distance >= PULL_REFRESH_THRESHOLD;
+  pullRefreshRoot.style.setProperty('--pull-distance', `${Math.round(distance)}px`);
+  pullRefreshRoot.classList.add('pulling');
+  pullRefreshRoot.classList.toggle('ready', ready);
+  pullRefreshRoot.querySelector('[data-pull-refresh-label]').textContent = ready
+    ? 'Loslassen zum Aktualisieren'
+    : 'Zum Aktualisieren ziehen';
+}
+
+function resetPullGesture() {
+  pullStartY = null;
+  pullStartX = null;
+  pullDistance = 0;
+  resetPullIndicator();
+}
+
+function resetPullIndicator() {
+  if (!pullRefreshRoot) return;
+  pullDistance = 0;
+  pullRefreshRoot.style.removeProperty('--pull-distance');
+  pullRefreshRoot.classList.remove('pulling', 'ready', 'refreshing', 'complete', 'error');
+  pullRefreshRoot.querySelector('[data-pull-refresh-label]').textContent = 'Zum Aktualisieren ziehen';
+}
+
+async function refreshCurrentView() {
+  pullRefreshBusy = true;
+  pullRefreshRoot.classList.remove('pulling', 'ready');
+  pullRefreshRoot.classList.add('refreshing');
+  pullRefreshRoot.style.setProperty('--pull-distance', `${PULL_REFRESH_THRESHOLD + 8}px`);
+  pullRefreshRoot.querySelector('[data-pull-refresh-label]').textContent = 'Aktualisiere …';
+
+  try {
+    await reloadData();
+    render();
+    pullRefreshRoot.classList.remove('refreshing');
+    pullRefreshRoot.classList.add('complete');
+    pullRefreshRoot.querySelector('[data-pull-refresh-label]').textContent = 'Aktualisiert';
+    await delay(420);
+  } catch (error) {
+    console.warn('Pull-to-refresh:', error);
+    pullRefreshRoot.classList.remove('refreshing');
+    pullRefreshRoot.classList.add('error');
+    pullRefreshRoot.querySelector('[data-pull-refresh-label]').textContent = 'Aktualisierung fehlgeschlagen';
+    await delay(900);
+  } finally {
+    pullRefreshBusy = false;
+    resetPullGesture();
+  }
 }
 
 async function openBookingForm(booking = null) {
@@ -356,4 +472,8 @@ function shiftMonth(month, delta) {
   const [year, monthNumber] = month.split('-').map(Number);
   const date = new Date(year, monthNumber - 1 + delta, 1);
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

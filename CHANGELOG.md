@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.6 – 2026-09-07
+
+- Eigenes Pull-to-refresh für Moneta ergänzt: Herunterziehen am oberen Rand aktualisiert nur die App-Daten und löst keinen vollständigen Seitenreload aus.
+- Die aktuell geöffnete Ansicht, der gewählte Monat sowie Analysezustände bleiben beim Aktualisieren erhalten.
+- Native wirkende Pull-to-refresh-Anzeige mit Zuständen für Ziehen, Loslassen, Aktualisieren, Erfolg und Fehler ergänzt.
+- Pull-to-refresh greift nicht in offene Dialoge oder Formulareingaben ein und ersetzt weiterhin das Browser-Pull-to-refresh.
+- Versionsanzeige und Service-Worker-Cache auf Version 2.0.6 angehoben.
+
 ## 2.0.5 – 2026-09-07
 
 - Pull-to-refresh bzw. das Herunterziehen der gesamten App-Oberfläche am oberen Rand unterbunden, damit Moneta sich in der installierten PWA stärker wie eine native App verhält.
