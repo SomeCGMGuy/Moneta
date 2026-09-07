@@ -1,4 +1,4 @@
-const TRANSITION_MS = 190;
+const TRANSITION_MS = 260;
 
 export function mountPushPage(layer, { historyKey = 'monetaPushPage' } = {}) {
   const root = document.querySelector('#modal-root');
