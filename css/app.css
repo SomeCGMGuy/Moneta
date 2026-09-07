@@ -2168,3 +2168,316 @@ dialog[open]::backdrop {
         margin-block-start: 12px;
     }
 }
+
+
+/* =====================================================================
+   MONETA MOBILE APP NAVIGATION / ANALYSE V2
+   ===================================================================== */
+
+.moneta-mobile-analysis-view,
+.moneta-month-icon {
+    display: none;
+}
+
+.moneta-category-type-switch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    margin-bottom: 16px;
+    padding: 4px;
+    border-radius: 16px;
+    background: #f1f5f9;
+}
+
+.dark .moneta-category-type-switch { background: #1e293b; }
+
+.moneta-category-type-switch button {
+    min-height: 40px;
+    border-radius: 12px;
+    color: #64748b;
+    font-size: .875rem;
+    font-weight: 700;
+}
+
+.moneta-category-type-switch button.is-active {
+    background: #fff;
+    color: #0f172a;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, .12);
+}
+
+.dark .moneta-category-type-switch button.is-active {
+    background: #334155;
+    color: #fff;
+}
+
+@media (max-width: 767px) {
+    .moneta-header-actions > div {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+    }
+
+    .dark .moneta-header-actions > div {
+        border-color: #334155;
+        background: #1e293b;
+    }
+
+    .moneta-month-input {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+    }
+
+    .moneta-month-input::-webkit-calendar-picker-indicator {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        cursor: pointer;
+    }
+
+    .moneta-month-icon {
+        display: grid;
+        width: 42px;
+        height: 42px;
+        place-items: center;
+        color: #475569;
+        pointer-events: none;
+    }
+
+    .dark .moneta-month-icon { color: #cbd5e1; }
+    .moneta-month-icon svg { width: 20px; height: 20px; }
+
+    .moneta-mobile-bottom-nav {
+        grid-template-columns: 1fr 1fr 66px 1fr 1fr;
+        gap: 2px;
+        padding-inline: 6px;
+    }
+
+    .moneta-mobile-nav-item {
+        min-width: 0;
+        padding-inline: 2px;
+        font-size: .58rem;
+    }
+
+    .moneta-mobile-fab {
+        width: 56px;
+        height: 56px;
+    }
+
+    .moneta-desktop-category-analysis {
+        display: none;
+    }
+
+    .moneta-mobile-analysis-view {
+        display: none;
+        padding: 4px 0 16px;
+    }
+
+    .moneta-view-analysis .moneta-summary,
+    .moneta-view-analysis .moneta-dashboard {
+        display: none;
+    }
+
+    .moneta-view-analysis .moneta-mobile-analysis-view {
+        display: block;
+    }
+
+    .moneta-analysis-heading {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 12px;
+        margin: 8px 2px 12px;
+    }
+
+    .moneta-analysis-kicker {
+        color: #059669;
+        font-size: .68rem;
+        font-weight: 800;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+    }
+
+    .dark .moneta-analysis-kicker { color: #34d399; }
+
+    .moneta-analysis-title {
+        margin-top: 2px;
+        font-size: 1.32rem;
+        font-weight: 800;
+        letter-spacing: -.025em;
+    }
+
+    .moneta-analysis-month {
+        color: #64748b;
+        font-size: .78rem;
+        font-weight: 650;
+    }
+
+    .dark .moneta-analysis-month { color: #94a3b8; }
+
+    .moneta-analysis-type-switch {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+        margin-bottom: 12px;
+        padding: 4px;
+        border-radius: 16px;
+        background: #e2e8f0;
+    }
+
+    .dark .moneta-analysis-type-switch { background: #1e293b; }
+
+    .moneta-analysis-type-switch button {
+        min-height: 40px;
+        border-radius: 12px;
+        color: #64748b;
+        font-size: .82rem;
+        font-weight: 750;
+    }
+
+    .moneta-analysis-type-switch button.is-active {
+        background: #fff;
+        color: #059669;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, .08);
+    }
+
+    .dark .moneta-analysis-type-switch button.is-active {
+        background: #334155;
+        color: #34d399;
+    }
+
+    .moneta-analysis-card {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto auto;
+        align-items: center;
+        gap: 2px 16px;
+        padding: 16px;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        background: #fff;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, .05);
+    }
+
+    .dark .moneta-analysis-card {
+        border-color: #1e293b;
+        background: #0f172a;
+    }
+
+    .moneta-analysis-total-label {
+        align-self: end;
+        color: #64748b;
+        font-size: .76rem;
+        font-weight: 650;
+    }
+
+    .moneta-analysis-total {
+        align-self: start;
+        font-size: 1.45rem;
+        font-weight: 850;
+        letter-spacing: -.025em;
+    }
+
+    .moneta-analysis-chart {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        display: grid;
+        width: 92px;
+        height: 92px;
+        place-items: center;
+        border-radius: 999px;
+        background: conic-gradient(#e2e8f0 0 100%);
+    }
+
+    .moneta-analysis-chart-hole {
+        width: 55px;
+        height: 55px;
+        border-radius: 999px;
+        background: #fff;
+    }
+
+    .dark .moneta-analysis-chart-hole { background: #0f172a; }
+
+    .moneta-analysis-list {
+        display: grid;
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    .moneta-analysis-item {
+        display: grid;
+        grid-template-columns: 12px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+        min-height: 56px;
+        padding: 10px 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        background: #fff;
+    }
+
+    .dark .moneta-analysis-item {
+        border-color: #1e293b;
+        background: #0f172a;
+    }
+
+    .moneta-analysis-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+    }
+
+    .moneta-analysis-item-text {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+    }
+
+    .moneta-analysis-item-text strong {
+        overflow: hidden;
+        font-size: .86rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .moneta-analysis-item-text span {
+        margin-top: 1px;
+        color: #64748b;
+        font-size: .7rem;
+    }
+
+    .dark .moneta-analysis-item-text span { color: #94a3b8; }
+
+    .moneta-analysis-item-amount {
+        font-size: .82rem;
+        white-space: nowrap;
+    }
+
+    .moneta-analysis-empty {
+        padding: 28px 18px;
+        border: 1px dashed #cbd5e1;
+        border-radius: 18px;
+        color: #64748b;
+        text-align: center;
+        font-size: .82rem;
+    }
+
+    .dark .moneta-analysis-empty {
+        border-color: #334155;
+        color: #94a3b8;
+    }
+
+    #delete-transaction-dialog {
+        width: calc(100% - 28px);
+        max-width: 420px;
+    }
+}

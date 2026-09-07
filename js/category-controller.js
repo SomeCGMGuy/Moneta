@@ -39,6 +39,8 @@
             dialogList,
             form,
             nameInput,
+            expenseTypeButton,
+            incomeTypeButton,
             formError,
             saveButton,
             cancelEditButton,
@@ -52,6 +54,9 @@
 
     /** @type {string | null} */
     let editingCategoryId = null
+
+    /** @type {TransactionType} */
+    let selectedCategoryType = "expense"
 
     /** @type {string | null} */
     let pendingCategoryDeleteId = null
@@ -102,21 +107,47 @@
      * @returns {Promise<Category[]>}
      */
     const initializeCategories = async () => {
-        const storedCategories =
-            await loadCategories()
+        let storedCategories = await loadCategories()
 
-        if (storedCategories.length > 0) {
-            return storedCategories
+        if (storedCategories.length === 0) {
+            const defaults = getDefaultCategories()
+            for (const category of defaults) {
+                await saveCategory(category)
+            }
+            return defaults
         }
 
-        const defaultCategories =
-            getDefaultCategories()
-
-        for (const category of defaultCategories) {
-            await saveCategory(category)
+        // Kategorien aus älteren Moneta-Versionen waren implizit Ausgaben-Kategorien.
+        for (const category of storedCategories) {
+            if (category.type !== "expense" && category.type !== "income") {
+                await saveCategory({
+                    ...category,
+                    type: "expense"
+                })
+            }
         }
 
-        return defaultCategories
+        storedCategories = await loadCategories()
+
+        const normalized = storedCategories.map((category) => ({
+            ...category,
+            type: category.type === "income" ? "income" : "expense"
+        }))
+
+        const hasExpense = normalized.some((category) => category.type === "expense")
+        const hasIncome = normalized.some((category) => category.type === "income")
+
+        if (!hasExpense || !hasIncome) {
+            const defaults = getDefaultCategories()
+            const missingType = hasExpense ? "income" : "expense"
+            for (const category of defaults.filter((item) => item.type === missingType)) {
+                if (!normalized.some((item) => item.id === category.id)) {
+                    await saveCategory(category)
+                }
+            }
+        }
+
+        return loadCategories()
     }
 
 
@@ -126,10 +157,23 @@
      *
      * @returns {void}
      */
+    const setCategoryType = (type) => {
+        selectedCategoryType = type
+        const isExpense = type === "expense"
+
+        expenseTypeButton.classList.toggle("is-active", isExpense)
+        incomeTypeButton.classList.toggle("is-active", !isExpense)
+        expenseTypeButton.setAttribute("aria-pressed", String(isExpense))
+        incomeTypeButton.setAttribute("aria-pressed", String(!isExpense))
+    }
+
     const resetCategoryForm = () => {
         editingCategoryId = null
 
         form.reset()
+        expenseTypeButton.disabled = false
+        incomeTypeButton.disabled = false
+        setCategoryType("expense")
 
         saveButton.textContent =
             "Hinzufügen"
@@ -158,6 +202,10 @@
         nameInput.value =
             category.name
 
+        setCategoryType(category.type)
+        expenseTypeButton.disabled = true
+        incomeTypeButton.disabled = true
+
         saveButton.textContent =
             "Speichern"
 
@@ -184,9 +232,13 @@
         const categories =
             window.App.categories.getAll()
 
-        if (categories.length <= 1) {
+        const sameTypeCategories = categories.filter(
+            (item) => item.type === category.type
+        )
+
+        if (sameTypeCategories.length <= 1) {
             formError.textContent =
-                "Die letzte vorhandene Kategorie kann nicht gelöscht werden."
+                `Die letzte ${category.type === "income" ? "Einnahmen" : "Ausgaben"}-Kategorie kann nicht gelöscht werden.`
 
             formError.classList.remove(
                 "hidden"
@@ -239,7 +291,7 @@
 
         renderCategoryOptions(
             categoryInput,
-            categories
+            categories.filter((category) => category.type === "expense")
         )
 
         renderCategoryDialogList(
@@ -307,6 +359,7 @@
                     (category) =>
                         category.name.toLowerCase() ===
                             name.toLowerCase() &&
+                        category.type === selectedCategoryType &&
                         category.id !==
                             editingCategoryId
                 )
@@ -329,7 +382,8 @@
                     editingCategoryId ??
                     crypto.randomUUID(),
 
-                name
+                name,
+                type: selectedCategoryType
             }
 
             await saveCategory(
@@ -453,6 +507,16 @@
         cancelEditButton.addEventListener(
             "click",
             resetCategoryForm
+        )
+
+        expenseTypeButton.addEventListener(
+            "click",
+            () => setCategoryType("expense")
+        )
+
+        incomeTypeButton.addEventListener(
+            "click",
+            () => setCategoryType("income")
         )
 
         form.addEventListener(

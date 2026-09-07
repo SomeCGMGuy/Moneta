@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "moneta-pwa-v3";
+const CACHE_NAME = "moneta-pwa-v4";
 const CACHE_PREFIX = "moneta-pwa-";
 
 const APP_SHELL = [

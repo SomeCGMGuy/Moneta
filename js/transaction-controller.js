@@ -11,12 +11,18 @@
     } = window.App.transactions
 
     const {
-        renderTransactions
+        renderTransactions,
+        renderCategoryOptions
     } = window.App.ui
 
     const {
         show: showMessage
     } = window.App.messageDialog
+
+    const {
+        open: openDialog,
+        close: closeDialog
+    } = window.App.dialog
 
     const {
         expense: {
@@ -36,13 +42,20 @@
             saveButtonLabel,
             cancelEditButton,
             list,
-            error: formError
+            error: formError,
+            deleteDialog,
+            deleteMessage,
+            cancelDeleteButton,
+            confirmDeleteButton
         }
     } = window.App.dom
 
 
     /** @type {string | null} */
     let editingTransactionId = null
+
+    /** @type {Transaction | null} */
+    let pendingTransactionDelete = null
 
     /** @type {TransactionType} */
     let selectedTransactionType =
@@ -69,9 +82,20 @@
      * @param {TransactionType} type - Neuer Buchungstyp.
      * @returns {void}
      */
-    const setTransactionType = (type) => {
+    const refreshCategoryOptions = (preferredCategoryId = null) => {
+        const categories = window.App.categories.getByType(selectedTransactionType)
+        renderCategoryOptions(categoryInput, categories)
+
+        if (preferredCategoryId && categories.some((category) => category.id === preferredCategoryId)) {
+            categoryInput.value = preferredCategoryId
+        }
+    }
+
+    const setTransactionType = (type, preferredCategoryId = null) => {
         selectedTransactionType =
             type
+
+        refreshCategoryOptions(preferredCategoryId)
 
         const isExpense =
             type === "expense"
@@ -254,9 +278,6 @@
                 transaction.amountCents / 100
             )
 
-        categoryInput.value =
-            transaction.categoryId
-
         saveButtonLabel.textContent =
             "Änderungen Speichern"
 
@@ -265,7 +286,8 @@
         )
 
         setTransactionType(
-            transaction.type
+            transaction.type,
+            transaction.categoryId
         )
 
         drawerTitle.textContent =
@@ -283,57 +305,49 @@
      * @param {Transaction} transaction - Zu löschende Buchung.
      * @returns {Promise<void>}
      */
-    const handleDeleteTransaction = async (
-        transaction
-    ) => {
+    const handleDeleteTransaction = (transaction) => {
+        pendingTransactionDelete = transaction
+
+        const label = transaction.description?.trim() || "Diese Buchung"
+        deleteMessage.textContent =
+            `„${label}“ wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`
+
+        openDialog(deleteDialog)
+    }
+
+    const cancelTransactionDelete = () => {
+        pendingTransactionDelete = null
+        closeDialog(deleteDialog)
+    }
+
+    const confirmTransactionDelete = async () => {
+        if (!pendingTransactionDelete) {
+            return
+        }
+
+        const transaction = pendingTransactionDelete
+        pendingTransactionDelete = null
+
         try {
-            await deleteTransaction(
-                transaction.id
-            )
+            await deleteTransaction(transaction.id)
 
-            const transactions =
-                getTransactions()
-
-            const index =
-                transactions.findIndex(
-                    (item) =>
-                        item.id ===
-                        transaction.id
-                )
-
+            const transactions = getTransactions()
+            const index = transactions.findIndex((item) => item.id === transaction.id)
             if (index !== -1) {
-                transactions.splice(
-                    index,
-                    1
-                )
+                transactions.splice(index, 1)
             }
 
-            if (
-                editingTransactionId ===
-                transaction.id
-            ) {
+            if (editingTransactionId === transaction.id) {
                 resetForm()
             }
 
+            closeDialog(deleteDialog)
             refresh()
-
             onTransactionsChanged()
-
         } catch (error) {
-            /*
-            * Die Karte wurde bereits visuell
-            * ausgeblendet.
-            *
-            * Falls IndexedDB fehlschlägt,
-            * rendern wir sie aus dem unveränderten
-            * Runtime-State wieder neu.
-            */
+            closeDialog(deleteDialog)
             refresh()
-
-            showTechnicalError(
-                "Buchung konnte nicht gelöscht werden",
-                error
-            )
+            showTechnicalError("Buchung konnte nicht gelöscht werden", error)
         }
     }
 
@@ -601,6 +615,23 @@
             true
         )
 
+        cancelDeleteButton.addEventListener(
+            "click",
+            cancelTransactionDelete
+        )
+
+        confirmDeleteButton.addEventListener(
+            "click",
+            confirmTransactionDelete
+        )
+
+        deleteDialog.addEventListener(
+            "close",
+            () => {
+                pendingTransactionDelete = null
+            }
+        )
+
         drawer.addEventListener(
             "close",
             () => {
@@ -780,6 +811,7 @@
 
     window.App.transactionController = {
         initialize,
-        refresh
+        refresh,
+        refreshCategoryOptions
     }
 })()

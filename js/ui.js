@@ -495,20 +495,9 @@
         )
 
         deleteButton.addEventListener(
-    "click",
-    async () => {
-        deleteButton.disabled =
-            true
-
-        await animateTransactionRemoval(
-            item
+            "click",
+            () => onDelete(transaction)
         )
-
-        await onDelete(
-            transaction
-        )
-    }
-)
 
 
         actions.append(
@@ -1066,125 +1055,52 @@
     ) => {
         container.replaceChildren()
 
-        const items =
-            categories.map(
-                (category) => {
-                    const item =
-                        document.createElement("div")
+        const createItem = (category) => {
+            const item = document.createElement("div")
+            item.className =
+                "flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 transition-colors dark:border-slate-700 dark:bg-slate-800"
 
-                    item.className =
-                        "flex items-center justify-between gap-3 " +
-                        "rounded-2xl border border-slate-200 bg-slate-50 " +
-                        "px-4 py-3 transition-colors " +
-                        "dark:border-slate-700 dark:bg-slate-800"
+            const name = document.createElement("span")
+            name.className = "min-w-0 flex-1 truncate font-medium text-slate-800 dark:text-slate-200"
+            name.textContent = category.name
 
+            const actions = document.createElement("div")
+            actions.className = "flex shrink-0 items-center gap-1"
 
-                    const name =
-                        document.createElement("span")
+            const editButton = document.createElement("button")
+            editButton.type = "button"
+            editButton.className = "flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 transition hover:bg-white hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white"
+            editButton.setAttribute("aria-label", "Kategorie bearbeiten")
+            editButton.title = "Bearbeiten"
+            editButton.appendChild(createIcon("pencil", { className: "h-4 w-4" }))
+            editButton.addEventListener("click", () => onEdit(category))
 
-                    name.className =
-                        "min-w-0 flex-1 truncate font-medium " +
-                        "text-slate-800 dark:text-slate-200"
+            const deleteButton = document.createElement("button")
+            deleteButton.type = "button"
+            deleteButton.className = "flex h-9 w-9 items-center justify-center rounded-xl text-red-500 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+            deleteButton.setAttribute("aria-label", "Kategorie löschen")
+            deleteButton.title = "Löschen"
+            deleteButton.appendChild(createIcon("trash-2", { className: "h-4 w-4" }))
+            deleteButton.addEventListener("click", () => onDelete(category))
 
-                    name.textContent =
-                        category.name
+            actions.append(editButton, deleteButton)
+            item.append(name, actions)
+            return item
+        }
 
+        const sections = [
+            { type: "expense", title: "Ausgaben-Kategorien" },
+            { type: "income", title: "Einnahmen-Kategorien" }
+        ]
 
-                    const actions =
-                        document.createElement("div")
-
-                    actions.className =
-                        "flex shrink-0 items-center gap-1"
-
-
-                    const editButton =
-                        document.createElement("button")
-
-                    editButton.type =
-                        "button"
-
-                    editButton.className =
-                        "flex h-9 w-9 items-center justify-center rounded-xl " +
-                        "text-slate-500 transition " +
-                        "hover:bg-white hover:text-slate-900 " +
-                        "dark:text-slate-400 dark:hover:bg-slate-700 " +
-                        "dark:hover:text-white"
-
-                    editButton.setAttribute(
-                        "aria-label",
-                        "Kategorie bearbeiten"
-                    )
-
-                    editButton.title =
-                        "Bearbeiten"
-
-                    editButton.appendChild(
-                        createIcon(
-                            "pencil",
-                            {
-                                className: "h-4 w-4"
-                            }
-                        )
-                    )
-
-                    editButton.addEventListener(
-                        "click",
-                        () => onEdit(category)
-                    )
-
-
-                    const deleteButton =
-                        document.createElement("button")
-
-                    deleteButton.type =
-                        "button"
-
-                    deleteButton.className =
-                        "flex h-9 w-9 items-center justify-center rounded-xl " +
-                        "text-red-500 transition hover:bg-red-50 " +
-                        "dark:text-red-400 dark:hover:bg-red-500/10"
-
-                    deleteButton.setAttribute(
-                        "aria-label",
-                        "Kategorie löschen"
-                    )
-
-                    deleteButton.title =
-                        "Löschen"
-
-                    deleteButton.appendChild(
-                        createIcon(
-                            "trash-2",
-                            {
-                                className: "h-4 w-4"
-                            }
-                        )
-                    )
-
-                    deleteButton.addEventListener(
-                        "click",
-                        () => onDelete(category)
-                    )
-
-
-                    actions.append(
-                        editButton,
-                        deleteButton
-                    )
-
-                    item.append(
-                        name,
-                        actions
-                    )
-
-                    return item
-                }
-            )
-
-
-        container.append(
-            ...items
-        )
+        for (const section of sections) {
+            const sectionCategories = categories.filter((category) => category.type === section.type)
+            const heading = document.createElement("p")
+            heading.className = "mb-2 mt-4 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 first:mt-0 dark:text-slate-400"
+            heading.textContent = section.title
+            container.appendChild(heading)
+            container.append(...sectionCategories.map(createItem))
+        }
     }
 
 

@@ -50,6 +50,11 @@ interface AppDomExpense {
     closeDrawerButton: HTMLButtonElement
     closeDrawerIcon: HTMLElement
 
+    deleteDialog: HTMLDialogElement
+    deleteMessage: HTMLElement
+    cancelDeleteButton: HTMLButtonElement
+    confirmDeleteButton: HTMLButtonElement
+
 }
 
 
@@ -178,6 +183,7 @@ interface AppDialog {
 interface Category {
     id: string
     name: string
+    type: TransactionType
 }
 
 interface CategoryControllerOptions {
@@ -378,6 +384,8 @@ interface AppCategories {
     ): void
 
     getAll(): Category[]
+
+    getByType(type: TransactionType): Category[]
 
     getById(
         categoryId: string

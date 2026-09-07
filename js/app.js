@@ -94,7 +94,8 @@ const {
 } = window.App.theme
 
 const {
-    initialize: initializeMobile
+    initialize: initializeMobile,
+    refreshAnalysis: refreshMobileAnalysis
 } = window.App.mobile
 
 const {
@@ -108,7 +109,8 @@ const {
 
 const {
     initialize: initializeTransactionController,
-    refresh: refreshTransactions
+    refresh: refreshTransactions,
+    refreshCategoryOptions: refreshTransactionCategoryOptions
 } = window.App.transactionController
 
 // Unsere Beispielausgaben
@@ -342,6 +344,7 @@ monthInput.addEventListener(
     refreshSummary()
     refreshCategorySummary()
     refreshMobileCategoryFilters()
+    refreshMobileAnalysis()
 })
 
 // END /js/logic.js
@@ -374,6 +377,8 @@ const initApp = async () => {
                 refreshCategorySummary()
                 refreshMobileCategoryFilters()
                 refreshTransactions()
+                refreshTransactionCategoryOptions()
+                refreshMobileAnalysis()
             }
         })
 
@@ -406,10 +411,15 @@ const initApp = async () => {
             onChange: () => {
                 refreshSummary()
                 refreshCategorySummary()
+                refreshMobileCategoryFilters()
+                refreshMobileAnalysis()
             }
         })
 
-        initializeMobile()
+        initializeMobile({
+            getTransactions: () => transactions,
+            getSelectedMonth: () => selectedMonth
+        })
 
         refreshBudgetForm()
         refreshSummary()

@@ -171,6 +171,22 @@
                 "#icon-close-transaction-drawer"
             )),
 
+        deleteDialog:
+            /** @type {HTMLDialogElement} */
+            (document.querySelector("#delete-transaction-dialog")),
+
+        deleteMessage:
+            /** @type {HTMLElement} */
+            (document.querySelector("#delete-transaction-message")),
+
+        cancelDeleteButton:
+            /** @type {HTMLButtonElement} */
+            (document.querySelector("#button-cancel-delete-transaction")),
+
+        confirmDeleteButton:
+            /** @type {HTMLButtonElement} */
+            (document.querySelector("#button-confirm-delete-transaction")),
+
     }
 
 
@@ -213,6 +229,14 @@
         nameInput:
             /** @type {HTMLInputElement} */
             (document.querySelector("#category-name-input")),
+
+        expenseTypeButton:
+            /** @type {HTMLButtonElement} */
+            (document.querySelector("#button-category-type-expense")),
+
+        incomeTypeButton:
+            /** @type {HTMLButtonElement} */
+            (document.querySelector("#button-category-type-income")),
 
         formError:
             /** @type {HTMLElement} */
@@ -285,41 +309,29 @@
      * DOM-Referenzen der kompakten mobilen Navigation.
      */
     const mobile = {
-        overviewButton:
-            /** @type {HTMLButtonElement} */
-            (document.querySelector("#button-mobile-overview")),
+        overviewButton: /** @type {HTMLButtonElement} */ (document.querySelector("#button-mobile-overview")),
+        analysisButton: /** @type {HTMLButtonElement} */ (document.querySelector("#button-mobile-analysis")),
+        newTransactionButton: /** @type {HTMLButtonElement} */ (document.querySelector("#button-mobile-new-transaction")),
+        budgetButton: /** @type {HTMLButtonElement} */ (document.querySelector("#button-mobile-budget")),
+        moreButton: /** @type {HTMLButtonElement} */ (document.querySelector("#button-mobile-more")),
+        toolsCloseButton: /** @type {HTMLButtonElement} */ (document.querySelector("#button-mobile-tools-close")),
+        toolsBackdrop: /** @type {HTMLElement} */ (document.querySelector("#mobile-tools-backdrop")),
 
-        newTransactionButton:
-            /** @type {HTMLButtonElement} */
-            (document.querySelector("#button-mobile-new-transaction")),
+        overviewIcon: /** @type {HTMLElement} */ (document.querySelector("#icon-mobile-overview")),
+        analysisIcon: /** @type {HTMLElement} */ (document.querySelector("#icon-mobile-analysis")),
+        newTransactionIcon: /** @type {HTMLElement} */ (document.querySelector("#icon-mobile-new-transaction")),
+        budgetIcon: /** @type {HTMLElement} */ (document.querySelector("#icon-mobile-budget")),
+        moreIcon: /** @type {HTMLElement} */ (document.querySelector("#icon-mobile-more")),
+        toolsCloseIcon: /** @type {HTMLElement} */ (document.querySelector("#icon-mobile-tools-close")),
 
-        toolsButton:
-            /** @type {HTMLButtonElement} */
-            (document.querySelector("#button-mobile-tools")),
-
-        toolsCloseButton:
-            /** @type {HTMLButtonElement} */
-            (document.querySelector("#button-mobile-tools-close")),
-
-        toolsBackdrop:
-            /** @type {HTMLElement} */
-            (document.querySelector("#mobile-tools-backdrop")),
-
-        overviewIcon:
-            /** @type {HTMLElement} */
-            (document.querySelector("#icon-mobile-overview")),
-
-        newTransactionIcon:
-            /** @type {HTMLElement} */
-            (document.querySelector("#icon-mobile-new-transaction")),
-
-        toolsIcon:
-            /** @type {HTMLElement} */
-            (document.querySelector("#icon-mobile-tools")),
-
-        toolsCloseIcon:
-            /** @type {HTMLElement} */
-            (document.querySelector("#icon-mobile-tools-close"))
+        analysisView: /** @type {HTMLElement} */ (document.querySelector("#mobile-analysis-view")),
+        analysisExpenseButton: /** @type {HTMLButtonElement} */ (document.querySelector("#button-analysis-expense")),
+        analysisIncomeButton: /** @type {HTMLButtonElement} */ (document.querySelector("#button-analysis-income")),
+        analysisMonth: /** @type {HTMLElement} */ (document.querySelector("#mobile-analysis-month")),
+        analysisTotalLabel: /** @type {HTMLElement} */ (document.querySelector("#mobile-analysis-total-label")),
+        analysisTotal: /** @type {HTMLElement} */ (document.querySelector("#mobile-analysis-total")),
+        analysisChart: /** @type {HTMLElement} */ (document.querySelector("#mobile-analysis-chart")),
+        analysisList: /** @type {HTMLElement} */ (document.querySelector("#mobile-analysis-list"))
     }
 
     /**
