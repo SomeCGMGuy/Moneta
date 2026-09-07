@@ -1,4 +1,4 @@
-const CACHE_NAME = 'moneta-shell-v2.0.17';
+const CACHE_NAME = 'moneta-shell-v2.0.18';
 const APP_SHELL = [
   './',
   './index.html',
@@ -40,7 +40,7 @@ const APP_SHELL = [
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
+  event.waitUntil(precacheFreshShell());
   self.skipWaiting();
 });
 
@@ -60,6 +60,16 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(networkFirst(event.request));
 });
+
+async function precacheFreshShell() {
+  const cache = await caches.open(CACHE_NAME);
+  await Promise.all(APP_SHELL.map(async (path) => {
+    const request = new Request(path, { cache: 'no-store' });
+    const response = await fetch(request);
+    if (!response.ok) throw new Error(`App-Datei konnte nicht geladen werden: ${path}`);
+    await cache.put(new Request(path), response);
+  }));
+}
 
 async function networkFirst(request) {
   const cache = await caches.open(CACHE_NAME);

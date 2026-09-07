@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.18 – 2026-09-07
+
+- Beim Öffnen von Moneta erscheint einmal pro Browsersitzung ein eigener Installationshinweis, sofern die PWA noch nicht installiert ist und der Browser einen nativen Installationsdialog anbietet.
+- Der Hinweis kann direkt zur PWA-Installation führen oder mit „Später“ geschlossen werden; bereits installierte PWAs werden weiterhin erkannt und nicht erneut gefragt.
+- Die Update-Logik prüft beim Start mit einer cachefreien Versionsabfrage, ob auf dem Server bereits eine neuere Moneta-Version liegt, und stößt dann automatisch einen frischen App-Reload an.
+- Beim Neuaufbau des Service-Worker-Caches werden sämtliche App-Dateien jetzt ausdrücklich mit `cache: no-store` vom Server geladen, statt möglicherweise alte Brave-HTTP-Cache-Einträge erneut in den PWA-Cache zu übernehmen.
+- Dadurch sollen künftige Git-Updates ohne manuelles Löschen des Brave-Caches übernommen werden; lokale Buchungen, Kategorien, Budgets und Einstellungen bleiben dabei erhalten.
+- Service-Worker-Cache und Versionsanzeige auf Version 2.0.18 angehoben.
+
 ## 2.0.17 – 2026-09-07
 
 - Unter Einstellungen → App einen eigenen „App installieren“-Bereich ergänzt.

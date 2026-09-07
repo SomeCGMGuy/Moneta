@@ -1,9 +1,14 @@
+import { APP_VERSION } from './version.js';
+
 const REFRESH_PARAM = 'moneta-refresh';
 const APP_CACHE_PREFIX = 'moneta-shell-';
+const UPDATE_TARGET_KEY = 'moneta-update-target';
 
 const initialUrl = new URL(location.href);
 if (initialUrl.searchParams.has(REFRESH_PARAM)) {
   finishForcedReload(initialUrl);
+} else {
+  setTimeout(checkForAppUpdate, 900);
 }
 
 document.addEventListener('click', (event) => {
@@ -14,14 +19,20 @@ document.addEventListener('click', (event) => {
 
 async function refreshApp(button) {
   if (button.disabled) return;
+  await forceFreshReload(button);
+}
 
-  const originalLabel = button.textContent;
-  button.disabled = true;
-  button.textContent = 'Aktualisiere …';
+async function forceFreshReload(button = null, targetVersion = null) {
+  const originalLabel = button?.textContent;
+  if (button) {
+    button.disabled = true;
+    button.textContent = 'Aktualisiere …';
+  }
 
   try {
     sessionStorage.setItem('moneta-manual-refresh', '1');
     sessionStorage.setItem('moneta-sw-reloaded', '1');
+    if (targetVersion) sessionStorage.setItem(UPDATE_TARGET_KEY, targetVersion);
 
     if ('caches' in window) {
       const keys = await caches.keys();
@@ -44,9 +55,37 @@ async function refreshApp(button) {
     console.warn('App-Aktualisierung:', error);
     sessionStorage.removeItem('moneta-manual-refresh');
     sessionStorage.removeItem('moneta-sw-reloaded');
-    button.disabled = false;
-    button.textContent = originalLabel;
+    if (button) {
+      button.disabled = false;
+      button.textContent = originalLabel;
+    }
     location.reload();
+  }
+}
+
+async function checkForAppUpdate() {
+  if (location.protocol === 'file:') return;
+
+  try {
+    const versionUrl = new URL('./js/version.js', location.href);
+    versionUrl.searchParams.set('moneta-update-check', Date.now().toString());
+    const response = await fetch(versionUrl.href, { cache: 'no-store' });
+    if (!response.ok) return;
+
+    const source = await response.text();
+    const match = source.match(/APP_VERSION\s*=\s*['\"]([^'\"]+)['\"]/);
+    const remoteVersion = match?.[1];
+    if (!remoteVersion) return;
+
+    if (remoteVersion === APP_VERSION) {
+      sessionStorage.removeItem(UPDATE_TARGET_KEY);
+      return;
+    }
+
+    if (sessionStorage.getItem(UPDATE_TARGET_KEY) === remoteVersion) return;
+    await forceFreshReload(null, remoteVersion);
+  } catch (error) {
+    console.warn('Update-Prüfung:', error);
   }
 }
 
@@ -72,6 +111,6 @@ async function waitForController() {
     new Promise((resolve) => {
       navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true });
     }),
-    new Promise((resolve) => setTimeout(resolve, 2500))
+    new Promise((resolve) => setTimeout(resolve, 3000))
   ]);
 }
