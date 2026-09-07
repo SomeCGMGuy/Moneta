@@ -117,6 +117,22 @@
 }
 .field textarea { min-height: 88px; padding-top: 12px; resize: vertical; }
 .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--forest-700); box-shadow: 0 0 0 3px var(--focus-ring); }
+.booking-title-autocomplete { position: relative; min-width: 0; }
+.booking-title-suggestions {
+  position: absolute; z-index: 12; top: calc(100% + 6px); left: 0; right: 0;
+  max-height: min(240px, 34vh); overflow-y: auto; overscroll-behavior: contain;
+  background: var(--surface-strong); border: 1px solid var(--border); border-radius: 14px;
+  box-shadow: var(--shadow); padding: 4px;
+}
+.booking-title-suggestions[hidden] { display: none; }
+.booking-title-suggestion {
+  width: 100%; min-height: 48px; padding: 8px 10px; border: 0; border-radius: 11px;
+  background: transparent; color: var(--text); text-align: left; display: grid; gap: 2px;
+  -webkit-tap-highlight-color: transparent;
+}
+.booking-title-suggestion span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+.booking-title-suggestion small { color: var(--text-muted); font-size: .72rem; }
+.booking-title-suggestion:active { background: var(--forest-050); }
 .segmented { display: grid; grid-template-columns: 1fr 1fr; padding: 4px; background: var(--surface-muted); border-radius: 14px; }
 .segmented button { border: 0; background: transparent; border-radius: 11px; min-height: 42px; font-weight: 700; color: var(--text-muted); }
 .segmented button.active { background: var(--surface-strong); color: var(--forest-950); box-shadow: var(--shadow-soft); }
@@ -177,6 +193,7 @@
 
 @media (hover: hover) {
   .booking-row:hover, .category-row:hover, .analysis-row-button:hover, .chart-legend-item:hover { background: var(--forest-050); }
+  .booking-title-suggestion:hover { background: var(--forest-050); }
 }
 @media (min-width: 680px) {
   .metric-grid { grid-template-columns: repeat(4, minmax(0,1fr)); }
@@ -187,6 +204,7 @@
   .theme-setting { grid-template-columns: 1fr; }
   .theme-segmented { min-width: 0; }
   .backup-actions .btn { flex: 1 1 180px; }
+  .booking-title-suggestions { max-height: min(208px, 30vh); }
 }
 @media (max-width: 420px) {
   .category-form-grid { grid-template-columns: 78px minmax(0, 1fr); }
