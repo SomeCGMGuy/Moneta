@@ -1,7 +1,11 @@
 import { mountPushPage } from './push-page.js';
 
+const CATEGORY_ICONS = ['🛒','🍽️','☕','🏠','⚡','🚗','⛽','🚌','🛍️','🎬','🎮','💊','🏥','✈️','🎁','🐾','📱','💻','💰','💼','📈','🏦','🎓','🧾'];
+
 export function showCategoryForm({ category = null, initialType = 'expense' }) {
   const type = category?.type ?? initialType;
+  const selectedIcon = category?.icon ?? '';
+  const icons = selectedIcon && !CATEGORY_ICONS.includes(selectedIcon) ? [selectedIcon, ...CATEGORY_ICONS] : CATEGORY_ICONS;
   const layer = document.createElement('div');
   layer.className = 'push-page-layer';
   layer.innerHTML = `
@@ -14,21 +18,23 @@ export function showCategoryForm({ category = null, initialType = 'expense' }) {
       <form class="push-page-form">
         <div class="push-page-content">
           <input type="hidden" name="type" value="${type}" />
+          <input type="hidden" name="icon" value="${escapeAttr(selectedIcon)}" />
           <div class="segmented" aria-label="Kategorietyp">
             <button type="button" data-type="expense" class="${type === 'expense' ? 'active' : ''}">Ausgabe</button>
             <button type="button" data-type="income" class="${type === 'income' ? 'active' : ''}">Einnahme</button>
           </div>
-          <div class="category-form-grid">
-            <div class="field category-icon-field">
-              <label for="category-icon">Icon</label>
-              <input id="category-icon" name="icon" maxlength="16" value="${escapeAttr(category?.icon ?? '')}" placeholder="z. B. ☕" autocomplete="off" />
+          <div class="field">
+            <label>Icon</label>
+            <div class="category-icon-picker" role="radiogroup" aria-label="Kategorie-Icon auswählen">
+              ${icons.map((icon) => `<button type="button" class="category-icon-option${icon === selectedIcon ? ' selected' : ''}" data-category-icon="${escapeAttr(icon)}" role="radio" aria-checked="${icon === selectedIcon ? 'true' : 'false'}">${escapeHtml(icon)}</button>`).join('')}
             </div>
-            <div class="field">
-              <label for="category-name">Name</label>
-              <input id="category-name" name="name" maxlength="50" required value="${escapeAttr(category?.name ?? '')}" placeholder="z. B. Café" autocomplete="off" />
-            </div>
+            <button type="button" class="category-icon-clear" data-category-icon-clear ${selectedIcon ? '' : 'hidden'}>Kein Icon</button>
           </div>
-          <p class="form-hint">Einnahmen und Ausgaben haben getrennte Kategorien. Das Icon ist optional.</p>
+          <div class="field">
+            <label for="category-name">Name</label>
+            <input id="category-name" name="name" maxlength="50" required value="${escapeAttr(category?.name ?? '')}" placeholder="z. B. Café" autocomplete="off" />
+          </div>
+          <p class="form-hint">Einnahmen und Ausgaben haben getrennte Kategorien. Wähle ein Icon aus der Liste oder lasse es leer.</p>
           ${category ? '<button class="btn btn-ghost push-page-delete" type="button" data-delete>Kategorie löschen</button>' : ''}
         </div>
         <footer class="push-page-actions">
@@ -40,12 +46,35 @@ export function showCategoryForm({ category = null, initialType = 'expense' }) {
   const navigation = mountPushPage(layer, { historyKey: 'monetaCategoryPage' });
   const form = layer.querySelector('form');
   const typeInput = form.elements.type;
+  const iconInput = form.elements.icon;
+  const clearIconButton = layer.querySelector('[data-category-icon-clear]');
 
   layer.querySelectorAll('[data-type]').forEach((button) => {
     button.addEventListener('click', () => {
       typeInput.value = button.dataset.type;
       layer.querySelectorAll('[data-type]').forEach((item) => item.classList.toggle('active', item === button));
     });
+  });
+
+  layer.querySelectorAll('[data-category-icon]').forEach((button) => {
+    button.addEventListener('click', () => {
+      iconInput.value = button.dataset.categoryIcon;
+      layer.querySelectorAll('[data-category-icon]').forEach((item) => {
+        const selected = item === button;
+        item.classList.toggle('selected', selected);
+        item.setAttribute('aria-checked', selected ? 'true' : 'false');
+      });
+      clearIconButton.hidden = false;
+    });
+  });
+
+  clearIconButton.addEventListener('click', () => {
+    iconInput.value = '';
+    layer.querySelectorAll('[data-category-icon]').forEach((item) => {
+      item.classList.remove('selected');
+      item.setAttribute('aria-checked', 'false');
+    });
+    clearIconButton.hidden = true;
   });
 
   layer.querySelector('[data-back]').addEventListener('click', () => navigation.close(null));
