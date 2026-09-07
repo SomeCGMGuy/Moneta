@@ -1,4 +1,5 @@
 const monthFormat = new Intl.DateTimeFormat('de-DE', { month: 'long' });
+const SHEET_EXIT_MS = 180;
 
 export function showChoiceSheet({ title, options, selected = '', searchable = false, searchPlaceholder = 'Suchen' }) {
   return new Promise((resolve) => {
@@ -12,7 +13,15 @@ export function showChoiceSheet({ title, options, selected = '', searchable = fa
       <div class="choice-sheet-empty" data-choice-empty hidden>Keine Treffer.</div>
     </section>`;
     document.body.append(layer);
-    const close = (value = null) => { layer.remove(); document.removeEventListener('keydown', onKey); resolve(value); };
+    let closing = false;
+    const close = (value = null) => {
+      if (closing) return;
+      closing = true;
+      document.removeEventListener('keydown', onKey);
+      layer.classList.remove('open');
+      layer.classList.add('closing');
+      window.setTimeout(() => { layer.remove(); resolve(value); }, SHEET_EXIT_MS);
+    };
     const onKey = (event) => { if (event.key === 'Escape') close(null); };
     document.addEventListener('keydown', onKey);
     layer.addEventListener('click', (event) => {
@@ -35,7 +44,7 @@ export function showChoiceSheet({ title, options, selected = '', searchable = fa
 
 export function showMonthSheet({ title = 'Monat wählen', value }) {
   return new Promise((resolve) => {
-    const [initialYear, initialMonth] = String(value).split('-').map(Number);
+    const [initialYear] = String(value).split('-').map(Number);
     let year = Number.isFinite(initialYear) ? initialYear : new Date().getFullYear();
     const selected = /^\d{4}-\d{2}$/.test(value ?? '') ? value : '';
     const layer = document.createElement('div');
@@ -55,7 +64,15 @@ export function showMonthSheet({ title = 'Monat wählen', value }) {
         return `<button type="button" class="month-sheet-option${monthValue === selected ? ' selected' : ''}" data-month-value="${monthValue}">${capitalize(monthFormat.format(new Date(year, index, 1)))}</button>`;
       }).join('');
     };
-    const close = (result = null) => { layer.remove(); document.removeEventListener('keydown', onKey); resolve(result); };
+    let closing = false;
+    const close = (result = null) => {
+      if (closing) return;
+      closing = true;
+      document.removeEventListener('keydown', onKey);
+      layer.classList.remove('open');
+      layer.classList.add('closing');
+      window.setTimeout(() => { layer.remove(); resolve(result); }, SHEET_EXIT_MS);
+    };
     const onKey = (event) => { if (event.key === 'Escape') close(null); };
     document.addEventListener('keydown', onKey);
     layer.addEventListener('click', (event) => {

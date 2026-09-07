@@ -1,4 +1,5 @@
 const PREVIEW_LIMIT = 5;
+const FINANCIAL_SHEET_EXIT_MS = 180;
 
 document.addEventListener('input', (event) => {
   const input = event.target.closest('[data-category-search]');
@@ -38,7 +39,7 @@ document.addEventListener('click', (event) => {
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeFinancialStartSheet(); });
 
 function openFinancialStartSheet() {
-  closeFinancialStartSheet();
+  document.querySelector('[data-financial-sheet-backdrop]')?.remove();
   const current = Number(document.querySelector('[data-financial-start]')?.value || 28);
   const sheet = document.createElement('div');
   sheet.className = 'financial-sheet-backdrop';
@@ -55,7 +56,11 @@ function openFinancialStartSheet() {
 }
 
 function closeFinancialStartSheet() {
-  document.querySelector('[data-financial-sheet-backdrop]')?.remove();
+  const sheet = document.querySelector('[data-financial-sheet-backdrop]');
+  if (!sheet || sheet.classList.contains('closing')) return;
+  sheet.classList.remove('open');
+  sheet.classList.add('closing');
+  window.setTimeout(() => sheet.remove(), FINANCIAL_SHEET_EXIT_MS);
 }
 
 function updateCategoryGroup(type, value) {
