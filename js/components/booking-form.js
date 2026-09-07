@@ -1,31 +1,14 @@
 import { listCategories } from '../services/category-service.js';
-
-const TRANSITION_MS = 280;
-const HISTORY_KEY = 'monetaBookingPage';
+import { mountPushPage } from './push-page.js';
 
 export async function showBookingForm({ booking = null }) {
-  const root = document.querySelector('#modal-root');
-  const app = document.querySelector('#app');
   const type = booking?.type ?? 'expense';
   const layer = document.createElement('div');
-  layer.className = 'booking-page-layer';
+  layer.className = 'push-page-layer';
 
   const categories = await listCategories(type);
   layer.innerHTML = buildMarkup(booking, type, categories, defaultBookingDate());
-  root.append(layer);
-  app?.setAttribute('inert', '');
-  document.documentElement.classList.add('booking-page-open');
-
-  let historyEntryActive = false;
-  try {
-    const baseState = history.state && typeof history.state === 'object' ? history.state : {};
-    history.pushState({ ...baseState, [HISTORY_KEY]: true }, '', location.href);
-    historyEntryActive = true;
-  } catch (error) {
-    console.warn('Booking navigation history:', error);
-  }
-
-  requestAnimationFrame(() => requestAnimationFrame(() => layer.classList.add('entered')));
+  const navigation = mountPushPage(layer, { historyKey: 'monetaBookingPage' });
 
   const form = layer.querySelector('form');
   const typeInput = form.elements.type;
@@ -50,82 +33,38 @@ export async function showBookingForm({ booking = null }) {
 
   if (booking?.categoryId) categorySelect.value = booking.categoryId;
 
-  return new Promise((resolve) => {
-    let settled = false;
-    let pendingResult = null;
+  layer.querySelector('[data-back]').addEventListener('click', () => navigation.close(null));
+  layer.querySelector('[data-delete]')?.addEventListener('click', () => navigation.close({ deleteRequested: true, booking }));
 
-    const finishClose = async (value) => {
-      if (settled) return;
-      settled = true;
-      window.removeEventListener('popstate', onPopState);
-      document.removeEventListener('keydown', onKeyDown);
-      layer.classList.remove('entered');
-      document.documentElement.classList.add('booking-page-returning');
-      await wait(TRANSITION_MS);
-      layer.remove();
-      document.documentElement.classList.remove('booking-page-open', 'booking-page-returning');
-      app?.removeAttribute('inert');
-      resolve(value);
-    };
-
-    const requestClose = (value = null) => {
-      if (settled) return;
-      pendingResult = value;
-      if (historyEntryActive) {
-        historyEntryActive = false;
-        history.back();
-      } else {
-        finishClose(value);
-      }
-    };
-
-    const onPopState = () => {
-      if (settled) return;
-      historyEntryActive = false;
-      finishClose(pendingResult);
-    };
-
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') requestClose(null);
-    };
-
-    window.addEventListener('popstate', onPopState);
-    document.addEventListener('keydown', onKeyDown);
-    layer.querySelector('[data-back]').addEventListener('click', () => requestClose(null));
-
-    const deleteButton = layer.querySelector('[data-delete]');
-    if (deleteButton) {
-      deleteButton.addEventListener('click', () => requestClose({ deleteRequested: true, booking }));
-    }
-
-    form.addEventListener('submit', (event) => {
-      event.preventDefault();
-      const data = new FormData(form);
-      requestClose({
-        id: booking?.id,
-        type: data.get('type'),
-        amount: data.get('amount'),
-        categoryId: data.get('categoryId'),
-        title: data.get('title'),
-        note: data.get('note'),
-        date: data.get('date')
-      });
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const data = new FormData(form);
+    navigation.close({
+      id: booking?.id,
+      type: data.get('type'),
+      amount: data.get('amount'),
+      categoryId: data.get('categoryId'),
+      title: data.get('title'),
+      note: data.get('note'),
+      date: data.get('date')
     });
   });
+
+  return navigation.promise;
 }
 
 function buildMarkup(booking, type, categories, defaultDate) {
   const title = booking ? 'Buchung bearbeiten' : 'Neue Buchung';
   return `
-    <section class="booking-page" role="dialog" aria-modal="true" aria-labelledby="booking-page-title">
-      <header class="booking-page-header">
-        <button class="booking-page-back" type="button" data-back aria-label="Zurück">‹</button>
+    <section class="push-page" role="dialog" aria-modal="true" aria-labelledby="booking-page-title">
+      <header class="push-page-header">
+        <button class="push-page-back" type="button" data-back aria-label="Zurück">‹</button>
         <h2 id="booking-page-title">${title}</h2>
-        <span class="booking-page-header-spacer" aria-hidden="true"></span>
+        <span class="push-page-header-spacer" aria-hidden="true"></span>
       </header>
 
-      <form class="booking-page-form">
-        <div class="booking-page-content">
+      <form class="push-page-form">
+        <div class="push-page-content">
           <input type="hidden" name="type" value="${type}" />
           <div class="segmented" aria-label="Buchungstyp">
             <button type="button" data-type="expense" class="${type === 'expense' ? 'active' : ''}">Ausgabe</button>
@@ -151,11 +90,11 @@ function buildMarkup(booking, type, categories, defaultDate) {
             <label for="booking-note">Notiz <span aria-hidden="true">·</span> optional</label>
             <textarea id="booking-note" name="note" maxlength="500" placeholder="Zusätzliche Informationen">${escapeHtml(booking?.note ?? '')}</textarea>
           </div>
-          ${booking ? '<button class="btn btn-ghost booking-page-delete" type="button" data-delete>Buchung löschen</button>' : ''}
+          ${booking ? '<button class="btn btn-ghost push-page-delete" type="button" data-delete>Buchung löschen</button>' : ''}
         </div>
 
-        <footer class="booking-page-actions">
-          <button class="btn btn-primary booking-page-save" type="submit">${booking ? 'Änderungen speichern' : 'Buchung hinzufügen'}</button>
+        <footer class="push-page-actions">
+          <button class="btn btn-primary push-page-save" type="submit">${booking ? 'Änderungen speichern' : 'Buchung hinzufügen'}</button>
         </footer>
       </form>
     </section>`;
@@ -176,7 +115,6 @@ function localIsoDate(date) {
   return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 }
 
-function wait(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
 function escapeHtml(value) {
   return String(value).replace(/[&<>'\"]/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char]));
 }

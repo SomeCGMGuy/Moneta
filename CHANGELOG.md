@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.11 – 2026-09-07
+
+- Push-Navigation auf Kategorien, Budgets und Bestätigungsdialoge erweitert, damit diese Bereiche wie eigene App-Seiten statt klassische Modals erscheinen.
+- Android-System-Zurück funktioniert damit auch in diesen Ansichten konsistent wie der Zurück-Pfeil in der Kopfzeile.
+- Die Push-Animation wurde von 280 ms auf 190 ms verkürzt und startet beim Schließen sofort, statt erst auf den History-Rücksprung zu warten.
+- Hintergrund-Parallax und Abdunklung reduziert sowie die Animation auf GPU-freundliche translate3d-Transformationen umgestellt, damit das Zurückfahren flüssiger und weniger wie ein Hänger wirkt.
+- Gemeinsame Push-Navigationslogik zentralisiert und Service-Worker-Cache sowie Versionsanzeige auf 2.0.11 angehoben.
+
 ## 2.0.10 – 2026-09-07
 
 - Die Android-System-Zurücktaste ist jetzt mit der neuen Transaktionsnavigation verknüpft.

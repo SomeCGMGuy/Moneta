@@ -1,3 +1,5 @@
+import { mountPushPage } from '../components/push-page.js';
+
 const money = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
 
 export function renderBudgets({ budgets, bookings, categoryMap, month }) {
@@ -31,37 +33,40 @@ export function renderBudgets({ budgets, bookings, categoryMap, month }) {
 }
 
 export function showBudgetForm({ budget = null, categories, month }) {
-  const root = document.querySelector('#modal-root');
-  const backdrop = document.createElement('div');
-  backdrop.className = 'modal-backdrop';
-  backdrop.innerHTML = `
-    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="budget-modal-title">
-      <div class="modal-header"><h2 id="budget-modal-title">${budget ? 'Budget bearbeiten' : 'Budget hinzufügen'}</h2><button class="icon-btn" type="button" data-close>×</button></div>
-      <form class="form-grid">
-        <div class="field"><label>Kategorie</label><select name="categoryId" required>${categories.map(c => `<option value="${c.id}">${escapeHtml(c.icon)} ${escapeHtml(c.name)}</option>`).join('')}</select></div>
-        <div class="field"><label>Monat</label><input name="month" type="month" required value="${budget?.month ?? month}" /></div>
-        <div class="field"><label>Limit</label><input name="limit" type="number" min="0.01" step="0.01" required value="${budget?.limit ?? ''}" placeholder="300,00" /></div>
-        <div class="form-actions">
-          ${budget ? '<button class="btn btn-ghost" style="color:var(--danger)" type="button" data-delete>Budget löschen</button>' : ''}
-          <div class="form-actions-right"><button class="btn btn-secondary" type="button" data-cancel>Abbrechen</button><button class="btn btn-primary" type="submit">Speichern</button></div>
+  const layer = document.createElement('div');
+  layer.className = 'push-page-layer';
+  layer.innerHTML = `
+    <section class="push-page" role="dialog" aria-modal="true" aria-labelledby="budget-page-title">
+      <header class="push-page-header">
+        <button class="push-page-back" type="button" data-back aria-label="Zurück">‹</button>
+        <h2 id="budget-page-title">${budget ? 'Budget bearbeiten' : 'Budget hinzufügen'}</h2>
+        <span class="push-page-header-spacer" aria-hidden="true"></span>
+      </header>
+      <form class="push-page-form">
+        <div class="push-page-content">
+          <div class="field"><label for="budget-category">Kategorie</label><select id="budget-category" name="categoryId" required>${categories.map(c => `<option value="${c.id}">${escapeHtml(c.icon)} ${escapeHtml(c.name)}</option>`).join('')}</select></div>
+          <div class="field"><label for="budget-month">Monat</label><input id="budget-month" name="month" type="month" required value="${budget?.month ?? month}" /></div>
+          <div class="field"><label for="budget-limit">Limit</label><input id="budget-limit" name="limit" inputmode="decimal" type="number" min="0.01" step="0.01" required value="${budget?.limit ?? ''}" placeholder="300,00" /></div>
+          ${budget ? '<button class="btn btn-ghost push-page-delete" type="button" data-delete>Budget löschen</button>' : ''}
         </div>
+        <footer class="push-page-actions">
+          <button class="btn btn-primary push-page-save" type="submit">${budget ? 'Änderungen speichern' : 'Budget hinzufügen'}</button>
+        </footer>
       </form>
     </section>`;
-  root.append(backdrop);
-  if (budget) backdrop.querySelector('select[name="categoryId"]').value = budget.categoryId;
 
-  return new Promise((resolve) => {
-    const close = (value) => { backdrop.remove(); resolve(value); };
-    backdrop.querySelector('[data-close]').addEventListener('click', () => close(null));
-    backdrop.querySelector('[data-cancel]').addEventListener('click', () => close(null));
-    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) close(null); });
-    backdrop.querySelector('[data-delete]')?.addEventListener('click', () => close({ delete: true, id: budget.id }));
-    backdrop.querySelector('form').addEventListener('submit', (event) => {
-      event.preventDefault();
-      const fd = new FormData(event.currentTarget);
-      close({ id: budget?.id, month: fd.get('month'), categoryId: fd.get('categoryId'), limit: fd.get('limit') });
-    });
+  if (budget) layer.querySelector('select[name="categoryId"]').value = budget.categoryId;
+  const navigation = mountPushPage(layer, { historyKey: 'monetaBudgetPage' });
+
+  layer.querySelector('[data-back]').addEventListener('click', () => navigation.close(null));
+  layer.querySelector('[data-delete]')?.addEventListener('click', () => navigation.close({ delete: true, id: budget.id }));
+  layer.querySelector('form').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const fd = new FormData(event.currentTarget);
+    navigation.close({ id: budget?.id, month: fd.get('month'), categoryId: fd.get('categoryId'), limit: fd.get('limit') });
   });
+
+  return navigation.promise;
 }
 
-function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char])); }
+function escapeHtml(value) { return String(value).replace(/[&<>'\"]/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char])); }
