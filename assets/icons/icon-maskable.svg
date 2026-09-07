@@ -1,8 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Moneta Maskable Icon">
-  <rect width="512" height="512" fill="#214b3b"/>
-  <g transform="translate(76.8 76.8) scale(.7)">
-    <circle cx="256" cy="256" r="157" fill="#f3e8c8"/>
-    <circle cx="256" cy="256" r="126" fill="none" stroke="#214b3b" stroke-width="18" opacity="0.85"/>
-    <path d="M152 342V170h46l58 82 58-82h46v172h-46V242l-58 78-58-78v100z" fill="#214b3b"/>
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#3d9660"/><stop offset="1" stop-color="#0d4a32"/></linearGradient></defs>
+  <rect width="512" height="512" fill="url(#g)"/>
+  <g fill="#fff">
+    <rect x="151" y="292" width="50" height="76" rx="16"/>
+    <rect x="231" y="237" width="50" height="131" rx="16"/>
+    <rect x="311" y="171" width="50" height="197" rx="16"/>
   </g>
 </svg>
