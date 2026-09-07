@@ -4,7 +4,7 @@ const slides = [
   { icon: 'M', eyebrow: 'Willkommen', title: 'Deine Finanzen. Klar im Blick.', text: 'Moneta bringt Buchungen, Budgets und Auswertungen an einen Ort – ruhig, übersichtlich und für den Alltag gemacht.', note: 'Deine Finanzdaten bleiben lokal auf diesem Gerät.' },
   { icon: '↕', eyebrow: 'Buchungen', title: 'Einnahmen und Ausgaben im Griff.', text: 'Erfasse Buchungen, finde sie über die Suche wieder und nutze Kategorien. Wiederkehrende Buchungen fließen schon vorab als geplante Werte in deine Übersicht ein.', note: 'Geplante Buchungen erkennst du an der reduzierten Darstellung.' },
   { icon: '31', eyebrow: 'Finanzmonat', title: 'Ein Monat, der zu deinem Geldfluss passt.', text: 'Wenn Gehalt und Fixkosten nicht zum Kalendermonat passen, legst du deinen eigenen Starttag fest. Salden und Statistiken folgen dann deinem tatsächlichen Zahlungsrhythmus.', note: 'Jederzeit unter Einstellungen → Auswertung änderbar.' },
-  { icon: '✓', eyebrow: 'Bereit', title: 'Moneta ist startklar.', text: 'Deine Daten werden lokal gespeichert. Mit Backup & Wiederherstellung kannst du sie zusätzlich sichern und später wieder einspielen.', note: 'Die Einführung kannst du jederzeit in den Einstellungen erneut öffnen.' }
+  { icon: '✓', eyebrow: 'Bereit', title: 'Moneta ist startklar.', text: 'Deine Finanzdaten werden lokal gespeichert. Nach dem ersten vollständigen Laden kannst du Moneta auch ohne Internetverbindung weiter nutzen.', note: 'Mit Backup & Wiederherstellung kannst du deine Daten zusätzlich sichern.' }
 ];
 
 export function onboardingCompleted() { try { return localStorage.getItem(STORAGE_KEY) === '1'; } catch { return false; } }
