@@ -7,8 +7,10 @@ import {
   deleteCategory,
   getCategoryUsage
 } from './services/category-service.js';
-import { listBookingsForMonth, saveBooking, deleteBooking, getBooking } from './services/booking-service.js';
+import { listBookings, saveBooking, deleteBooking, getBooking } from './services/booking-service.js';
 import { listBudgetsForMonth, saveBudget, deleteBudget } from './services/budget-service.js';
+import { getSetting, setSetting } from './services/settings-service.js';
+import { createBackup, downloadBackup, parseBackup, restoreBackup, summarizeBackup } from './services/backup-service.js';
 import { renderOverview } from './views/overview.js';
 import { renderAnalysis } from './views/analysis.js';
 import { renderBudgets, showBudgetForm } from './views/budgets.js';
@@ -23,8 +25,12 @@ const state = {
   view: location.hash.replace('#/', '') || 'overview',
   month: currentMonth(),
   bookings: [],
+  allBookings: [],
   budgets: [],
-  categoryMap: new Map()
+  categoryMap: new Map(),
+  analysisRange: 'month',
+  analysisCategoryId: null,
+  theme: 'light'
 };
 
 let viewRoot;
@@ -34,13 +40,26 @@ await bootstrap();
 
 async function bootstrap() {
   await ensureDefaultCategories();
+  state.theme = normalizeTheme(await getSetting('theme', localStorage.getItem('moneta-theme') || 'light'));
+  applyTheme(state.theme, false);
   await reloadData();
   mountShell();
   bindGlobalEvents();
   render();
 
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-    navigator.serviceWorker.register('./service-worker.js').catch((error) => console.warn('Service Worker:', error));
+    const hadController = Boolean(navigator.serviceWorker.controller);
+    if (hadController) {
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (sessionStorage.getItem('moneta-sw-reloaded') === '1') return;
+        sessionStorage.setItem('moneta-sw-reloaded', '1');
+        location.reload();
+      }, { once: true });
+    }
+
+    navigator.serviceWorker.register('./service-worker.js', { updateViaCache: 'none' })
+      .then((registration) => registration.update())
+      .catch((error) => console.warn('Service Worker:', error));
   }
 }
 
@@ -52,11 +71,15 @@ function mountShell() {
 }
 
 async function reloadData() {
-  [state.bookings, state.budgets, state.categoryMap] = await Promise.all([
-    listBookingsForMonth(state.month),
+  const [allBookings, budgets, categoryMap] = await Promise.all([
+    listBookings(),
     listBudgetsForMonth(state.month),
     getCategoryMap()
   ]);
+  state.allBookings = allBookings;
+  state.bookings = allBookings.filter((row) => row.date.slice(0, 7) === state.month);
+  state.budgets = budgets;
+  state.categoryMap = categoryMap;
 }
 
 function render() {
@@ -98,8 +121,48 @@ function bindGlobalEvents() {
     const monthButton = event.target.closest('[data-month]');
     if (monthButton) {
       state.month = shiftMonth(state.month, monthButton.dataset.month === 'next' ? 1 : -1);
+      state.analysisCategoryId = null;
       await reloadData();
       render();
+      return;
+    }
+
+    const analysisRange = event.target.closest('[data-analysis-range]');
+    if (analysisRange) {
+      state.analysisRange = analysisRange.dataset.analysisRange;
+      state.analysisCategoryId = null;
+      render();
+      return;
+    }
+
+    const analysisCategory = event.target.closest('[data-analysis-category]');
+    if (analysisCategory) {
+      const categoryId = analysisCategory.dataset.analysisCategory || null;
+      state.analysisCategoryId = state.analysisCategoryId === categoryId ? null : categoryId;
+      render();
+      return;
+    }
+
+    const themeChoice = event.target.closest('[data-theme-choice]');
+    if (themeChoice) {
+      const theme = normalizeTheme(themeChoice.dataset.themeChoice);
+      state.theme = theme;
+      await applyTheme(theme, true);
+      render();
+      return;
+    }
+
+    if (event.target.closest('[data-backup-export]')) {
+      try {
+        downloadBackup(await createBackup());
+      } catch (error) {
+        alert(error.message ?? 'Das Backup konnte nicht erstellt werden.');
+      }
+      return;
+    }
+
+    if (event.target.closest('[data-backup-import]')) {
+      app.querySelector('[data-backup-file]')?.click();
       return;
     }
 
@@ -132,6 +195,36 @@ function bindGlobalEvents() {
     if (categoryEdit) {
       const category = await getCategory(categoryEdit.dataset.categoryEdit);
       if (category) await openCategoryForm(category, category.type);
+    }
+  });
+
+  app.addEventListener('change', async (event) => {
+    const input = event.target.closest('[data-backup-file]');
+    if (!input?.files?.[0]) return;
+    const file = input.files[0];
+    input.value = '';
+
+    try {
+      const backup = parseBackup(await file.text());
+      const counts = summarizeBackup(backup);
+      const confirmed = await showConfirmDialog({
+        title: 'Backup wiederherstellen?',
+        message: `Das Backup enthält ${counts.bookings} Buchungen, ${counts.categories} Kategorien und ${counts.budgets} Budgets. Deine aktuellen Moneta-Daten werden vollständig ersetzt.`,
+        confirmLabel: 'Daten ersetzen',
+        danger: true
+      });
+      if (!confirmed) return;
+
+      await restoreBackup(backup);
+      await ensureDefaultCategories();
+      state.theme = normalizeTheme(await getSetting('theme', 'light'));
+      applyTheme(state.theme, false);
+      state.analysisCategoryId = null;
+      await reloadData();
+      render();
+      alert('Das Moneta-Backup wurde vollständig wiederhergestellt.');
+    } catch (error) {
+      alert(error.message ?? 'Das Backup konnte nicht importiert werden.');
     }
   });
 
@@ -240,6 +333,18 @@ async function openCategoryForm(category = null, initialType = 'expense') {
 
   await reloadData();
   render();
+}
+
+async function applyTheme(theme, persist) {
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = theme;
+  localStorage.setItem('moneta-theme', theme);
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#101b17' : '#214b3b');
+  if (persist) await setSetting('theme', theme);
+}
+
+function normalizeTheme(value) {
+  return value === 'dark' ? 'dark' : 'light';
 }
 
 function currentMonth() {

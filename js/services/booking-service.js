@@ -12,7 +12,7 @@ function normalizeAmount(amount) {
 
 export async function listBookings() {
   const rows = await getAll('bookings');
-  return rows.sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+  return rows.sort((a, b) => (b.date ?? '').localeCompare(a.date ?? '') || (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
 }
 
 export async function listBookingsForMonth(month) {

@@ -1,33 +1,61 @@
-# Moneta 2.0.1
+# Moneta 2.0.2
 
-Lokale PWA für **Finanzanalyse und Budgetplanung**. Neu aufgebaut als bewusst schlanke Plain-JavaScript-Anwendung mit IndexedDB.
+Lokale PWA für **Finanzanalyse und Budgetplanung**. Bewusst schlank als Plain-JavaScript-Anwendung mit IndexedDB, ohne Framework, Cloud oder Build-Pipeline.
 
-## Enthalten
+## Neu in 2.0.2
+
+- Vollständiger JSON-Backup-Export für Buchungen, Kategorien, Budgets und Einstellungen
+- Wiederherstellungs-Import mit Prüfung und ausdrücklicher Bestätigung vor dem Ersetzen der lokalen Daten
+- Backup-Metadaten mit App- und Formatversion für spätere Kompatibilität
+- Erweiterte Analyse mit Zeitraumwahl: Monat, letztes Quartal, dieses Jahr und letztes Jahr
+- Anklickbare Kategorien mit Buchungs-Drilldown
+- Animiertes Donutdiagramm, Fortschrittsbalken und monatlicher Ausgabenverlauf
+- Hell-/Dunkelmodus, lokal gespeichert und ebenfalls im Backup enthalten
+- „Über Moneta“ auf die Versionsanzeige reduziert
+- Mobile Tap-Highlights in Navigation und Buchungslisten entfernt; stattdessen dezentes App-Feedback
+- Lange Buchungstexte bleiben sicher im Textbereich und überlagern den Betrag nicht mehr
+- Service Worker auf Network-first umgestellt, damit neue Releases online schneller den aktuellen Stand laden und offline weiterhin aus dem Cache funktionieren
+- Visuelle Referenzdateien unter `docs/mockups/`
+
+## Grundfunktionen
 
 - Übersicht mit Einnahmen, Ausgaben, Saldo und Monatswechsel
-- Buchungen anlegen und bearbeiten
-- Einnahmen- und Ausgabenkategorien getrennt und direkt in den Einstellungen verwaltbar
-- Buchungen nur nach zusätzlicher Bestätigung löschen
-- Kategorieanalyse der Ausgaben mit Kreis-/Donutdiagramm
+- Buchungen anlegen, bearbeiten und nach zusätzlicher Bestätigung löschen
+- Einnahmen- und Ausgabenkategorien getrennt verwalten
+- Kategorieanalyse der Ausgaben mit Donutdiagramm
 - Monatsbudgets pro Ausgabenkategorie
 - IndexedDB als lokale Datenbank
-- PWA-Manifest und Service Worker für Offline-App-Shell
+- PWA-Manifest und Service Worker für Offline-Nutzung
 - Moneta-Icon im reduzierten Münzstil
-- Kein Framework, keine Cloud, keine Build-Pipeline notwendig
 
 ## Starten
 
-ES-Module und Service Worker sollten über HTTP geladen werden. Im Projektordner z. B.:
+ES-Module und Service Worker sollten über HTTP geladen werden. Im Projektordner zum Beispiel:
 
 ```bash
 python -m http.server 8080
 ```
 
-Dann im Browser öffnen:
+Danach im Browser öffnen:
 
 ```text
 http://localhost:8080
 ```
+
+Für GitHub Pages kann der Inhalt des Projektordners direkt als statische Website veröffentlicht werden.
+
+## Datensicherung
+
+Unter **Einstellungen → Datensicherung** kann ein vollständiges Backup als JSON-Datei exportiert werden. Der Import ersetzt nach einer Sicherheitsabfrage den aktuellen lokalen Datenbestand atomar durch den Inhalt der Sicherung.
+
+Enthalten sind die IndexedDB-Stores:
+
+- `bookings`
+- `categories`
+- `budgets`
+- `settings`
+
+Das Backupformat enthält zusätzlich `appVersion`, `formatVersion` und `exportedAt`.
 
 ## Datenmodell
 
@@ -59,15 +87,10 @@ http://localhost:8080
 
 ### settings
 
-Vorbereitet für spätere lokale Einstellungen.
+Key-/Value-Einstellungen, aktuell unter anderem das gewählte Farbschema.
 
 Saldo, Summen und Analysewerte werden bewusst **nicht** gespeichert, sondern aus den Buchungen berechnet.
 
-## Nächste sinnvolle Schritte
+## Visuelle Referenz
 
-1. Kategorien sortieren/archivieren
-2. Wiederkehrende Buchungen
-3. Datenexport/-import als JSON
-4. Backup-/Restore-Workflow
-5. Erweiterte Analysen und Monatsvergleiche
-6. Optional CSV-Import mit Vorschau
+Die vereinbarte Designsprache ist als statische Referenz unter `docs/mockups/` im Release enthalten. Diese Dateien enthalten nur Beispieldaten und dienen bei späteren Änderungen zum visuellen Abgleich mit dem Soll-Zustand.

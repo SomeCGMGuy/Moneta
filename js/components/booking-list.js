@@ -10,9 +10,9 @@ export function renderBookingList(bookings, categoryMap) {
     const category = categoryMap.get(booking.categoryId) ?? { name: 'Unbekannt', icon: '•' };
     const sign = booking.type === 'expense' ? '−' : '+';
     return `
-      <button class="booking-row" type="button" data-booking-id="${booking.id}">
+      <button class="booking-row" type="button" data-booking-id="${escapeAttr(booking.id)}">
         <span class="booking-icon" aria-hidden="true">${escapeHtml(category.icon ?? '•')}</span>
-        <span>
+        <span class="booking-copy">
           <span class="booking-title">${escapeHtml(booking.title)}</span>
           <span class="booking-meta">${escapeHtml(category.name)} · ${date.format(new Date(`${booking.date}T12:00:00`))}</span>
         </span>
@@ -24,3 +24,4 @@ export function renderBookingList(bookings, categoryMap) {
 function escapeHtml(value) {
   return String(value).replace(/[&<>'"]/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char]));
 }
+function escapeAttr(value) { return escapeHtml(value); }
