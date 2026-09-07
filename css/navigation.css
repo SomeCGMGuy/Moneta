@@ -1,5 +1,6 @@
 :root {
-  --push-nav-duration: 190ms;
+  --push-nav-duration: 260ms;
+  --motion-standard: cubic-bezier(.2, 0, 0, 1);
 }
 
 html.push-page-open,
@@ -9,13 +10,14 @@ html.push-page-open body {
 }
 
 html.push-page-open #view-root {
-  transform: translateX(-16%);
-  opacity: .82;
-  transition: transform var(--push-nav-duration) cubic-bezier(.2,.75,.25,1), opacity var(--push-nav-duration) ease;
+  transform: translateX(-7%) scale(.985);
+  opacity: .9;
+  transition: transform var(--push-nav-duration) var(--motion-standard), opacity 180ms linear;
+  transform-origin: center left;
 }
 
 html.push-page-returning #view-root {
-  transform: translateX(0);
+  transform: translateX(0) scale(1);
   opacity: 1;
 }
 
@@ -33,15 +35,15 @@ html.push-page-returning #bottom-nav-root {
   margin-inline: auto;
   background: var(--bg);
   transform: translate3d(100%, 0, 0);
-  transition: transform var(--push-nav-duration) cubic-bezier(.2,.75,.25,1), box-shadow var(--push-nav-duration) ease;
-  box-shadow: -8px 0 24px rgb(0 0 0 / 0);
+  transition: transform var(--push-nav-duration) var(--motion-standard), box-shadow 220ms ease-out;
+  box-shadow: -10px 0 28px rgb(0 0 0 / 0);
   will-change: transform;
   contain: layout paint;
 }
 
 .push-page-layer.entered {
   transform: translate3d(0, 0, 0);
-  box-shadow: -8px 0 24px rgb(0 0 0 / .10);
+  box-shadow: -10px 0 28px rgb(0 0 0 / .12);
 }
 
 .push-page {
@@ -99,7 +101,7 @@ html.push-page-returning #bottom-nav-root {
   -webkit-tap-highlight-color: transparent;
 }
 
-.push-page-back:active { opacity: .6; }
+.push-page-back:active { transform: scale(.92); opacity: .72; }
 .push-page-header-spacer { width: 44px; height: 44px; }
 
 .push-page-form,
@@ -166,11 +168,10 @@ html.push-page-returning #bottom-nav-root {
 }
 
 @media (min-width: 760px) {
-  .push-page-layer {
-    border-inline: 1px solid var(--border);
-  }
+  .push-page-layer { border-inline: 1px solid var(--border); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   :root { --push-nav-duration: 1ms; }
+  html.push-page-open #view-root { transform: none; opacity: 1; }
 }
