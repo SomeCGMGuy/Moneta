@@ -15,6 +15,26 @@ export function groupByCategory(bookings, type = 'expense') {
     .sort((a, b) => b.amount - a.amount);
 }
 
+export function getFinancialMonthPeriod(referenceMonth, startDay = getConfiguredStartDay()) {
+  const [year, month] = referenceMonth.split('-').map(Number);
+  const day = normalizeStartDay(startDay);
+  if (day === 1) {
+    const start = new Date(year, month - 1, 1);
+    const end = new Date(year, month, 0);
+    return periodFromDates(start, end, monthLabel(start));
+  }
+  const start = new Date(year, month - 2, day);
+  const end = new Date(year, month - 1, day - 1);
+  return periodFromDates(start, end, `${monthLabel(new Date(year, month - 1, 1))} · ${formatShortDate(start)}–${formatShortDate(end)}`);
+}
+
+export function financialMonthForDate(value, startDay = getConfiguredStartDay()) {
+  const date = parseDate(value);
+  const day = normalizeStartDay(startDay);
+  if (day > 1 && date.getDate() >= day) date.setMonth(date.getMonth() + 1);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+}
+
 export function getAnalysisPeriod(range, referenceMonth) {
   const [year, month] = referenceMonth.split('-').map(Number);
 
@@ -33,10 +53,7 @@ export function getAnalysisPeriod(range, referenceMonth) {
     return periodFromDates(new Date(year - 1, 0, 1), new Date(year - 1, 11, 31), `${year - 1}`);
   }
 
-  const start = new Date(year, month - 1, 1);
-  const end = new Date(year, month, 0);
-  const label = new Intl.DateTimeFormat('de-DE', { month: 'long', year: 'numeric' }).format(start);
-  return periodFromDates(start, end, capitalize(label));
+  return getFinancialMonthPeriod(referenceMonth);
 }
 
 export function filterBookingsForPeriod(bookings, period) {
@@ -52,11 +69,7 @@ export function monthlyExpenseSeries(bookings, period) {
 
   while (cursor <= last) {
     const key = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}`;
-    rows.push({
-      key,
-      label: new Intl.DateTimeFormat('de-DE', { month: 'short' }).format(cursor).replace('.', ''),
-      amount: 0
-    });
+    rows.push({ key, label: new Intl.DateTimeFormat('de-DE', { month: 'short' }).format(cursor).replace('.', ''), amount: 0 });
     cursor.setMonth(cursor.getMonth() + 1);
   }
 
@@ -69,19 +82,19 @@ export function monthlyExpenseSeries(bookings, period) {
   return rows;
 }
 
-function periodFromDates(start, end, label) {
-  return { start: localIsoDate(start), end: localIsoDate(end), label };
+function getConfiguredStartDay() {
+  if (localStorage.getItem('moneta-financial-month-mode') !== 'custom') return 1;
+  return normalizeStartDay(localStorage.getItem('moneta-financial-month-start'));
 }
 
-function localIsoDate(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
+function normalizeStartDay(value) {
+  const day = Number.parseInt(value, 10);
+  return Number.isFinite(day) ? Math.min(28, Math.max(1, day)) : 1;
 }
 
-function parseDate(value) {
-  return new Date(`${value}T12:00:00`);
-}
-
+function periodFromDates(start, end, label) { return { start: localIsoDate(start), end: localIsoDate(end), label }; }
+function localIsoDate(date) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; }
+function parseDate(value) { return new Date(`${value}T12:00:00`); }
+function monthLabel(date) { return capitalize(new Intl.DateTimeFormat('de-DE', { month: 'long', year: 'numeric' }).format(date)); }
+function formatShortDate(date) { return new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit' }).format(date); }
 function capitalize(value) { return value.charAt(0).toUpperCase() + value.slice(1); }
