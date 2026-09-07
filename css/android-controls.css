@@ -30,6 +30,21 @@
 .material-dialog p { margin: 10px 0 22px; color: var(--text-muted); line-height: 1.5; }
 .material-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
 .material-dialog-actions .btn { min-height: 40px; padding-inline: 14px; }
-.category-row[hidden], .choice-sheet-option[hidden] { display: none !important; }
+.category-row[hidden], .choice-sheet-option[hidden], .booking-progressive[hidden] { display: none !important; }
+.booking-toggle-row { min-height: 58px; display: grid; grid-template-columns: minmax(0,1fr) 52px; align-items: center; gap: 14px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.booking-toggle-row > span:first-child { min-width: 0; display: grid; gap: 2px; }
+.booking-toggle-row strong { color: var(--text); font-size: .94rem; }
+.booking-toggle-row small { color: var(--text-muted); font-size: .78rem; }
+.material-switch { position: absolute; opacity: 0; pointer-events: none; }
+.material-switch-track { position: relative; width: 52px; height: 32px; border: 2px solid var(--text-muted); border-radius: 999px; background: var(--surface-muted); transition: background .16s ease, border-color .16s ease; }
+.material-switch-track::after { content: ''; position: absolute; top: 50%; left: 5px; width: 20px; height: 20px; border-radius: 50%; background: var(--text-muted); transform: translateY(-50%); transition: left .16s ease, width .16s ease, height .16s ease, background .16s ease; }
+.material-switch:checked + .material-switch-track { border-color: var(--forest-900); background: var(--forest-900); }
+.material-switch:checked + .material-switch-track::after { left: 24px; width: 24px; height: 24px; background: var(--surface-strong); }
+.material-switch:focus-visible + .material-switch-track { box-shadow: 0 0 0 3px var(--focus-ring); }
+.booking-progressive { display: grid; gap: 14px; padding: 2px 0 4px; }
+.booking-fixed-actions { display: grid; grid-template-columns: minmax(0,1fr); gap: 10px; z-index: 4; }
+.booking-fixed-actions:has(.booking-footer-delete) { grid-template-columns: auto minmax(0,1fr); }
+.booking-fixed-actions .push-page-save { width: 100%; }
+.booking-footer-delete { min-width: 92px; color: var(--danger); }
 @media (max-width: 390px) { .month-sheet-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
-@media (prefers-reduced-motion: reduce) { .choice-sheet-backdrop, .choice-sheet { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .choice-sheet-backdrop, .choice-sheet, .material-switch-track, .material-switch-track::after { transition: none; } }
