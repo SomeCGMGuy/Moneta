@@ -13,6 +13,8 @@ export async function showBookingForm({ booking = null }) {
   const form = layer.querySelector('form');
   const typeInput = form.elements.type;
   const categorySelect = form.elements.categoryId;
+  const recurrenceSelect = form.elements.recurrenceFrequency;
+  const recurrenceEndField = layer.querySelector('[data-recurrence-end-field]');
 
   const refreshCategories = async (nextType) => {
     const rows = await listCategories(nextType);
@@ -25,20 +27,37 @@ export async function showBookingForm({ booking = null }) {
     layer.querySelectorAll('[data-type]').forEach((button) => button.classList.toggle('active', button.dataset.type === nextType));
     await refreshCategories(nextType);
   };
+  const updateRecurrenceVisibility = () => {
+    recurrenceEndField.hidden = recurrenceSelect.value === 'none';
+  };
+
   layer.querySelectorAll('[data-type]').forEach((button) => button.addEventListener('click', () => setType(button.dataset.type)));
+  recurrenceSelect.addEventListener('change', updateRecurrenceVisibility);
+  updateRecurrenceVisibility();
   if (booking?.categoryId) categorySelect.value = booking.categoryId;
   if (!booking) window.setTimeout(() => { if (layer.isConnected) layer.querySelector('#booking-amount')?.focus({ preventScroll: true }); }, FOCUS_DELAY_MS);
   layer.querySelector('[data-back]').addEventListener('click', () => navigation.close(null));
   layer.querySelector('[data-delete]')?.addEventListener('click', () => navigation.close({ deleteRequested: true, booking }));
   form.addEventListener('submit', (event) => {
     event.preventDefault(); const data = new FormData(form);
-    navigation.close({ id: booking?.id, type: data.get('type'), amount: data.get('amount'), categoryId: data.get('categoryId'), title: data.get('title'), note: data.get('note'), date: data.get('date') });
+    navigation.close({
+      id: booking?.id,
+      type: data.get('type'),
+      amount: data.get('amount'),
+      categoryId: data.get('categoryId'),
+      title: data.get('title'),
+      note: data.get('note'),
+      date: data.get('date'),
+      recurrenceFrequency: data.get('recurrenceFrequency'),
+      recurrenceEndDate: data.get('recurrenceEndDate')
+    });
   });
   return navigation.promise;
 }
 
 function buildMarkup(booking, type, categories, defaultDate) {
   const title = booking ? 'Buchung bearbeiten' : 'Neue Buchung';
+  const recurrenceFrequency = booking?.recurrenceFrequency ?? 'none';
   return `<section class="push-page" role="dialog" aria-modal="true" aria-labelledby="booking-page-title">
     <header class="push-page-header"><button class="push-page-back" type="button" data-back aria-label="Zurück">‹</button><h2 id="booking-page-title">${title}</h2><span class="push-page-header-spacer" aria-hidden="true"></span></header>
     <form class="push-page-form"><div class="push-page-content booking-editor">
@@ -48,10 +67,21 @@ function buildMarkup(booking, type, categories, defaultDate) {
       <div class="field booking-title-field"><label for="booking-title">Bezeichnung</label><input id="booking-title" name="title" maxlength="120" required value="${escapeAttr(booking?.title ?? '')}" placeholder="Wofür?" /></div>
       <div class="field"><label for="booking-category">Kategorie</label><select id="booking-category" name="categoryId" required>${categories.map((category) => `<option value="${escapeAttr(category.id)}">${escapeHtml(category.icon)} ${escapeHtml(category.name)}</option>`).join('')}</select></div>
       <div class="field"><label for="booking-date">Datum</label><input id="booking-date" name="date" type="date" required value="${escapeAttr(booking?.date ?? defaultDate)}" /></div>
+      <div class="field recurrence-field"><label for="booking-recurrence">Wiederholung</label><select id="booking-recurrence" name="recurrenceFrequency">
+        ${recurrenceOption('none', 'Keine', recurrenceFrequency)}
+        ${recurrenceOption('weekly', 'Wöchentlich', recurrenceFrequency)}
+        ${recurrenceOption('monthly', 'Monatlich', recurrenceFrequency)}
+        ${recurrenceOption('yearly', 'Jährlich', recurrenceFrequency)}
+      </select><p class="form-hint">Zukünftige Termine werden als Prognose in Salden und Statistiken berücksichtigt.</p></div>
+      <div class="field recurrence-end-field" data-recurrence-end-field><label for="booking-recurrence-end">Endet am <span aria-hidden="true">·</span> optional</label><input id="booking-recurrence-end" name="recurrenceEndDate" type="date" min="${escapeAttr(booking?.date ?? defaultDate)}" value="${escapeAttr(booking?.recurrenceEndDate ?? '')}" /></div>
       <div class="field"><label for="booking-note">Notiz <span aria-hidden="true">·</span> optional</label><textarea id="booking-note" name="note" maxlength="500" placeholder="Zusätzliche Informationen">${escapeHtml(booking?.note ?? '')}</textarea></div>
       ${booking ? '<button class="btn btn-ghost push-page-delete" type="button" data-delete>Buchung löschen</button>' : ''}
     </div><footer class="push-page-actions"><button class="btn btn-primary push-page-save" type="submit">${booking ? 'Änderungen speichern' : 'Buchung hinzufügen'}</button></footer></form>
   </section>`;
+}
+
+function recurrenceOption(value, label, selected) {
+  return `<option value="${value}"${value === selected ? ' selected' : ''}>${label}</option>`;
 }
 
 function defaultBookingDate() {

@@ -1,5 +1,5 @@
 export const DB_NAME = 'moneta';
-export const DB_VERSION = 1;
+export const DB_VERSION = 2;
 
 export function upgradeDatabase(db, oldVersion, transaction) {
   if (oldVersion < 1) {
@@ -16,5 +16,12 @@ export function upgradeDatabase(db, oldVersion, transaction) {
     budgets.createIndex('categoryId', 'categoryId');
 
     db.createObjectStore('settings', { keyPath: 'key' });
+  }
+
+  if (oldVersion < 2) {
+    const recurringRules = db.createObjectStore('recurringRules', { keyPath: 'id' });
+    recurringRules.createIndex('bookingId', 'bookingId');
+    recurringRules.createIndex('startDate', 'startDate');
+    recurringRules.createIndex('frequency', 'frequency');
   }
 }
