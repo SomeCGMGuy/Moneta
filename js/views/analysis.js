@@ -33,11 +33,13 @@ export function renderAnalysis({ allBookings, categoryMap, month, analysisRange 
   const series = analysisRange === 'month' ? [] : monthlyExpenseSeries(bookings, period);
 
   return `
-    <main class="page analysis-page">
+    <main class="page analysis-page" data-active-month="${escapeAttr(month)}">
       <header class="page-header"><div><h1 class="page-title">Analyse</h1><p class="page-subtitle">Ausgaben für ${escapeHtml(period.label)} – interaktiv nach Kategorien aufgeschlüsselt.</p></div></header>
 
-      <div class="analysis-range-tabs" aria-label="Analysezeitraum">
-        ${ranges.map(([id, label]) => `<button type="button" data-analysis-range="${id}" class="${analysisRange === id ? 'active' : ''}" aria-pressed="${analysisRange === id}">${label}</button>`).join('')}
+      <div class="analysis-range-shell">
+        <div class="analysis-range-tabs" aria-label="Analysezeitraum">
+          ${ranges.map(([id, label]) => `<button type="button" data-analysis-range="${id}" class="${analysisRange === id ? 'active' : ''}" aria-pressed="${analysisRange === id}">${label}</button>`).join('')}
+        </div>
       </div>
 
       <section class="card analysis-summary">
@@ -72,12 +74,21 @@ export function renderAnalysis({ allBookings, categoryMap, month, analysisRange 
 
 function renderPieChart(groups, total, categoryMap, selectedCategoryId) {
   let cursor = 0;
+  const selectedGroup = selectedCategoryId ? groups.find((group) => group.categoryId === selectedCategoryId) : null;
+  const selectedCategory = selectedGroup ? categoryMap.get(selectedGroup.categoryId) : null;
+  const selectedPercent = selectedGroup && total ? (selectedGroup.amount / total) * 100 : 0;
+
   const segments = groups.map((group, index) => {
     const percent = total ? (group.amount / total) * 100 : 0;
     const start = cursor;
     cursor += percent;
-    return `${chartColors[index % chartColors.length]} ${start.toFixed(3)}% ${cursor.toFixed(3)}%`;
-  });
+    const selected = selectedCategoryId === group.categoryId;
+    const visiblePercent = Math.max(0, percent - 0.7);
+    return `<circle class="donut-segment ${selected ? 'selected' : ''}" cx="60" cy="60" r="46" pathLength="100"
+      fill="none" stroke="${chartColors[index % chartColors.length]}" stroke-width="14"
+      stroke-dasharray="${visiblePercent.toFixed(3)} ${(100 - visiblePercent).toFixed(3)}" stroke-dashoffset="${(-start).toFixed(3)}"
+      data-analysis-category="${escapeAttr(group.categoryId)}" tabindex="0" role="button" aria-label="${escapeAttr((categoryMap.get(group.categoryId)?.name ?? 'Unbekannt') + ': ' + percent.toFixed(1).replace('.', ',') + ' Prozent')}"></circle>`;
+  }).join('');
 
   const legend = groups.slice(0, 8).map((group, index) => {
     const category = categoryMap.get(group.categoryId) ?? { name: 'Unbekannt' };
@@ -90,12 +101,19 @@ function renderPieChart(groups, total, categoryMap, selectedCategoryId) {
     </button>`;
   }).join('');
 
-  return `<section class="card analysis-chart-card" aria-label="Kreisdiagramm der Ausgaben nach Kategorie">
-    <div class="analysis-chart-copy"><span class="analysis-chart-kicker">Verteilung</span><strong>Ausgaben nach Kategorie</strong><p>Tippe auf eine Kategorie, um ihre Buchungen aufzuschlüsseln.</p></div>
+  const centerLabel = selectedGroup && selectedCategory
+    ? `<span>${escapeHtml(selectedCategory.name)}</span><strong>${money.format(selectedGroup.amount)}</strong><small>${selectedPercent.toFixed(1).replace('.', ',')} %</small>`
+    : `<span>Gesamt</span><strong>${money.format(total)}</strong>`;
+
+  return `<section class="card analysis-chart-card" aria-label="Donutdiagramm der Ausgaben nach Kategorie">
+    <div class="analysis-chart-copy"><span class="analysis-chart-kicker">Verteilung</span><strong>Ausgaben nach Kategorie</strong><p>Tippe direkt auf ein Segment oder eine Kategorie, um sie hervorzuheben.</p></div>
     <div class="analysis-chart-layout">
-      <button type="button" class="donut-chart" style="--chart-background:conic-gradient(${segments.join(',')})" data-analysis-category="" aria-label="Kategorieauswahl zurücksetzen">
-        <span class="donut-center"><span>Gesamt</span><strong>${money.format(total)}</strong></span>
-      </button>
+      <div class="donut-chart-wrap ${selectedCategoryId ? 'has-selection' : ''}">
+        <svg class="donut-chart" viewBox="0 0 120 120" aria-label="Ausgaben nach Kategorie">
+          ${segments}
+        </svg>
+        <button type="button" class="donut-center" data-analysis-category="" aria-label="Kategorieauswahl zurücksetzen">${centerLabel}</button>
+      </div>
       <div class="chart-legend">${legend}</div>
     </div>
   </section>`;

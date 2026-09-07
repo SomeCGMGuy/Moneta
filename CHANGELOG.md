@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.8 – 2026-09-07
+
+- Neue Buchungen orientieren ihr vorausgewähltes Datum jetzt am aktuell geöffneten Monat statt immer am heutigen Kalendermonat.
+- Dabei bleibt der heutige Tag erhalten, soweit er im Zielmonat existiert; andernfalls wird automatisch der letzte gültige Tag des Monats verwendet.
+- Die Schnellerfassung verwendet dieselbe Monatslogik und zeigt im Vormonat das konkrete Buchungsdatum statt „Heute“ an.
+- Das Donutdiagramm in der Analyse ist jetzt direkt interaktiv: Segmente können angetippt werden, die gewählte Kategorie wird deutlich hervorgehoben und die übrigen Segmente werden zurückgenommen.
+- In der Donutmitte werden bei einer Auswahl Kategorie, Betrag und prozentualer Anteil angezeigt; Kategorieauswahl und Diagramm sind miteinander synchronisiert.
+- Die Zeitraumfilter in der Analyse haben seitlichen Innenabstand und Scroll-Snapping, sodass erste und letzte Schaltfläche beim horizontalen Scrollen vollständig sichtbar bleiben.
+- Versionsanzeige und Service-Worker-Cache auf Version 2.0.8 angehoben.
+
 ## 2.0.7 – 2026-09-07
 
 - In den Einstellungen einen eigenen Bereich „App“ mit „App neu laden“ ergänzt.

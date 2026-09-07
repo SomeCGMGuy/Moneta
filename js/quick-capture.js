@@ -21,7 +21,7 @@ app?.addEventListener('submit', async (event) => {
       categoryId: category.value,
       title: parsed.title,
       note: '',
-      date: today()
+      date: dateForMonth(form.dataset.bookingMonth)
     });
     location.reload();
   } catch (error) {
@@ -50,8 +50,15 @@ function parseQuickText(value) {
   return { title, amount };
 }
 
-function today() {
-  const date = new Date();
+function dateForMonth(month) {
+  const now = new Date();
+  if (!/^\d{4}-\d{2}$/.test(month ?? '')) return localIsoDate(now);
+  const [year, monthNumber] = month.split('-').map(Number);
+  const day = Math.min(now.getDate(), new Date(year, monthNumber, 0).getDate());
+  return `${year}-${String(monthNumber).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function localIsoDate(date) {
   const offset = date.getTimezoneOffset() * 60000;
   return new Date(date.getTime() - offset).toISOString().slice(0, 10);
 }

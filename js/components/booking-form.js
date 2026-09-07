@@ -7,7 +7,7 @@ export async function showBookingForm({ booking = null }) {
   backdrop.className = 'modal-backdrop';
 
   const categories = await listCategories(type);
-  backdrop.innerHTML = buildMarkup(booking, type, categories);
+  backdrop.innerHTML = buildMarkup(booking, type, categories, defaultBookingDate());
   root.append(backdrop);
 
   const form = backdrop.querySelector('form');
@@ -67,9 +67,7 @@ export async function showBookingForm({ booking = null }) {
   });
 }
 
-function buildMarkup(booking, type, categories) {
-  const today = new Date();
-  const localDate = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+function buildMarkup(booking, type, categories, defaultDate) {
   return `
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="booking-modal-title">
       <div class="modal-header">
@@ -96,7 +94,7 @@ function buildMarkup(booking, type, categories) {
         </div>
         <div class="field">
           <label for="booking-date">Datum</label>
-          <input id="booking-date" name="date" type="date" required value="${booking?.date ?? localDate}" />
+          <input id="booking-date" name="date" type="date" required value="${booking?.date ?? defaultDate}" />
         </div>
         <div class="field">
           <label for="booking-note">Notiz <span aria-hidden="true">·</span> optional</label>
@@ -111,6 +109,21 @@ function buildMarkup(booking, type, categories) {
         </div>
       </form>
     </section>`;
+}
+
+function defaultBookingDate() {
+  const today = new Date();
+  const activeMonth = document.querySelector('[data-active-month]')?.dataset.activeMonth;
+  if (!/^\d{4}-\d{2}$/.test(activeMonth ?? '')) return localIsoDate(today);
+
+  const [year, month] = activeMonth.split('-').map(Number);
+  const lastDay = new Date(year, month, 0).getDate();
+  const day = Math.min(today.getDate(), lastDay);
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function localIsoDate(date) {
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 }
 
 function escapeHtml(value) {
