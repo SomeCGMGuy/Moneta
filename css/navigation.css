@@ -8,16 +8,20 @@ html.push-page-open body {
   overscroll-behavior: none;
 }
 
-html.push-page-open #view-root,
-html.push-page-open #bottom-nav-root {
+html.push-page-open #view-root {
   transform: translateX(-16%);
   opacity: .82;
   transition: transform var(--push-nav-duration) cubic-bezier(.2,.75,.25,1), opacity var(--push-nav-duration) ease;
 }
 
-html.push-page-returning #view-root,
-html.push-page-returning #bottom-nav-root {
+html.push-page-returning #view-root {
   transform: translateX(0);
+  opacity: 1;
+}
+
+html.push-page-open #bottom-nav-root,
+html.push-page-returning #bottom-nav-root {
+  transform: none;
   opacity: 1;
 }
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.12 – 2026-09-07
+
+- Die Bottom-Navigation bleibt während Push-Übergängen jetzt vollständig in ihrer festen Position und wird nicht mehr zusammen mit dem Hintergrund verschoben.
+- Dadurch entfällt der sichtbare Sprung des Footers beim Zurückkehren aus Buchungen, Kategorien, Budgets und Bestätigungsansichten.
+- Nur der eigentliche Inhaltsbereich nutzt weiterhin den dezenten Parallax-Effekt; die Push-Seite fährt darüber ein und wieder aus.
+- Service-Worker-Cache und Versionsanzeige auf Version 2.0.12 angehoben.
+
 ## 2.0.11 – 2026-09-07
 
 - Push-Navigation auf Kategorien, Budgets und Bestätigungsdialoge erweitert, damit diese Bereiche wie eigene App-Seiten statt klassische Modals erscheinen.
