@@ -370,7 +370,13 @@ async function openBookingForm(booking = null) {
   }
 
   try {
-    await saveBooking(result);
+    const savedBooking = await saveBooking(result);
+    if (!booking) {
+      state.month = savedBooking.date.slice(0, 7);
+      state.view = 'overview';
+      state.analysisCategoryId = null;
+      if (location.hash !== '#/overview') history.replaceState(null, '', '#/overview');
+    }
     await reloadData();
     render();
   } catch (error) {
