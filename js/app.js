@@ -1,5 +1,5 @@
 import { ensureDefaultCategories, getCategoryMap, listCategories, getCategory, saveCategory, deleteCategory, getCategoryUsage } from './services/category-service.js';
-import { listBookings, saveBooking, deleteBooking, getBooking } from './services/booking-service.js';
+import { listBookingsWithProjections, saveBooking, deleteBooking, getBooking } from './services/booking-service.js';
 import { listBudgetsForMonth, saveBudget, deleteBudget } from './services/budget-service.js';
 import { getSetting, setSetting } from './services/settings-service.js';
 import { createBackup, downloadBackup, parseBackup, restoreBackup, summarizeBackup } from './services/backup-service.js';
@@ -44,7 +44,12 @@ function mountShell() {
 }
 
 async function reloadData() {
-  const [allBookings, budgets, categoryMap] = await Promise.all([listBookings(), listBudgetsForMonth(state.month), getCategoryMap()]);
+  const projectionWindow = projectionWindowForMonth(state.month);
+  const [allBookings, budgets, categoryMap] = await Promise.all([
+    listBookingsWithProjections(projectionWindow),
+    listBudgetsForMonth(state.month),
+    getCategoryMap()
+  ]);
   const startDay = state.financialMonthMode === 'custom' ? state.financialMonthStart : 1;
   state.allBookings = allBookings;
   state.bookings = filterBookingsForPeriod(allBookings, getFinancialMonthPeriod(state.month, startDay));
@@ -89,7 +94,8 @@ function bindGlobalEvents() {
     const input = event.target.closest('[data-backup-file]'); if (!input?.files?.[0]) return; const file = input.files[0]; input.value = '';
     try {
       const backup = parseBackup(await file.text()); const counts = summarizeBackup(backup);
-      const confirmed = await showConfirmDialog({ title: 'Backup wiederherstellen?', message: `Das Backup enthält ${counts.bookings} Buchungen, ${counts.categories} Kategorien und ${counts.budgets} Budgets. Deine aktuellen Moneta-Daten werden vollständig ersetzt.`, confirmLabel: 'Daten ersetzen', danger: true });
+      const recurringText = counts.recurringRules ? `, ${counts.recurringRules} Wiederholungen` : '';
+      const confirmed = await showConfirmDialog({ title: 'Backup wiederherstellen?', message: `Das Backup enthält ${counts.bookings} Buchungen${recurringText}, ${counts.categories} Kategorien und ${counts.budgets} Budgets. Deine aktuellen Moneta-Daten werden vollständig ersetzt.`, confirmLabel: 'Daten ersetzen', danger: true });
       if (!confirmed) return;
       await restoreBackup(backup); await ensureDefaultCategories();
       state.theme = normalizeTheme(await getSetting('theme', 'light'));
@@ -115,7 +121,7 @@ async function refreshCurrentView() { pullRefreshBusy = true; pullRefreshRoot.cl
 
 async function openBookingForm(booking = null) {
   const result = await showBookingForm({ booking }); if (!result) return;
-  if (result.deleteRequested) { const row = result.booking; const confirmed = await showConfirmDialog({ title: 'Buchung löschen?', message: `„${row.title}“ wird dauerhaft aus Moneta entfernt.`, confirmLabel: 'Endgültig löschen', danger: true }); if (!confirmed) return; await deleteBooking(row.id); await reloadData(); render(); return; }
+  if (result.deleteRequested) { const row = result.booking; const confirmed = await showConfirmDialog({ title: 'Buchung löschen?', message: row.recurrenceRuleId ? `„${row.title}“ und die zugehörige Wiederholung werden dauerhaft aus Moneta entfernt.` : `„${row.title}“ wird dauerhaft aus Moneta entfernt.`, confirmLabel: 'Endgültig löschen', danger: true }); if (!confirmed) return; await deleteBooking(row.id); await reloadData(); render(); return; }
   try {
     const savedBooking = await saveBooking(result);
     if (!booking) { const startDay = state.financialMonthMode === 'custom' ? state.financialMonthStart : 1; state.month = financialMonthForDate(savedBooking.date, startDay); state.view = 'overview'; state.analysisCategoryId = null; if (location.hash !== '#/overview') history.replaceState(null, '', '#/overview'); }
@@ -144,4 +150,5 @@ function normalizeFinancialStart(value) { const day = Number.parseInt(value, 10)
 function normalizeTheme(value) { return value === 'dark' ? 'dark' : 'light'; }
 function currentMonth() { const date = new Date(); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; }
 function shiftMonth(month, delta) { const [year, monthNumber] = month.split('-').map(Number); const date = new Date(year, monthNumber - 1 + delta, 1); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; }
+function projectionWindowForMonth(month) { const year = Number(month.slice(0, 4)); return { from: `${year - 1}-01-01`, to: `${year + 2}-12-31` }; }
 function delay(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
