@@ -28,12 +28,6 @@ document.addEventListener('click', async (event) => {
     return;
   }
 
-  const suggestion = event.target.closest('[data-pwa-install-suggestion]');
-  if (suggestion && event.target === suggestion) {
-    closeInstallSuggestion();
-    return;
-  }
-
   const button = event.target.closest('[data-pwa-install]');
   if (!button || button.disabled) return;
 
@@ -48,6 +42,7 @@ document.addEventListener('click', async (event) => {
     return;
   }
 
+  const originalLabel = button.textContent;
   button.disabled = true;
   button.textContent = 'Öffne …';
 
@@ -59,14 +54,22 @@ document.addEventListener('click', async (event) => {
     updateInstallUi();
   } catch (error) {
     console.warn('PWA-Installation:', error);
-    deferredInstallPrompt = null;
-    closeInstallSuggestion();
+    button.disabled = false;
+    button.textContent = originalLabel;
     updateInstallUi();
   }
 });
 
-const observer = new MutationObserver(updateInstallUi);
-observer.observe(document.documentElement, { childList: true, subtree: true });
+let updateQueued = false;
+const observer = new MutationObserver(() => {
+  if (updateQueued) return;
+  updateQueued = true;
+  requestAnimationFrame(() => {
+    updateQueued = false;
+    updateInstallUi();
+  });
+});
+observer.observe(document.querySelector('#app'), { childList: true, subtree: true });
 updateInstallUi();
 
 function scheduleInstallSuggestion() {
@@ -81,24 +84,19 @@ function scheduleInstallSuggestion() {
 }
 
 function showInstallSuggestion() {
-  const root = document.querySelector('#modal-root');
-  if (!root || root.querySelector('[data-pwa-install-suggestion]')) return;
+  if (document.querySelector('[data-pwa-install-suggestion]')) return;
 
-  root.insertAdjacentHTML('beforeend', `
-    <div class="modal-backdrop" data-pwa-install-suggestion>
-      <section class="modal modal-compact" role="dialog" aria-modal="true" aria-labelledby="pwa-install-title">
-        <div class="modal-header">
-          <h2 id="pwa-install-title">Moneta als App installieren?</h2>
-        </div>
-        <p class="confirm-copy">Installiere Moneta auf deinem Startbildschirm. Danach lässt sich die App wie eine normale Anwendung direkt öffnen.</p>
-        <div class="form-actions">
-          <button class="btn btn-ghost" type="button" data-pwa-install-later>Später</button>
-          <div class="form-actions-right">
-            <button class="btn btn-primary" type="button" data-pwa-install>App installieren</button>
-          </div>
-        </div>
-      </section>
-    </div>`);
+  document.body.insertAdjacentHTML('beforeend', `
+    <aside class="pwa-install-suggestion card" data-pwa-install-suggestion aria-labelledby="pwa-install-title">
+      <div class="pwa-install-suggestion-copy">
+        <strong id="pwa-install-title">Moneta als App installieren?</strong>
+        <p>Direkt vom Startbildschirm öffnen und wie eine normale App verwenden.</p>
+      </div>
+      <div class="pwa-install-suggestion-actions">
+        <button class="btn btn-ghost" type="button" data-pwa-install-later>Später</button>
+        <button class="btn btn-primary" type="button" data-pwa-install>Installieren</button>
+      </div>
+    </aside>`);
 }
 
 function closeInstallSuggestion() {
@@ -110,18 +108,15 @@ function updateInstallUi() {
   const copy = document.querySelector('[data-pwa-install-copy]');
   if (!button) return;
 
-  if (isStandalone()) {
-    button.disabled = true;
-    button.textContent = 'Installiert';
-    if (copy) copy.textContent = 'Moneta ist bereits als App auf diesem Gerät installiert.';
-    return;
-  }
-
-  button.disabled = false;
-  button.textContent = 'App installieren';
-  if (copy) {
-    copy.textContent = deferredInstallPrompt
+  const standalone = isStandalone();
+  const label = standalone ? 'Installiert' : 'App installieren';
+  const text = standalone
+    ? 'Moneta ist bereits als App auf diesem Gerät installiert.'
+    : deferredInstallPrompt
       ? 'Installiert Moneta über den nativen Browserdialog direkt auf deinem Startbildschirm.'
       : 'Falls kein direkter Installationsdialog verfügbar ist, zeigt Moneta dir den passenden Weg über das Browsermenü.';
-  }
+
+  if (button.disabled !== standalone) button.disabled = standalone;
+  if (button.textContent !== label) button.textContent = label;
+  if (copy && copy.textContent !== text) copy.textContent = text;
 }

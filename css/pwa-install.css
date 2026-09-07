@@ -1,0 +1,31 @@
+.pwa-install-suggestion {
+  position: fixed;
+  left: 50%;
+  bottom: calc(82px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 45;
+  width: min(calc(100% - 24px), 620px);
+  padding: 16px;
+  display: grid;
+  gap: 14px;
+  box-shadow: var(--shadow);
+}
+
+.pwa-install-suggestion-copy strong {
+  display: block;
+  color: var(--forest-950);
+}
+
+.pwa-install-suggestion-copy p {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: .84rem;
+  line-height: 1.45;
+}
+
+.pwa-install-suggestion-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
