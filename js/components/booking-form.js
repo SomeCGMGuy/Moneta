@@ -1,6 +1,7 @@
 import { listCategories } from '../services/category-service.js';
 
 const TRANSITION_MS = 280;
+const HISTORY_KEY = 'monetaBookingPage';
 
 export async function showBookingForm({ booking = null }) {
   const root = document.querySelector('#modal-root');
@@ -14,6 +15,15 @@ export async function showBookingForm({ booking = null }) {
   root.append(layer);
   app?.setAttribute('inert', '');
   document.documentElement.classList.add('booking-page-open');
+
+  let historyEntryActive = false;
+  try {
+    const baseState = history.state && typeof history.state === 'object' ? history.state : {};
+    history.pushState({ ...baseState, [HISTORY_KEY]: true }, '', location.href);
+    historyEntryActive = true;
+  } catch (error) {
+    console.warn('Booking navigation history:', error);
+  }
 
   requestAnimationFrame(() => requestAnimationFrame(() => layer.classList.add('entered')));
 
@@ -42,10 +52,12 @@ export async function showBookingForm({ booking = null }) {
 
   return new Promise((resolve) => {
     let settled = false;
+    let pendingResult = null;
 
-    const close = async (value) => {
+    const finishClose = async (value) => {
       if (settled) return;
       settled = true;
+      window.removeEventListener('popstate', onPopState);
       document.removeEventListener('keydown', onKeyDown);
       layer.classList.remove('entered');
       document.documentElement.classList.add('booking-page-returning');
@@ -56,22 +68,40 @@ export async function showBookingForm({ booking = null }) {
       resolve(value);
     };
 
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') close(null);
+    const requestClose = (value = null) => {
+      if (settled) return;
+      pendingResult = value;
+      if (historyEntryActive) {
+        historyEntryActive = false;
+        history.back();
+      } else {
+        finishClose(value);
+      }
     };
 
+    const onPopState = () => {
+      if (settled) return;
+      historyEntryActive = false;
+      finishClose(pendingResult);
+    };
+
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') requestClose(null);
+    };
+
+    window.addEventListener('popstate', onPopState);
     document.addEventListener('keydown', onKeyDown);
-    layer.querySelector('[data-back]').addEventListener('click', () => close(null));
+    layer.querySelector('[data-back]').addEventListener('click', () => requestClose(null));
 
     const deleteButton = layer.querySelector('[data-delete]');
     if (deleteButton) {
-      deleteButton.addEventListener('click', () => close({ deleteRequested: true, booking }));
+      deleteButton.addEventListener('click', () => requestClose({ deleteRequested: true, booking }));
     }
 
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       const data = new FormData(form);
-      close({
+      requestClose({
         id: booking?.id,
         type: data.get('type'),
         amount: data.get('amount'),
@@ -148,6 +178,6 @@ function localIsoDate(date) {
 
 function wait(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
 function escapeHtml(value) {
-  return String(value).replace(/[&<>'"]/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char]));
+  return String(value).replace(/[&<>'\"]/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char]));
 }
 function escapeAttr(value) { return escapeHtml(value); }

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.10 – 2026-09-07
+
+- Die Android-System-Zurücktaste ist jetzt mit der neuen Transaktionsnavigation verknüpft.
+- Beim Öffnen einer Buchung wird ein eigener History-Eintrag gesetzt; Android-Zurück, Browser-Zurück und der Zurück-Button oben schließen dadurch dieselbe Push-Ansicht.
+- Speichern und Löschen räumen den temporären Navigationseintrag ebenfalls sauber auf, damit kein zusätzlicher Zurück-Schritt in der App-Historie hängen bleibt.
+- Versionsanzeige und Service-Worker-Cache auf Version 2.0.10 angehoben.
+
 ## 2.0.9 – 2026-09-07
 
 - Neue und bestehende Buchungen öffnen jetzt als eigene, vollflächige Transaktionsansicht statt als Modal.
