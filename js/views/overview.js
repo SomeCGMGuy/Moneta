@@ -38,6 +38,8 @@ export function renderOverview({ month, bookings, categoryMap }) {
         <div class="card metric-card"><div class="metric-label">Ø Ausgabe</div><div class="metric-value">${money.format(averageExpense(bookings))}</div></div>
       </section>
 
+      ${renderQuickCapture(categoryMap)}
+
       <section class="section">
         <div class="section-heading"><h2>Buchungen</h2><span class="chip">${bookings.length}</span></div>
         ${renderBookingList(bookings, categoryMap)}
@@ -45,8 +47,36 @@ export function renderOverview({ month, bookings, categoryMap }) {
     </main>`;
 }
 
+function renderQuickCapture(categoryMap) {
+  const categories = [...categoryMap.values()]
+    .filter((category) => category.type === 'expense')
+    .sort((a, b) => a.name.localeCompare(b.name, 'de'));
+
+  return `
+    <section class="section">
+      <div class="section-heading"><h2>Schnellerfassung</h2><span class="chip">Heute</span></div>
+      <form class="card metric-card form-grid" data-quick-capture>
+        <div class="field">
+          <label for="quick-text">Buchung</label>
+          <input id="quick-text" name="quickText" type="text" inputmode="text" autocomplete="off" placeholder="z. B. REWE 12,40" required />
+        </div>
+        <div class="field">
+          <label for="quick-category">Kategorie</label>
+          <select id="quick-category" name="quickCategory" required>
+            <option value="">Kategorie auswählen …</option>
+            ${categories.map((category) => `<option value="${escapeHtml(category.id)}">${escapeHtml(category.icon)} ${escapeHtml(category.name)}</option>`).join('')}
+          </select>
+        </div>
+        <button class="btn btn-primary" type="submit">Buchen</button>
+      </form>
+    </section>`;
+}
+
 function averageExpense(bookings) {
   const expenses = bookings.filter((b) => b.type === 'expense');
   return expenses.length ? expenses.reduce((sum, b) => sum + b.amount, 0) / expenses.length : 0;
 }
 function capitalize(value) { return value.charAt(0).toUpperCase() + value.slice(1); }
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
+}
