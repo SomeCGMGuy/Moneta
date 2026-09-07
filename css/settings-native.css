@@ -1,0 +1,31 @@
+.financial-start-card { padding: 16px; display: grid; gap: 14px; overflow: hidden; }
+.financial-start-copy strong { display: block; color: var(--forest-950); }
+.financial-start-copy p { margin: 4px 0 0; color: var(--text-muted); font-size: .84rem; line-height: 1.45; }
+.financial-day-scroller { display: flex; gap: 8px; overflow-x: auto; padding: 2px 1px 6px; scrollbar-width: none; scroll-snap-type: x proximity; overscroll-behavior-inline: contain; }
+.financial-day-scroller::-webkit-scrollbar { display: none; }
+.financial-day-chip { flex: 0 0 auto; scroll-snap-align: center; }
+.financial-day-chip input { position: absolute; opacity: 0; pointer-events: none; }
+.financial-day-chip span { min-width: 44px; min-height: 44px; padding: 0 11px; border: 1px solid var(--border); border-radius: 999px; display: inline-grid; place-items: center; background: var(--surface); color: var(--text-muted); font-weight: 750; -webkit-tap-highlight-color: transparent; }
+.financial-day-chip.selected span, .financial-day-chip:has(input:checked) span { background: var(--forest-900); border-color: var(--forest-900); color: var(--bg); box-shadow: var(--shadow-soft); }
+:root[data-theme='light'] .financial-day-chip.selected span, :root[data-theme='light'] .financial-day-chip:has(input:checked) span { color: #fff; }
+
+.category-search { margin: 10px 12px 4px; min-height: 44px; padding: 0 12px; display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface-muted); color: var(--text-muted); }
+.category-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text); font: inherit; }
+.category-search input::placeholder { color: var(--text-muted); }
+.category-show-more { width: calc(100% - 24px); min-height: 42px; margin: 6px 12px 12px; border: 0; border-radius: 12px; background: var(--forest-050); color: var(--forest-900); font-weight: 750; -webkit-tap-highlight-color: transparent; }
+.category-search-empty { border-top: 1px solid var(--border); }
+
+.category-icon-picker { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.category-icon-option { aspect-ratio: 1; min-width: 0; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); color: inherit; display: grid; place-items: center; font-size: 1.35rem; -webkit-tap-highlight-color: transparent; }
+.category-icon-option.selected { border-color: var(--forest-700); background: var(--forest-050); box-shadow: inset 0 0 0 2px var(--forest-100); }
+.category-icon-clear { align-self: start; min-height: 36px; padding: 0 10px; border: 0; background: transparent; color: var(--text-muted); font-weight: 700; text-align: left; -webkit-tap-highlight-color: transparent; }
+
+@media (max-width: 520px) {
+  .financial-start-card { padding-inline: 14px; }
+  .category-icon-picker { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 7px; }
+  .category-icon-option { border-radius: 13px; font-size: 1.25rem; }
+}
+
+@media (max-width: 390px) {
+  .category-icon-picker { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
