@@ -1,3 +1,5 @@
+import { registerOverlayHistory } from './overlay-history.js';
+
 export function showConfirmDialog({ title, message, confirmLabel = 'Bestätigen', danger = false }) {
   return new Promise((resolve) => {
     const returnFocusTo = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -12,14 +14,20 @@ export function showConfirmDialog({ title, message, confirmLabel = 'Bestätigen'
       </div>
     </section>`;
     document.body.append(layer);
-    const close = (value) => {
-      layer.remove();
+    let closing = false;
+    let historyGuard;
+    const close = (value, { fromHistory = false } = {}) => {
+      if (closing) return;
+      closing = true;
       document.removeEventListener('keydown', onKey);
+      if (fromHistory) historyGuard?.release(); else historyGuard?.consume();
+      layer.remove();
       if (returnFocusTo?.isConnected) requestAnimationFrame(() => returnFocusTo.focus({ preventScroll: true }));
       resolve(value);
     };
     const onKey = (event) => { if (event.key === 'Escape') close(false); };
     document.addEventListener('keydown', onKey);
+    historyGuard = registerOverlayHistory(() => close(false, { fromHistory: true }), 'monetaConfirmDialog');
     layer.addEventListener('click', (event) => { if (event.target === layer) close(false); });
     layer.querySelector('[data-cancel]').addEventListener('click', () => close(false));
     layer.querySelector('[data-confirm]').addEventListener('click', () => close(true));

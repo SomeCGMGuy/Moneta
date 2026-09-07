@@ -51,7 +51,8 @@ export function mountPushPage(layer, { historyKey = 'monetaPushPage' } = {}) {
     window.setTimeout(finish, TRANSITION_MS);
   };
 
-  const onPopState = () => {
+  const onPopState = (event) => {
+    if (event.state && typeof event.state === 'object' && event.state[historyKey]) return;
     historyEntryActive = false;
     beginClose(null, { consumeHistory: false });
   };

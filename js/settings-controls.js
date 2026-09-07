@@ -1,5 +1,9 @@
+import { registerOverlayHistory } from './components/overlay-history.js';
+
 const PREVIEW_LIMIT = 5;
 const FINANCIAL_SHEET_EXIT_MS = 180;
+let financialSheetHistoryGuard = null;
+let financialSheetReturnFocus = null;
 
 document.addEventListener('input', (event) => {
   const input = event.target.closest('[data-category-search]');
@@ -9,7 +13,7 @@ document.addEventListener('input', (event) => {
 
 document.addEventListener('click', (event) => {
   const openFinancial = event.target.closest('[data-financial-start-open]');
-  if (openFinancial) { openFinancialStartSheet(); return; }
+  if (openFinancial) { openFinancialStartSheet(openFinancial); return; }
 
   const day = event.target.closest('[data-financial-day]');
   if (day) {
@@ -38,8 +42,10 @@ document.addEventListener('click', (event) => {
 
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeFinancialStartSheet(); });
 
-function openFinancialStartSheet() {
+function openFinancialStartSheet(trigger) {
   document.querySelector('[data-financial-sheet-backdrop]')?.remove();
+  financialSheetHistoryGuard?.release();
+  financialSheetReturnFocus = trigger instanceof HTMLElement ? trigger : null;
   const current = Number(document.querySelector('[data-financial-start]')?.value || 28);
   const sheet = document.createElement('div');
   sheet.className = 'financial-sheet-backdrop';
@@ -51,16 +57,23 @@ function openFinancialStartSheet() {
     <p class="financial-sheet-hint">Die Auswahl wird sofort übernommen.</p>
   </section>`;
   document.body.append(sheet);
+  financialSheetHistoryGuard = registerOverlayHistory(() => closeFinancialStartSheet({ fromHistory: true }), 'monetaFinancialSheet');
   requestAnimationFrame(() => sheet.classList.add('open'));
   sheet.querySelector('.financial-day-option.selected')?.focus({ preventScroll: true });
 }
 
-function closeFinancialStartSheet() {
+function closeFinancialStartSheet({ fromHistory = false } = {}) {
   const sheet = document.querySelector('[data-financial-sheet-backdrop]');
   if (!sheet || sheet.classList.contains('closing')) return;
+  if (fromHistory) financialSheetHistoryGuard?.release(); else financialSheetHistoryGuard?.consume();
+  financialSheetHistoryGuard = null;
   sheet.classList.remove('open');
   sheet.classList.add('closing');
-  window.setTimeout(() => sheet.remove(), FINANCIAL_SHEET_EXIT_MS);
+  window.setTimeout(() => {
+    sheet.remove();
+    if (financialSheetReturnFocus?.isConnected) financialSheetReturnFocus.focus({ preventScroll: true });
+    financialSheetReturnFocus = null;
+  }, FINANCIAL_SHEET_EXIT_MS);
 }
 
 function updateCategoryGroup(type, value) {

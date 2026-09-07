@@ -1,3 +1,5 @@
+import { registerOverlayHistory } from './overlay-history.js';
+
 const monthFormat = new Intl.DateTimeFormat('de-DE', { month: 'long' });
 const SHEET_EXIT_MS = 180;
 
@@ -15,10 +17,12 @@ export function showChoiceSheet({ title, options, selected = '', searchable = fa
     </section>`;
     document.body.append(layer);
     let closing = false;
-    const close = (value = null) => {
+    let historyGuard;
+    const close = (value = null, { fromHistory = false } = {}) => {
       if (closing) return;
       closing = true;
       document.removeEventListener('keydown', onKey);
+      if (fromHistory) historyGuard?.release(); else historyGuard?.consume();
       layer.classList.remove('open');
       layer.classList.add('closing');
       window.setTimeout(() => {
@@ -29,6 +33,7 @@ export function showChoiceSheet({ title, options, selected = '', searchable = fa
     };
     const onKey = (event) => { if (event.key === 'Escape') close(null); };
     document.addEventListener('keydown', onKey);
+    historyGuard = registerOverlayHistory(() => close(null, { fromHistory: true }), 'monetaChoiceSheet');
     layer.addEventListener('click', (event) => {
       if (event.target === layer || event.target.closest('[data-choice-close]')) return close(null);
       const option = event.target.closest('[data-choice-value]');
@@ -71,10 +76,12 @@ export function showMonthSheet({ title = 'Monat wählen', value }) {
       }).join('');
     };
     let closing = false;
-    const close = (result = null) => {
+    let historyGuard;
+    const close = (result = null, { fromHistory = false } = {}) => {
       if (closing) return;
       closing = true;
       document.removeEventListener('keydown', onKey);
+      if (fromHistory) historyGuard?.release(); else historyGuard?.consume();
       layer.classList.remove('open');
       layer.classList.add('closing');
       window.setTimeout(() => {
@@ -85,6 +92,7 @@ export function showMonthSheet({ title = 'Monat wählen', value }) {
     };
     const onKey = (event) => { if (event.key === 'Escape') close(null); };
     document.addEventListener('keydown', onKey);
+    historyGuard = registerOverlayHistory(() => close(null, { fromHistory: true }), 'monetaMonthSheet');
     layer.addEventListener('click', (event) => {
       if (event.target === layer || event.target.closest('[data-choice-close]')) return close(null);
       const step = event.target.closest('[data-year-step]');
