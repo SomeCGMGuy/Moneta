@@ -1,0 +1,42 @@
+.booking-search {
+  position: relative;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.booking-search-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  pointer-events: none;
+}
+
+.booking-search input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 16px 0 44px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  outline: 0;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.booking-search input::placeholder { color: var(--text-muted); }
+.booking-search input:focus {
+  border-color: var(--forest-700);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.booking-row[hidden],
+.booking-search-empty[hidden] { display: none !important; }
+
+.booking-search-empty { margin-top: 12px; }

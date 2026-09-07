@@ -38,9 +38,16 @@ export function renderOverview({ month, bookings, categoryMap }) {
         <div class="card metric-card"><div class="metric-label">Ø Ausgabe</div><div class="metric-value">${money.format(averageExpense(bookings))}</div></div>
       </section>
 
-      <section class="section">
-        <div class="section-heading"><h2>Buchungen</h2><span class="chip">${bookings.length}</span></div>
+      <section class="section" data-booking-section>
+        <div class="section-heading"><h2>Buchungen</h2><span class="chip" data-booking-visible-count>${bookings.length}</span></div>
+        ${bookings.length ? `
+          <label class="booking-search" aria-label="Buchungen durchsuchen">
+            <span class="booking-search-icon" aria-hidden="true">⌕</span>
+            <input type="search" data-booking-search placeholder="Buchungen durchsuchen" autocomplete="off" spellcheck="false" />
+          </label>
+        ` : ''}
         ${renderBookingList(bookings, categoryMap)}
+        <div class="card empty-state booking-search-empty" data-booking-search-empty hidden><strong>Keine Treffer</strong>Für diese Suche gibt es in diesem Monat keine passende Buchung.</div>
       </section>
     </main>`;
 }

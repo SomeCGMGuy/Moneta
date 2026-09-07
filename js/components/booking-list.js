@@ -9,8 +9,17 @@ export function renderBookingList(bookings, categoryMap) {
   return `<div class="card booking-list">${bookings.map((booking) => {
     const category = categoryMap.get(booking.categoryId) ?? { name: 'Unbekannt', icon: '•' };
     const sign = booking.type === 'expense' ? '−' : '+';
+    const searchText = [
+      booking.title,
+      booking.note,
+      category.name,
+      booking.amount,
+      money.format(booking.amount),
+      booking.date,
+      booking.type === 'expense' ? 'Ausgabe' : 'Einnahme'
+    ].filter(Boolean).join(' ');
     return `
-      <button class="booking-row" type="button" data-booking-id="${escapeAttr(booking.id)}">
+      <button class="booking-row" type="button" data-booking-id="${escapeAttr(booking.id)}" data-booking-search="${escapeAttr(searchText)}">
         <span class="booking-icon" aria-hidden="true">${escapeHtml(category.icon ?? '•')}</span>
         <span class="booking-copy">
           <span class="booking-title">${escapeHtml(booking.title)}</span>
