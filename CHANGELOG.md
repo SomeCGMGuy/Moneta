@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.16 – 2026-09-07
+
+- In der Analyse einen eigenen Monatswechsler ergänzt, analog zur Übersicht.
+- Der gewählte Monat dient auch als Bezugsmonat für Quartals- und Jahresauswertungen; beim Wechsel werden Zeitraum, Diagramme und Kategorien direkt neu berechnet.
+- Service-Worker-Cache und Versionsanzeige auf Version 2.0.16 angehoben.
+
 ## 2.0.15 – 2026-09-07
 
 - „App neu laden“ leert jetzt gezielt nur Monetas App-Cache und entfernt die aktuelle Service-Worker-Registrierung, ohne IndexedDB oder lokale Nutzerdaten anzufassen.

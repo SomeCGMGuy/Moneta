@@ -8,6 +8,7 @@ import {
 import { renderBookingList } from '../components/booking-list.js';
 
 const money = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
+const monthName = new Intl.DateTimeFormat('de-DE', { month: 'long', year: 'numeric' });
 const chartColors = [
   'var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)',
   'var(--chart-5)', 'var(--chart-6)', 'var(--chart-7)', 'var(--chart-8)'
@@ -31,10 +32,19 @@ export function renderAnalysis({ allBookings, categoryMap, month, analysisRange 
     ? bookings.filter((booking) => booking.type === 'expense' && booking.categoryId === selectedCategory.id)
     : [];
   const series = analysisRange === 'month' ? [] : monthlyExpenseSeries(bookings, period);
+  const activeMonthDate = new Date(`${month}-01T12:00:00`);
 
   return `
     <main class="page analysis-page" data-active-month="${escapeAttr(month)}">
       <header class="page-header"><div><h1 class="page-title">Analyse</h1><p class="page-subtitle">Ausgaben für ${escapeHtml(period.label)} – interaktiv nach Kategorien aufgeschlüsselt.</p></div></header>
+
+      <div class="section-heading analysis-month-heading">
+        <div class="month-switcher" aria-label="Bezugsmonat der Analyse">
+          <button class="icon-btn" type="button" data-month="prev" aria-label="Vorheriger Monat">‹</button>
+          <div class="month-label">${capitalize(monthName.format(activeMonthDate))}</div>
+          <button class="icon-btn" type="button" data-month="next" aria-label="Nächster Monat">›</button>
+        </div>
+      </div>
 
       <div class="analysis-range-shell">
         <div class="analysis-range-tabs" aria-label="Analysezeitraum">
@@ -138,5 +148,6 @@ function compactMoney(value) {
   return `${Math.round(value)} €`;
 }
 
-function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char])); }
+function capitalize(value) { return value.charAt(0).toUpperCase() + value.slice(1); }
+function escapeHtml(value) { return String(value).replace(/[&<>'\"]/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char])); }
 function escapeAttr(value) { return escapeHtml(value); }
