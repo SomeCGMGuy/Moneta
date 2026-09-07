@@ -1,5 +1,6 @@
 export function showConfirmDialog({ title, message, confirmLabel = 'Bestätigen', danger = false }) {
   return new Promise((resolve) => {
+    const returnFocusTo = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const layer = document.createElement('div');
     layer.className = 'material-dialog-backdrop';
     layer.innerHTML = `<section class="material-dialog" role="alertdialog" aria-modal="true" aria-labelledby="material-dialog-title" aria-describedby="material-dialog-copy">
@@ -11,7 +12,12 @@ export function showConfirmDialog({ title, message, confirmLabel = 'Bestätigen'
       </div>
     </section>`;
     document.body.append(layer);
-    const close = (value) => { layer.remove(); document.removeEventListener('keydown', onKey); resolve(value); };
+    const close = (value) => {
+      layer.remove();
+      document.removeEventListener('keydown', onKey);
+      if (returnFocusTo?.isConnected) requestAnimationFrame(() => returnFocusTo.focus({ preventScroll: true }));
+      resolve(value);
+    };
     const onKey = (event) => { if (event.key === 'Escape') close(false); };
     document.addEventListener('keydown', onKey);
     layer.addEventListener('click', (event) => { if (event.target === layer) close(false); });
