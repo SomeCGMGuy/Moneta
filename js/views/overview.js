@@ -3,7 +3,6 @@ import { renderBookingList } from '../components/booking-list.js';
 
 const money = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
 const monthName = new Intl.DateTimeFormat('de-DE', { month: 'long', year: 'numeric' });
-const shortDate = new Intl.DateTimeFormat('de-DE', { day: 'numeric', month: 'short' });
 
 export function renderOverview({ month, bookings, categoryMap }) {
   const summary = summarizeBookings(bookings);
@@ -39,53 +38,11 @@ export function renderOverview({ month, bookings, categoryMap }) {
         <div class="card metric-card"><div class="metric-label">Ø Ausgabe</div><div class="metric-value">${money.format(averageExpense(bookings))}</div></div>
       </section>
 
-      ${renderQuickCapture(categoryMap, month)}
-
       <section class="section">
         <div class="section-heading"><h2>Buchungen</h2><span class="chip">${bookings.length}</span></div>
         ${renderBookingList(bookings, categoryMap)}
       </section>
     </main>`;
-}
-
-function renderQuickCapture(categoryMap, month) {
-  const categories = [...categoryMap.values()]
-    .filter((category) => category.type === 'expense')
-    .sort((a, b) => a.name.localeCompare(b.name, 'de'));
-  const bookingDate = dateForMonth(month);
-  const currentMonth = localIsoDate(new Date()).slice(0, 7);
-  const chipLabel = month === currentMonth ? 'Heute' : shortDate.format(new Date(`${bookingDate}T12:00:00`));
-
-  return `
-    <section class="section">
-      <div class="section-heading"><h2>Schnellerfassung</h2><span class="chip">${escapeHtml(chipLabel)}</span></div>
-      <form class="card metric-card form-grid" data-quick-capture data-booking-month="${escapeHtml(month)}">
-        <div class="field">
-          <label for="quick-text">Buchung</label>
-          <input id="quick-text" name="quickText" type="text" inputmode="text" autocomplete="off" placeholder="z. B. REWE 12,40" required />
-        </div>
-        <div class="field">
-          <label for="quick-category">Kategorie</label>
-          <select id="quick-category" name="quickCategory" required>
-            <option value="">Kategorie auswählen …</option>
-            ${categories.map((category) => `<option value="${escapeHtml(category.id)}">${escapeHtml(category.icon)} ${escapeHtml(category.name)}</option>`).join('')}
-          </select>
-        </div>
-        <button class="btn btn-primary" type="submit">Buchen</button>
-      </form>
-    </section>`;
-}
-
-function dateForMonth(month) {
-  const today = new Date();
-  const [year, monthNumber] = month.split('-').map(Number);
-  const lastDay = new Date(year, monthNumber, 0).getDate();
-  const day = Math.min(today.getDate(), lastDay);
-  return `${year}-${String(monthNumber).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-}
-
-function localIsoDate(date) {
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 }
 
 function averageExpense(bookings) {

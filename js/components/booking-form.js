@@ -1,6 +1,8 @@
 import { listCategories } from '../services/category-service.js';
 import { mountPushPage } from './push-page.js';
 
+const FOCUS_DELAY_MS = 210;
+
 export async function showBookingForm({ booking = null }) {
   const type = booking?.type ?? 'expense';
   const layer = document.createElement('div');
@@ -32,6 +34,12 @@ export async function showBookingForm({ booking = null }) {
   });
 
   if (booking?.categoryId) categorySelect.value = booking.categoryId;
+
+  if (!booking) {
+    window.setTimeout(() => {
+      if (layer.isConnected) layer.querySelector('#booking-title')?.focus({ preventScroll: true });
+    }, FOCUS_DELAY_MS);
+  }
 
   layer.querySelector('[data-back]').addEventListener('click', () => navigation.close(null));
   layer.querySelector('[data-delete]')?.addEventListener('click', () => navigation.close({ deleteRequested: true, booking }));

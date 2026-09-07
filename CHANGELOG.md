@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.13 – 2026-09-07
+
+- Beim Anlegen einer neuen Buchung wird die Bezeichnung nach dem Push-Übergang automatisch fokussiert, sodass direkt mit der Eingabe begonnen werden kann.
+- Die Schnellerfassung auf der Übersicht wurde vollständig entfernt; neue Buchungen laufen wieder ausschließlich über die zentrale Plus-Aktion.
+- Das nicht mehr benötigte Schnellerfassungs-Skript sowie dessen Service-Worker-Eintrag wurden entfernt.
+- Service-Worker-Cache und Versionsanzeige auf Version 2.0.13 angehoben.
+
 ## 2.0.12 – 2026-09-07
 
 - Die Bottom-Navigation bleibt während Push-Übergängen jetzt vollständig in ihrer festen Position und wird nicht mehr zusammen mit dem Hintergrund verschoben.
