@@ -1,5 +1,9 @@
-.month-switcher { display: flex; align-items: center; gap: 8px; }
-.month-label { min-width: 122px; text-align: center; font-weight: 740; color: var(--forest-950); }
+.summary-card .summary-balance.negative { color: var(--danger); }
+.month-switcher-shell { justify-content: center; margin-bottom: 12px; }
+.month-switcher { display: grid; grid-template-columns: 42px minmax(150px, auto) 42px; align-items: center; gap: 4px; padding: 4px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); box-shadow: var(--shadow-soft); }
+.month-label { min-width: 150px; text-align: center; font-weight: 760; color: var(--forest-950); letter-spacing: -0.01em; }
+.month-nav-btn { width: 42px; height: 42px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: var(--forest-900); font-size: 1.55rem; line-height: 1; -webkit-tap-highlight-color: transparent; }
+.month-nav-btn:active { background: var(--forest-050); transform: scale(.96); }
 .hero-brand { display: flex; align-items: center; gap: 12px; }
 .hero-logo { width: 48px; height: 48px; border-radius: 15px; overflow: hidden; box-shadow: var(--shadow-soft); }
 .hero-logo img { width: 100%; height: 100%; display: block; }
@@ -56,4 +60,5 @@
 @keyframes donut-enter { from { opacity: 0; transform: scale(.82) rotate(-24deg); } to { opacity: 1; transform: scale(1) rotate(0); } }
 @keyframes trend-grow { from { transform: scaleY(0); opacity: .35; } to { transform: scaleY(1); opacity: 1; } }
 @keyframes card-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-@media (max-width: 560px) { .analysis-chart-layout { grid-template-columns: 1fr; } .donut-chart-wrap { width: min(70vw, 220px); } .analysis-summary { align-items: center; } .analysis-summary-value { font-size: 1.55rem; } .trend-chart { margin-inline: -4px; } }
+@media (hover: hover) { .month-nav-btn:hover { background: var(--forest-050); } }
+@media (max-width: 560px) { .analysis-chart-layout { grid-template-columns: 1fr; } .donut-chart-wrap { width: min(70vw, 220px); } .analysis-summary { align-items: center; } .analysis-summary-value { font-size: 1.55rem; } .trend-chart { margin-inline: -4px; } .month-switcher { width: min(100%, 286px); grid-template-columns: 42px minmax(0, 1fr) 42px; } .month-label { min-width: 0; } }
