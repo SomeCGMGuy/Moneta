@@ -12,6 +12,7 @@ import { renderBottomNav } from './components/bottom-nav.js';
 import { showBookingForm } from './components/booking-form.js';
 import { showCategoryForm } from './components/category-form.js';
 import { showConfirmDialog } from './components/confirm-dialog.js';
+import { showOnboarding } from './components/onboarding.js';
 
 const app = document.querySelector('#app');
 const PULL_REFRESH_THRESHOLD = 72;
@@ -31,6 +32,7 @@ async function bootstrap() {
   syncFinancialMonthStorage();
   applyTheme(state.theme, false);
   await reloadData(); mountShell(); bindGlobalEvents(); render();
+  requestAnimationFrame(() => showOnboarding());
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     const hadController = Boolean(navigator.serviceWorker.controller);
     if (hadController) navigator.serviceWorker.addEventListener('controllerchange', () => { if (sessionStorage.getItem('moneta-sw-reloaded') === '1') return; sessionStorage.setItem('moneta-sw-reloaded', '1'); location.reload(); }, { once: true });
@@ -45,15 +47,9 @@ function mountShell() {
 
 async function reloadData() {
   const projectionWindow = projectionWindowForMonth(state.month);
-  const [allBookings, budgets, categoryMap] = await Promise.all([
-    listBookingsWithProjections(projectionWindow),
-    listBudgetsForMonth(state.month),
-    getCategoryMap()
-  ]);
+  const [allBookings, budgets, categoryMap] = await Promise.all([listBookingsWithProjections(projectionWindow), listBudgetsForMonth(state.month), getCategoryMap()]);
   const startDay = state.financialMonthMode === 'custom' ? state.financialMonthStart : 1;
-  state.allBookings = allBookings;
-  state.bookings = filterBookingsForPeriod(allBookings, getFinancialMonthPeriod(state.month, startDay));
-  state.budgets = budgets; state.categoryMap = categoryMap;
+  state.allBookings = allBookings; state.bookings = filterBookingsForPeriod(allBookings, getFinancialMonthPeriod(state.month, startDay)); state.budgets = budgets; state.categoryMap = categoryMap;
 }
 
 function render() {
@@ -66,19 +62,12 @@ function bindGlobalEvents() {
   app.addEventListener('click', async (event) => {
     const nav = event.target.closest('[data-nav]');
     if (nav) { const target = nav.dataset.nav; if (target === 'add') await openBookingForm(); else if (target !== state.view) { state.view = target; location.hash = `#/${target}`; render(); } return; }
-    const monthButton = event.target.closest('[data-month]');
-    if (monthButton) { state.month = shiftMonth(state.month, monthButton.dataset.month === 'next' ? 1 : -1); state.analysisCategoryId = null; await reloadData(); render(); return; }
-    const analysisRange = event.target.closest('[data-analysis-range]');
-    if (analysisRange) { state.analysisRange = analysisRange.dataset.analysisRange; state.analysisCategoryId = null; render(); return; }
-    const analysisCategory = event.target.closest('[data-analysis-category]');
-    if (analysisCategory) { const categoryId = analysisCategory.dataset.analysisCategory || null; state.analysisCategoryId = state.analysisCategoryId === categoryId ? null : categoryId; render(); return; }
-    const financialMode = event.target.closest('[data-financial-mode]');
-    if (financialMode) {
-      state.financialMonthMode = financialMode.dataset.financialMode === 'custom' ? 'custom' : 'calendar';
-      await setSetting('financialMonthMode', state.financialMonthMode); syncFinancialMonthStorage(); state.analysisCategoryId = null; await reloadData(); render(); return;
-    }
-    const themeChoice = event.target.closest('[data-theme-choice]');
-    if (themeChoice) { const theme = normalizeTheme(themeChoice.dataset.themeChoice); state.theme = theme; await applyTheme(theme, true); render(); return; }
+    const monthButton = event.target.closest('[data-month]'); if (monthButton) { state.month = shiftMonth(state.month, monthButton.dataset.month === 'next' ? 1 : -1); state.analysisCategoryId = null; await reloadData(); render(); return; }
+    const analysisRange = event.target.closest('[data-analysis-range]'); if (analysisRange) { state.analysisRange = analysisRange.dataset.analysisRange; state.analysisCategoryId = null; render(); return; }
+    const analysisCategory = event.target.closest('[data-analysis-category]'); if (analysisCategory) { const categoryId = analysisCategory.dataset.analysisCategory || null; state.analysisCategoryId = state.analysisCategoryId === categoryId ? null : categoryId; render(); return; }
+    const financialMode = event.target.closest('[data-financial-mode]'); if (financialMode) { state.financialMonthMode = financialMode.dataset.financialMode === 'custom' ? 'custom' : 'calendar'; await setSetting('financialMonthMode', state.financialMonthMode); syncFinancialMonthStorage(); state.analysisCategoryId = null; await reloadData(); render(); return; }
+    const themeChoice = event.target.closest('[data-theme-choice]'); if (themeChoice) { const theme = normalizeTheme(themeChoice.dataset.themeChoice); state.theme = theme; await applyTheme(theme, true); render(); return; }
+    if (event.target.closest('[data-onboarding-open]')) { await showOnboarding({ force: true }); return; }
     if (event.target.closest('[data-backup-export]')) { try { downloadBackup(await createBackup()); } catch (error) { alert(error.message ?? 'Das Backup konnte nicht erstellt werden.'); } return; }
     if (event.target.closest('[data-backup-import]')) { app.querySelector('[data-backup-file]')?.click(); return; }
     const bookingRow = event.target.closest('[data-booking-id]'); if (bookingRow) { const booking = await getBooking(bookingRow.dataset.bookingId); if (booking) await openBookingForm(booking); return; }
@@ -87,22 +76,10 @@ function bindGlobalEvents() {
     const categoryAdd = event.target.closest('[data-category-add]'); if (categoryAdd) { await openCategoryForm(null, categoryAdd.dataset.categoryAdd); return; }
     const categoryEdit = event.target.closest('[data-category-edit]'); if (categoryEdit) { const category = await getCategory(categoryEdit.dataset.categoryEdit); if (category) await openCategoryForm(category, category.type); }
   });
-
   app.addEventListener('change', async (event) => {
-    const financialStart = event.target.closest('[data-financial-start]');
-    if (financialStart) { state.financialMonthStart = normalizeFinancialStart(financialStart.value); await setSetting('financialMonthStart', state.financialMonthStart); syncFinancialMonthStorage(); state.analysisCategoryId = null; await reloadData(); render(); return; }
+    const financialStart = event.target.closest('[data-financial-start]'); if (financialStart) { state.financialMonthStart = normalizeFinancialStart(financialStart.value); await setSetting('financialMonthStart', state.financialMonthStart); syncFinancialMonthStorage(); state.analysisCategoryId = null; await reloadData(); render(); return; }
     const input = event.target.closest('[data-backup-file]'); if (!input?.files?.[0]) return; const file = input.files[0]; input.value = '';
-    try {
-      const backup = parseBackup(await file.text()); const counts = summarizeBackup(backup);
-      const recurringText = counts.recurringRules ? `, ${counts.recurringRules} Wiederholungen` : '';
-      const confirmed = await showConfirmDialog({ title: 'Backup wiederherstellen?', message: `Das Backup enthält ${counts.bookings} Buchungen${recurringText}, ${counts.categories} Kategorien und ${counts.budgets} Budgets. Deine aktuellen Moneta-Daten werden vollständig ersetzt.`, confirmLabel: 'Daten ersetzen', danger: true });
-      if (!confirmed) return;
-      await restoreBackup(backup); await ensureDefaultCategories();
-      state.theme = normalizeTheme(await getSetting('theme', 'light'));
-      state.financialMonthMode = (await getSetting('financialMonthMode', 'calendar')) === 'custom' ? 'custom' : 'calendar';
-      state.financialMonthStart = normalizeFinancialStart(await getSetting('financialMonthStart', 28)); syncFinancialMonthStorage();
-      applyTheme(state.theme, false); state.analysisCategoryId = null; await reloadData(); render(); alert('Das Moneta-Backup wurde vollständig wiederhergestellt.');
-    } catch (error) { alert(error.message ?? 'Das Backup konnte nicht importiert werden.'); }
+    try { const backup = parseBackup(await file.text()); const counts = summarizeBackup(backup); const recurringText = counts.recurringRules ? `, ${counts.recurringRules} Wiederholungen` : ''; const confirmed = await showConfirmDialog({ title: 'Backup wiederherstellen?', message: `Das Backup enthält ${counts.bookings} Buchungen${recurringText}, ${counts.categories} Kategorien und ${counts.budgets} Budgets. Deine aktuellen Moneta-Daten werden vollständig ersetzt.`, confirmLabel: 'Daten ersetzen', danger: true }); if (!confirmed) return; await restoreBackup(backup); await ensureDefaultCategories(); state.theme = normalizeTheme(await getSetting('theme', 'light')); state.financialMonthMode = (await getSetting('financialMonthMode', 'calendar')) === 'custom' ? 'custom' : 'calendar'; state.financialMonthStart = normalizeFinancialStart(await getSetting('financialMonthStart', 28)); syncFinancialMonthStorage(); applyTheme(state.theme, false); state.analysisCategoryId = null; await reloadData(); render(); alert('Das Moneta-Backup wurde vollständig wiederhergestellt.'); } catch (error) { alert(error.message ?? 'Das Backup konnte nicht importiert werden.'); }
   });
   window.addEventListener('hashchange', () => { state.view = location.hash.replace('#/', '') || 'overview'; render(); }); bindPullToRefresh();
 }
@@ -119,36 +96,15 @@ function resetPullGesture() { pullStartY = null; pullStartX = null; pullDistance
 function resetPullIndicator() { if (!pullRefreshRoot) return; pullDistance = 0; pullRefreshRoot.style.removeProperty('--pull-distance'); pullRefreshRoot.classList.remove('pulling', 'ready', 'refreshing', 'complete', 'error'); pullRefreshRoot.querySelector('[data-pull-refresh-label]').textContent = 'Zum Aktualisieren ziehen'; }
 async function refreshCurrentView() { pullRefreshBusy = true; pullRefreshRoot.classList.remove('pulling', 'ready'); pullRefreshRoot.classList.add('refreshing'); pullRefreshRoot.style.setProperty('--pull-distance', `${PULL_REFRESH_THRESHOLD + 8}px`); pullRefreshRoot.querySelector('[data-pull-refresh-label]').textContent = 'Aktualisiere …'; try { await reloadData(); render(); pullRefreshRoot.classList.remove('refreshing'); pullRefreshRoot.classList.add('complete'); pullRefreshRoot.querySelector('[data-pull-refresh-label]').textContent = 'Aktualisiert'; await delay(420); } catch (error) { console.warn('Pull-to-refresh:', error); pullRefreshRoot.classList.remove('refreshing'); pullRefreshRoot.classList.add('error'); pullRefreshRoot.querySelector('[data-pull-refresh-label]').textContent = 'Aktualisierung fehlgeschlagen'; await delay(900); } finally { pullRefreshBusy = false; resetPullGesture(); } }
 
-async function openBookingForm(booking = null) {
-  const result = await showBookingForm({ booking }); if (!result) return;
-  if (result.deleteRequested) { const row = result.booking; const confirmed = await showConfirmDialog({ title: 'Buchung löschen?', message: row.recurrenceRuleId ? `„${row.title}“ und die zugehörige Wiederholung werden dauerhaft aus Moneta entfernt.` : `„${row.title}“ wird dauerhaft aus Moneta entfernt.`, confirmLabel: 'Endgültig löschen', danger: true }); if (!confirmed) return; await deleteBooking(row.id); await reloadData(); render(); return; }
-  try {
-    const savedBooking = await saveBooking(result);
-    if (!booking) { const startDay = state.financialMonthMode === 'custom' ? state.financialMonthStart : 1; state.month = financialMonthForDate(savedBooking.date, startDay); state.view = 'overview'; state.analysisCategoryId = null; if (location.hash !== '#/overview') history.replaceState(null, '', '#/overview'); }
-    await reloadData(); render();
-  } catch (error) { alert(error.message ?? 'Die Buchung konnte nicht gespeichert werden.'); }
-}
-
-async function openBudgetForm(budget = null) {
-  const categories = await listCategories('expense'); if (!categories.length) { alert('Lege zuerst mindestens eine Ausgabenkategorie in den Einstellungen an.'); return; }
-  const result = await showBudgetForm({ budget, categories, month: state.month }); if (!result) return;
-  if (result.delete) { const confirmed = await showConfirmDialog({ title: 'Budget löschen?', message: 'Das Budget wird entfernt. Deine Buchungen bleiben unverändert erhalten.', confirmLabel: 'Budget löschen', danger: true }); if (!confirmed) return; await deleteBudget(result.id); }
-  else { const duplicate = state.budgets.find((item) => item.categoryId === result.categoryId && item.month === result.month && item.id !== result.id); if (duplicate) { alert('Für diese Kategorie existiert in diesem Monat bereits ein Budget.'); return; } await saveBudget(result); }
-  await reloadData(); render();
-}
-
-async function openCategoryForm(category = null, initialType = 'expense') {
-  const result = await showCategoryForm({ category, initialType }); if (!result) return;
-  if (result.deleteRequested) { const row = result.category; const usage = await getCategoryUsage(row.id); if (usage.bookings || usage.budgets) { const parts = []; if (usage.bookings) parts.push(`${usage.bookings} Buchung${usage.bookings === 1 ? '' : 'en'}`); if (usage.budgets) parts.push(`${usage.budgets} Budget${usage.budgets === 1 ? '' : 's'}`); alert(`„${row.name}“ kann nicht gelöscht werden, weil die Kategorie noch von ${parts.join(' und ')} verwendet wird.`); return; } const confirmed = await showConfirmDialog({ title: 'Kategorie löschen?', message: `„${row.name}“ wird dauerhaft aus Moneta entfernt.`, confirmLabel: 'Kategorie löschen', danger: true }); if (!confirmed) return; try { await deleteCategory(row.id); } catch (error) { alert(error.message ?? 'Die Kategorie konnte nicht gelöscht werden.'); return; } }
-  else { try { await saveCategory(result); } catch (error) { alert(error.message ?? 'Die Kategorie konnte nicht gespeichert werden.'); return; } }
-  await reloadData(); render();
-}
+async function openBookingForm(booking = null) { const result = await showBookingForm({ booking }); if (!result) return; if (result.deleteRequested) { const row = result.booking; const confirmed = await showConfirmDialog({ title: 'Buchung löschen?', message: row.recurrenceRuleId ? `„${row.title}“ und die zugehörige Wiederholung werden dauerhaft aus Moneta entfernt.` : `„${row.title}“ wird dauerhaft aus Moneta entfernt.`, confirmLabel: 'Endgültig löschen', danger: true }); if (!confirmed) return; await deleteBooking(row.id); await reloadData(); render(); return; } try { const savedBooking = await saveBooking(result); if (!booking) { const startDay = state.financialMonthMode === 'custom' ? state.financialMonthStart : 1; state.month = financialMonthForDate(savedBooking.date, startDay); state.view = 'overview'; state.analysisCategoryId = null; if (location.hash !== '#/overview') history.replaceState(null, '', '#/overview'); } await reloadData(); render(); } catch (error) { alert(error.message ?? 'Die Buchung konnte nicht gespeichert werden.'); } }
+async function openBudgetForm(budget = null) { const categories = await listCategories('expense'); if (!categories.length) { alert('Lege zuerst mindestens eine Ausgabenkategorie in den Einstellungen an.'); return; } const result = await showBudgetForm({ budget, categories, month: state.month }); if (!result) return; if (result.delete) { const confirmed = await showConfirmDialog({ title: 'Budget löschen?', message: 'Das Budget wird entfernt. Deine Buchungen bleiben unverändert erhalten.', confirmLabel: 'Budget löschen', danger: true }); if (!confirmed) return; await deleteBudget(result.id); } else { const duplicate = state.budgets.find((item) => item.categoryId === result.categoryId && item.month === result.month && item.id !== result.id); if (duplicate) { alert('Für diese Kategorie existiert in diesem Monat bereits ein Budget.'); return; } await saveBudget(result); } await reloadData(); render(); }
+async function openCategoryForm(category = null, initialType = 'expense') { const result = await showCategoryForm({ category, initialType }); if (!result) return; if (result.deleteRequested) { const row = result.category; const usage = await getCategoryUsage(row.id); if (usage.bookings || usage.budgets) { const parts = []; if (usage.bookings) parts.push(`${usage.bookings} Buchung${usage.bookings === 1 ? '' : 'en'}`); if (usage.budgets) parts.push(`${usage.budgets} Budget${usage.budgets === 1 ? '' : 's'}`); alert(`„${row.name}“ kann nicht gelöscht werden, weil die Kategorie noch von ${parts.join(' und ')} verwendet wird.`); return; } const confirmed = await showConfirmDialog({ title: 'Kategorie löschen?', message: `„${row.name}“ wird dauerhaft aus Moneta entfernt.`, confirmLabel: 'Kategorie löschen', danger: true }); if (!confirmed) return; try { await deleteCategory(row.id); } catch (error) { alert(error.message ?? 'Die Kategorie konnte nicht gelöscht werden.'); return; } } else { try { await saveCategory(result); } catch (error) { alert(error.message ?? 'Die Kategorie konnte nicht gespeichert werden.'); return; } } await reloadData(); render(); }
 
 async function applyTheme(theme, persist) { document.documentElement.dataset.theme = theme; document.documentElement.style.colorScheme = theme; localStorage.setItem('moneta-theme', theme); document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#101b17' : '#214b3b'); if (persist) await setSetting('theme', theme); }
 function syncFinancialMonthStorage() { localStorage.setItem('moneta-financial-month-mode', state.financialMonthMode); localStorage.setItem('moneta-financial-month-start', String(state.financialMonthStart)); }
-function normalizeFinancialStart(value) { const day = Number.parseInt(value, 10); return Number.isFinite(day) ? Math.min(28, Math.max(1, day)) : 28; }
 function normalizeTheme(value) { return value === 'dark' ? 'dark' : 'light'; }
-function currentMonth() { const date = new Date(); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; }
-function shiftMonth(month, delta) { const [year, monthNumber] = month.split('-').map(Number); const date = new Date(year, monthNumber - 1 + delta, 1); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; }
-function projectionWindowForMonth(month) { const year = Number(month.slice(0, 4)); return { from: `${year - 1}-01-01`, to: `${year + 2}-12-31` }; }
-function delay(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
+function normalizeFinancialStart(value) { const number = Number(value); return Number.isInteger(number) ? Math.min(28, Math.max(1, number)) : 28; }
+function currentMonth() { return new Date().toISOString().slice(0, 7); }
+function shiftMonth(month, delta) { const date = new Date(`${month}-01T12:00:00`); date.setMonth(date.getMonth() + delta); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; }
+function projectionWindowForMonth(month) { const date = new Date(`${month}-01T12:00:00`); date.setMonth(date.getMonth() + 2); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-01`; }
+function delay(ms) { return new Promise((resolve) => window.setTimeout(resolve, ms)); }
