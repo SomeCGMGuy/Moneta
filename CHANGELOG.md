@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.5 – 2026-09-07
+
+- Pull-to-refresh bzw. das Herunterziehen der gesamten App-Oberfläche am oberen Rand unterbunden, damit Moneta sich in der installierten PWA stärker wie eine native App verhält.
+- Textauswahl und Touch-Callout in der Bottom-Navigation deaktiviert, sodass die Navigationsbeschriftungen nicht mehr markiert oder kopiert werden können.
+- Beschriftung „Einstellungen“ im Footer für schmale Displays optimiert, damit der letzte Buchstabe nicht mehr abgeschnitten wird.
+- Versionsanzeige unter „Über Moneta“ auf 2.0.5 angehoben.
+- Service-Worker-Cache auf Version 2.0.5 angehoben.
+
 ## 2.0.4 – 2026-09-07
 
 - Pinch-/Seitenskalierung in der installierten Moneta-App unterbunden, damit die Oberfläche wie eine feste App-UI bedient wird.

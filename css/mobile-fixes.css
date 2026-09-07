@@ -1,5 +1,10 @@
 /* Mobile/PWA interaction fixes. Kept separate so the design reference styles stay untouched. */
 html,
+body {
+  overscroll-behavior-y: none;
+}
+
+html,
 body,
 .app-shell {
   touch-action: pan-x pan-y;
@@ -8,6 +13,15 @@ body,
 .bottom-nav {
   height: calc(70px + env(safe-area-inset-bottom));
   min-height: calc(70px + env(safe-area-inset-bottom));
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.bottom-nav * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .nav-item {
@@ -27,10 +41,17 @@ body,
   display: block;
   width: 100%;
   min-width: 0;
-  overflow: hidden;
   white-space: nowrap;
   text-align: center;
   line-height: 1.1;
+}
+
+.nav-item[data-nav='settings'] {
+  font-size: clamp(.58rem, 2.55vw, .68rem);
+}
+
+.nav-item[data-nav='settings'] > span:last-child {
+  letter-spacing: -.02em;
 }
 
 .field input,

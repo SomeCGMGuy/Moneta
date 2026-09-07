@@ -1,4 +1,4 @@
-const CACHE_NAME = 'moneta-shell-v2.0.4';
+const CACHE_NAME = 'moneta-shell-v2.0.5';
 const APP_SHELL = [
   './',
   './index.html',
