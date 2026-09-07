@@ -602,15 +602,23 @@
         )
 
         drawer.addEventListener(
-        "close",
-        () => {
-            resetForm()
-        }
+            "close",
+            () => {
+                drawer.classList.remove(
+                    "is-closing"
+                )
 
-        
+                document.documentElement.classList.remove(
+                    "moneta-transaction-open"
+                )
 
-        
-)
+                document.body.classList.remove(
+                    "moneta-transaction-open"
+                )
+
+                resetForm()
+            }
+        )
 
         eventsBound = true
     }
@@ -623,6 +631,14 @@
      */
     const openDrawer = () => {
         if (!drawer.open) {
+            document.documentElement.classList.add(
+                "moneta-transaction-open"
+            )
+
+            document.body.classList.add(
+                "moneta-transaction-open"
+            )
+
             drawer.showModal()
         }
 
@@ -670,8 +686,10 @@
         ) => {
             if (
                 event.target !== drawer ||
-                event.animationName !==
-                    "moneta-drawer-out"
+                (event.animationName !==
+                    "moneta-drawer-out" &&
+                 event.animationName !==
+                    "moneta-mobile-drawer-out")
             ) {
                 return
             }
@@ -691,6 +709,24 @@
         drawer.addEventListener(
             "animationend",
             handleAnimationEnd
+        )
+
+        window.setTimeout(
+            () => {
+                if (
+                    drawer.open &&
+                    drawer.classList.contains(
+                        "is-closing"
+                    )
+                ) {
+                    drawer.classList.remove(
+                        "is-closing"
+                    )
+
+                    drawer.close()
+                }
+            },
+            320
         )
     }
 

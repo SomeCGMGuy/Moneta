@@ -2018,14 +2018,25 @@ dialog[open]::backdrop {
         box-shadow: 0 5px 16px rgba(5, 150, 105, 0.26);
     }
 
-    /* Buchungsdialog als Bottom-Sheet statt rechter Seitenleiste. */
+    /*
+     * Buchungsdialog auf dem Handy als echte App-Ansicht.
+     * Er belegt den kompletten Viewport; nur der Formularinhalt
+     * innerhalb des Dialogs darf scrollen.
+     */
+    html.moneta-transaction-open,
+    body.moneta-transaction-open {
+        overflow: hidden;
+        overscroll-behavior: none;
+    }
+
     .moneta-drawer {
-        inset: auto 0 0 0;
-        width: 100%;
-        height: auto;
-        max-height: min(88dvh, 760px);
-        margin: auto 0 0;
-        border-radius: 24px 24px 0 0;
+        inset: 0;
+        width: 100vw;
+        height: 100dvh;
+        max-height: 100dvh;
+        margin: 0;
+        border-radius: 0;
+        overscroll-behavior: contain;
     }
 
     .moneta-drawer[open] {
@@ -2037,11 +2048,13 @@ dialog[open]::backdrop {
     }
 
     .moneta-drawer > div {
-        max-height: min(88dvh, 760px);
+        width: 100%;
+        height: 100%;
+        max-height: 100dvh;
     }
 
     .moneta-drawer > div > div:first-child {
-        padding: 14px 16px 12px;
+        padding: calc(14px + env(safe-area-inset-top)) 16px 12px;
     }
 
     .moneta-drawer > div > div:first-child p {
