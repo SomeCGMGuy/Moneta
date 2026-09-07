@@ -1,33 +1,40 @@
 import { listCategories } from '../services/category-service.js';
 
+const TRANSITION_MS = 280;
+
 export async function showBookingForm({ booking = null }) {
   const root = document.querySelector('#modal-root');
+  const app = document.querySelector('#app');
   const type = booking?.type ?? 'expense';
-  const backdrop = document.createElement('div');
-  backdrop.className = 'modal-backdrop';
+  const layer = document.createElement('div');
+  layer.className = 'booking-page-layer';
 
   const categories = await listCategories(type);
-  backdrop.innerHTML = buildMarkup(booking, type, categories, defaultBookingDate());
-  root.append(backdrop);
+  layer.innerHTML = buildMarkup(booking, type, categories, defaultBookingDate());
+  root.append(layer);
+  app?.setAttribute('inert', '');
+  document.documentElement.classList.add('booking-page-open');
 
-  const form = backdrop.querySelector('form');
+  requestAnimationFrame(() => requestAnimationFrame(() => layer.classList.add('entered')));
+
+  const form = layer.querySelector('form');
   const typeInput = form.elements.type;
   const categorySelect = form.elements.categoryId;
 
   const refreshCategories = async (nextType) => {
     const rows = await listCategories(nextType);
-    categorySelect.innerHTML = rows.map((category) => `<option value="${category.id}">${escapeHtml(category.icon)} ${escapeHtml(category.name)}</option>`).join('');
+    categorySelect.innerHTML = rows.map((category) => `<option value="${escapeAttr(category.id)}">${escapeHtml(category.icon)} ${escapeHtml(category.name)}</option>`).join('');
     const existingCategory = booking?.type === nextType ? booking.categoryId : null;
     if (existingCategory) categorySelect.value = existingCategory;
   };
 
   const setType = async (nextType) => {
     typeInput.value = nextType;
-    backdrop.querySelectorAll('[data-type]').forEach((button) => button.classList.toggle('active', button.dataset.type === nextType));
+    layer.querySelectorAll('[data-type]').forEach((button) => button.classList.toggle('active', button.dataset.type === nextType));
     await refreshCategories(nextType);
   };
 
-  backdrop.querySelectorAll('[data-type]').forEach((button) => {
+  layer.querySelectorAll('[data-type]').forEach((button) => {
     button.addEventListener('click', () => setType(button.dataset.type));
   });
 
@@ -35,18 +42,28 @@ export async function showBookingForm({ booking = null }) {
 
   return new Promise((resolve) => {
     let settled = false;
-    const close = (value) => {
+
+    const close = async (value) => {
       if (settled) return;
       settled = true;
-      backdrop.remove();
+      document.removeEventListener('keydown', onKeyDown);
+      layer.classList.remove('entered');
+      document.documentElement.classList.add('booking-page-returning');
+      await wait(TRANSITION_MS);
+      layer.remove();
+      document.documentElement.classList.remove('booking-page-open', 'booking-page-returning');
+      app?.removeAttribute('inert');
       resolve(value);
     };
 
-    backdrop.addEventListener('click', (event) => { if (event.target === backdrop) close(null); });
-    backdrop.querySelector('[data-close]').addEventListener('click', () => close(null));
-    backdrop.querySelector('[data-cancel]').addEventListener('click', () => close(null));
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') close(null);
+    };
 
-    const deleteButton = backdrop.querySelector('[data-delete]');
+    document.addEventListener('keydown', onKeyDown);
+    layer.querySelector('[data-back]').addEventListener('click', () => close(null));
+
+    const deleteButton = layer.querySelector('[data-delete]');
     if (deleteButton) {
       deleteButton.addEventListener('click', () => close({ deleteRequested: true, booking }));
     }
@@ -68,45 +85,48 @@ export async function showBookingForm({ booking = null }) {
 }
 
 function buildMarkup(booking, type, categories, defaultDate) {
+  const title = booking ? 'Buchung bearbeiten' : 'Neue Buchung';
   return `
-    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="booking-modal-title">
-      <div class="modal-header">
-        <h2 id="booking-modal-title">${booking ? 'Buchung bearbeiten' : 'Buchung hinzufügen'}</h2>
-        <button class="icon-btn" type="button" data-close aria-label="Schließen">×</button>
-      </div>
-      <form class="form-grid">
-        <input type="hidden" name="type" value="${type}" />
-        <div class="segmented" aria-label="Buchungstyp">
-          <button type="button" data-type="expense" class="${type === 'expense' ? 'active' : ''}">Ausgabe</button>
-          <button type="button" data-type="income" class="${type === 'income' ? 'active' : ''}">Einnahme</button>
-        </div>
-        <div class="field">
-          <label for="booking-title">Bezeichnung</label>
-          <input id="booking-title" name="title" maxlength="120" required value="${escapeAttr(booking?.title ?? '')}" placeholder="z. B. Supermarkt" />
-        </div>
-        <div class="field">
-          <label for="booking-amount">Betrag</label>
-          <input id="booking-amount" name="amount" inputmode="decimal" type="number" min="0.01" step="0.01" required value="${booking?.amount ?? ''}" placeholder="0,00" />
-        </div>
-        <div class="field">
-          <label for="booking-category">Kategorie</label>
-          <select id="booking-category" name="categoryId" required>${categories.map((category) => `<option value="${category.id}">${escapeHtml(category.icon)} ${escapeHtml(category.name)}</option>`).join('')}</select>
-        </div>
-        <div class="field">
-          <label for="booking-date">Datum</label>
-          <input id="booking-date" name="date" type="date" required value="${booking?.date ?? defaultDate}" />
-        </div>
-        <div class="field">
-          <label for="booking-note">Notiz <span aria-hidden="true">·</span> optional</label>
-          <textarea id="booking-note" name="note" maxlength="500" placeholder="Zusätzliche Informationen">${escapeHtml(booking?.note ?? '')}</textarea>
-        </div>
-        <div class="form-actions">
-          ${booking ? '<button class="btn btn-ghost" type="button" data-delete style="color:var(--danger)">Buchung löschen</button>' : ''}
-          <div class="form-actions-right">
-            <button class="btn btn-secondary" type="button" data-cancel>Abbrechen</button>
-            <button class="btn btn-primary" type="submit">${booking ? 'Speichern' : 'Hinzufügen'}</button>
+    <section class="booking-page" role="dialog" aria-modal="true" aria-labelledby="booking-page-title">
+      <header class="booking-page-header">
+        <button class="booking-page-back" type="button" data-back aria-label="Zurück">‹</button>
+        <h2 id="booking-page-title">${title}</h2>
+        <span class="booking-page-header-spacer" aria-hidden="true"></span>
+      </header>
+
+      <form class="booking-page-form">
+        <div class="booking-page-content">
+          <input type="hidden" name="type" value="${type}" />
+          <div class="segmented" aria-label="Buchungstyp">
+            <button type="button" data-type="expense" class="${type === 'expense' ? 'active' : ''}">Ausgabe</button>
+            <button type="button" data-type="income" class="${type === 'income' ? 'active' : ''}">Einnahme</button>
           </div>
+          <div class="field">
+            <label for="booking-title">Bezeichnung</label>
+            <input id="booking-title" name="title" maxlength="120" required value="${escapeAttr(booking?.title ?? '')}" placeholder="z. B. Supermarkt" />
+          </div>
+          <div class="field">
+            <label for="booking-amount">Betrag</label>
+            <input id="booking-amount" name="amount" inputmode="decimal" type="number" min="0.01" step="0.01" required value="${booking?.amount ?? ''}" placeholder="0,00" />
+          </div>
+          <div class="field">
+            <label for="booking-category">Kategorie</label>
+            <select id="booking-category" name="categoryId" required>${categories.map((category) => `<option value="${escapeAttr(category.id)}">${escapeHtml(category.icon)} ${escapeHtml(category.name)}</option>`).join('')}</select>
+          </div>
+          <div class="field">
+            <label for="booking-date">Datum</label>
+            <input id="booking-date" name="date" type="date" required value="${escapeAttr(booking?.date ?? defaultDate)}" />
+          </div>
+          <div class="field">
+            <label for="booking-note">Notiz <span aria-hidden="true">·</span> optional</label>
+            <textarea id="booking-note" name="note" maxlength="500" placeholder="Zusätzliche Informationen">${escapeHtml(booking?.note ?? '')}</textarea>
+          </div>
+          ${booking ? '<button class="btn btn-ghost booking-page-delete" type="button" data-delete>Buchung löschen</button>' : ''}
         </div>
+
+        <footer class="booking-page-actions">
+          <button class="btn btn-primary booking-page-save" type="submit">${booking ? 'Änderungen speichern' : 'Buchung hinzufügen'}</button>
+        </footer>
       </form>
     </section>`;
 }
@@ -126,6 +146,7 @@ function localIsoDate(date) {
   return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 }
 
+function wait(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
 function escapeHtml(value) {
   return String(value).replace(/[&<>'"]/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char]));
 }

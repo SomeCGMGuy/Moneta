@@ -1,4 +1,4 @@
-const CACHE_NAME = 'moneta-shell-v2.0.8';
+const CACHE_NAME = 'moneta-shell-v2.0.9';
 const APP_SHELL = [
   './',
   './index.html',
@@ -7,6 +7,7 @@ const APP_SHELL = [
   './css/base.css',
   './css/components.css',
   './css/views.css',
+  './css/navigation.css',
   './css/mobile-fixes.css',
   './js/app.js',
   './js/quick-capture.js',

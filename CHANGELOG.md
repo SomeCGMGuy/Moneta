@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.9 – 2026-09-07
+
+- Neue und bestehende Buchungen öffnen jetzt als eigene, vollflächige Transaktionsansicht statt als Modal.
+- Beim Öffnen fährt die aktuelle Moneta-Ansicht nach links, während die Transaktionsansicht von rechts hereinkommt; beim Zurückgehen läuft die Animation spiegelverkehrt.
+- Die Transaktionsansicht hat eine eigene Kopfzeile mit Zurück-Navigation und eine feste Speichern-Aktion am unteren Rand.
+- Die Bottom-Navigation bleibt während der Transaktionsansicht im Hintergrund und bewegt sich zusammen mit der bisherigen Ansicht aus dem Fokus.
+- Eingaben, Kategorien, Datumslogik und Löschen bestehender Buchungen funktionieren weiterhin wie zuvor.
+- Eigene Navigations-Styles ergänzt und Service-Worker-Cache sowie Versionsanzeige auf 2.0.9 angehoben.
+
 ## 2.0.8 – 2026-09-07
 
 - Neue Buchungen orientieren ihr vorausgewähltes Datum jetzt am aktuell geöffneten Monat statt immer am heutigen Kalendermonat.
