@@ -3,12 +3,13 @@ const SHEET_EXIT_MS = 180;
 
 export function showChoiceSheet({ title, options, selected = '', searchable = false, searchPlaceholder = 'Suchen' }) {
   return new Promise((resolve) => {
+    const returnFocusTo = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const layer = document.createElement('div');
     layer.className = 'choice-sheet-backdrop';
     layer.innerHTML = `<section class="choice-sheet" role="dialog" aria-modal="true" aria-labelledby="choice-sheet-title">
       <div class="choice-sheet-handle" aria-hidden="true"></div>
       <header class="choice-sheet-header"><h2 id="choice-sheet-title">${escapeHtml(title)}</h2><button type="button" class="choice-sheet-close" data-choice-close aria-label="Schließen">×</button></header>
-      ${searchable ? `<label class="choice-sheet-search"><span aria-hidden="true">⌕</span><input type="search" data-choice-search placeholder="${escapeAttr(searchPlaceholder)}" autocomplete="off" /></label>` : ''}
+      ${searchable ? `<label class="choice-sheet-search"><span aria-hidden="true">⌕</span><input type="search" data-choice-search placeholder="${escapeAttr(searchPlaceholder)}" autocomplete="off" enterkeyhint="search" /></label>` : ''}
       <div class="choice-sheet-list" data-choice-list>${renderOptions(options, selected)}</div>
       <div class="choice-sheet-empty" data-choice-empty hidden>Keine Treffer.</div>
     </section>`;
@@ -20,7 +21,11 @@ export function showChoiceSheet({ title, options, selected = '', searchable = fa
       document.removeEventListener('keydown', onKey);
       layer.classList.remove('open');
       layer.classList.add('closing');
-      window.setTimeout(() => { layer.remove(); resolve(value); }, SHEET_EXIT_MS);
+      window.setTimeout(() => {
+        layer.remove();
+        restoreFocus(returnFocusTo);
+        resolve(value);
+      }, SHEET_EXIT_MS);
     };
     const onKey = (event) => { if (event.key === 'Escape') close(null); };
     document.addEventListener('keydown', onKey);
@@ -44,6 +49,7 @@ export function showChoiceSheet({ title, options, selected = '', searchable = fa
 
 export function showMonthSheet({ title = 'Monat wählen', value }) {
   return new Promise((resolve) => {
+    const returnFocusTo = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const [initialYear] = String(value).split('-').map(Number);
     let year = Number.isFinite(initialYear) ? initialYear : new Date().getFullYear();
     const selected = /^\d{4}-\d{2}$/.test(value ?? '') ? value : '';
@@ -71,7 +77,11 @@ export function showMonthSheet({ title = 'Monat wählen', value }) {
       document.removeEventListener('keydown', onKey);
       layer.classList.remove('open');
       layer.classList.add('closing');
-      window.setTimeout(() => { layer.remove(); resolve(result); }, SHEET_EXIT_MS);
+      window.setTimeout(() => {
+        layer.remove();
+        restoreFocus(returnFocusTo);
+        resolve(result);
+      }, SHEET_EXIT_MS);
     };
     const onKey = (event) => { if (event.key === 'Escape') close(null); };
     document.addEventListener('keydown', onKey);
@@ -87,6 +97,10 @@ export function showMonthSheet({ title = 'Monat wählen', value }) {
   });
 }
 
+function restoreFocus(element) {
+  if (!element?.isConnected) return;
+  requestAnimationFrame(() => element.focus({ preventScroll: true }));
+}
 function renderOptions(options, selected) {
   return options.map((option) => `<button type="button" class="choice-sheet-option${String(option.value) === String(selected) ? ' selected' : ''}" data-choice-value="${escapeAttr(option.value)}" data-choice-label="${escapeAttr(option.label)}"><span class="choice-sheet-option-icon">${escapeHtml(option.icon || '')}</span><span>${escapeHtml(option.label)}</span><span class="choice-sheet-check" aria-hidden="true">${String(option.value) === String(selected) ? '✓' : ''}</span></button>`).join('');
 }
