@@ -12,16 +12,19 @@ export function onboardingCompleted() { try { return localStorage.getItem(STORAG
 export function showOnboarding({ force = false } = {}) {
   if (!force && onboardingCompleted()) return Promise.resolve(false);
   const root = document.querySelector('#modal-root');
+  const app = document.querySelector('#app');
   if (!root) return Promise.resolve(false);
   return new Promise((resolve) => {
     let index = 0;
     const previousOverflow = document.body.style.overflow;
+    const appWasInert = app?.hasAttribute('inert') ?? false;
     const shell = document.createElement('div');
     shell.className = 'onboarding';
     shell.setAttribute('role', 'dialog'); shell.setAttribute('aria-modal', 'true'); shell.setAttribute('aria-label', 'Willkommen bei Moneta');
+    app?.setAttribute('inert', '');
     root.appendChild(shell); document.body.style.overflow = 'hidden';
 
-    const finish = () => { try { localStorage.setItem(STORAGE_KEY, '1'); } catch {} shell.classList.add('leaving'); window.setTimeout(() => { shell.remove(); document.body.style.overflow = previousOverflow; resolve(true); }, 220); };
+    const finish = () => { try { localStorage.setItem(STORAGE_KEY, '1'); } catch {} shell.classList.add('leaving'); window.setTimeout(() => { shell.remove(); document.body.style.overflow = previousOverflow; if (!appWasInert) app?.removeAttribute('inert'); resolve(true); }, 220); };
     const render = (direction = 1) => {
       const slide = slides[index];
       shell.innerHTML = `<div class="onboarding-top"><div class="onboarding-brand">moneta<span>.</span></div>${index < slides.length - 1 ? '<button type="button" class="onboarding-skip" data-onboarding-skip>Überspringen</button>' : '<span></span>'}</div><div class="onboarding-stage"><article class="onboarding-slide ${direction < 0 ? 'from-left' : 'from-right'}"><div class="onboarding-visual" aria-hidden="true"><span>${slide.icon}</span></div><div class="onboarding-eyebrow">${slide.eyebrow}</div><h1>${slide.title}</h1><p>${slide.text}</p><div class="onboarding-note"><span aria-hidden="true">●</span>${slide.note}</div></article></div><div class="onboarding-footer"><div class="onboarding-dots" aria-label="Schritt ${index + 1} von ${slides.length}">${slides.map((_, i) => `<span class="${i === index ? 'active' : ''}"></span>`).join('')}</div><div class="onboarding-actions">${index ? '<button type="button" class="btn btn-secondary" data-onboarding-back>Zurück</button>' : '<span></span>'}<button type="button" class="btn btn-primary onboarding-next" data-onboarding-next>${index === slides.length - 1 ? 'Moneta starten' : 'Weiter'}</button></div></div>`;
