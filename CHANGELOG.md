@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.17 – 2026-09-07
+
+- Unter Einstellungen → App einen eigenen „App installieren“-Bereich ergänzt.
+- Unterstützte Chromium-Browser wie Brave können darüber ihren nativen PWA-Installationsdialog direkt aus Moneta öffnen.
+- Ist Moneta bereits als eigenständige PWA installiert, wird der Installationsstatus erkannt und die Aktion entsprechend deaktiviert.
+- Falls der Browser keinen direkten Installationsdialog bereitstellt, zeigt Moneta stattdessen einen Hinweis auf die Installation über das Browsermenü.
+- Service-Worker-Cache und Versionsanzeige auf Version 2.0.17 angehoben.
+
 ## 2.0.16 – 2026-09-07
 
 - In der Analyse einen eigenen Monatswechsler ergänzt, analog zur Übersicht.

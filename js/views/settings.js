@@ -42,10 +42,16 @@ export function renderSettings({ categoryMap, theme }) {
       </section>
 
       <section class="section settings-section">
-        <div class="section-heading"><div><h2>App</h2><p class="section-subtitle">Moneta vollständig neu laden, zum Beispiel nach einem App-Update.</p></div></div>
-        <div class="card theme-setting">
-          <div><strong>App neu laden</strong><p>Löscht nur zwischengespeicherte App-Dateien und lädt Moneta frisch vom Server. Buchungen, Kategorien, Budgets und Einstellungen bleiben erhalten.</p></div>
-          <button class="btn btn-secondary" type="button" data-app-reload>Neu laden</button>
+        <div class="section-heading"><div><h2>App</h2><p class="section-subtitle">Moneta installieren oder nach einem Update vollständig neu laden.</p></div></div>
+        <div class="category-settings-grid">
+          <div class="card theme-setting">
+            <div><strong>Auf Startbildschirm installieren</strong><p data-pwa-install-copy>Moneta kann als PWA installiert und wie eine normale App gestartet werden.</p></div>
+            <button class="btn btn-primary" type="button" data-pwa-install>App installieren</button>
+          </div>
+          <div class="card theme-setting">
+            <div><strong>App neu laden</strong><p>Löscht nur zwischengespeicherte App-Dateien und lädt Moneta frisch vom Server. Buchungen, Kategorien, Budgets und Einstellungen bleiben erhalten.</p></div>
+            <button class="btn btn-secondary" type="button" data-app-reload>Neu laden</button>
+          </div>
         </div>
       </section>
 
@@ -75,5 +81,5 @@ function renderCategoryGroup(title, type, categories) {
 }
 
 function sortCategories(a, b) { return a.name.localeCompare(b.name, 'de'); }
-function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char])); }
+function escapeHtml(value) { return String(value).replace(/[&<>'\"]/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char])); }
 function escapeAttr(value) { return escapeHtml(value); }
