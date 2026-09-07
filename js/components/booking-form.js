@@ -23,6 +23,7 @@ export async function showBookingForm({ booking = null }) {
   const typeInput = form.elements.type;
   const categoryInput = form.elements.categoryId;
   const recurrenceInput = form.elements.recurrenceFrequency;
+  const amountInput = form.elements.amount;
   const titleInput = form.elements.title;
   const noteInput = form.elements.note;
   const suggestions = layer.querySelector('[data-title-suggestions]');
@@ -47,7 +48,10 @@ export async function showBookingForm({ booking = null }) {
   };
   const updateNoteDisplay = () => {
     noteDetails.hidden = !noteToggle.checked;
-    if (noteToggle.checked) window.setTimeout(() => noteInput.focus({ preventScroll: true }), 0);
+    if (noteToggle.checked) window.setTimeout(() => {
+      noteInput.focus({ preventScroll: true });
+      ensureFocusedFieldVisible(noteInput);
+    }, 0);
   };
   const refreshCategories = async (nextType) => {
     categories = await listCategories(nextType);
@@ -109,6 +113,19 @@ export async function showBookingForm({ booking = null }) {
     if (!value) return;
     recurrenceInput.value = value; updateRecurrenceDisplay();
   });
+  amountInput.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    titleInput.focus({ preventScroll: true });
+    ensureFocusedFieldVisible(titleInput);
+  });
+  titleInput.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    hideSuggestions();
+    titleInput.blur();
+    layer.querySelector('[data-category-picker]')?.focus({ preventScroll: true });
+  });
   titleInput.addEventListener('input', () => { renderSuggestions(); applyLearnedCategory(); });
   titleInput.addEventListener('focus', renderSuggestions);
   suggestions.addEventListener('pointerdown', (event) => event.preventDefault());
@@ -120,14 +137,29 @@ export async function showBookingForm({ booking = null }) {
     hideSuggestions(); titleInput.focus({ preventScroll: true });
   });
   titleInput.addEventListener('blur', () => window.setTimeout(hideSuggestions, 100));
+  form.addEventListener('focusin', (event) => {
+    if (!event.target.matches('input, textarea')) return;
+    window.setTimeout(() => ensureFocusedFieldVisible(event.target), 120);
+  });
+  const viewport = window.visualViewport;
+  const onViewportResize = () => {
+    const focused = document.activeElement;
+    if (focused && layer.contains(focused) && focused.matches('input, textarea')) ensureFocusedFieldVisible(focused);
+  };
+  viewport?.addEventListener('resize', onViewportResize);
+
   updateCategoryDisplay(); updateRecurrenceDisplay();
-  if (!booking) window.setTimeout(() => { if (layer.isConnected) layer.querySelector('#booking-amount')?.focus({ preventScroll: true }); }, FOCUS_DELAY_MS);
+  if (!booking) window.setTimeout(() => { if (layer.isConnected) { amountInput.focus({ preventScroll: true }); ensureFocusedFieldVisible(amountInput); } }, FOCUS_DELAY_MS);
   layer.querySelector('[data-back]').addEventListener('click', () => navigation.close(null));
   layer.querySelector('[data-delete]')?.addEventListener('click', () => navigation.close({ deleteRequested: true, booking }));
   form.addEventListener('submit', (event) => {
-    event.preventDefault(); const data = new FormData(form);
+    event.preventDefault();
+    viewport?.removeEventListener('resize', onViewportResize);
+    if (document.activeElement instanceof HTMLElement && layer.contains(document.activeElement)) document.activeElement.blur();
+    const data = new FormData(form);
     navigation.close({ id: booking?.id, type: data.get('type'), amount: data.get('amount'), categoryId: data.get('categoryId'), title: data.get('title'), note: noteToggle.checked ? data.get('note') : '', date: data.get('date'), recurrenceFrequency: recurrenceToggle.checked ? data.get('recurrenceFrequency') : 'none', recurrenceEndDate: recurrenceToggle.checked ? data.get('recurrenceEndDate') : '' });
   });
+  navigation.promise.finally(() => viewport?.removeEventListener('resize', onViewportResize));
   return navigation.promise;
 }
 
@@ -142,8 +174,8 @@ function buildMarkup(booking, type, categories, defaultDate) {
     <form class="push-page-form booking-push-form"><div class="push-page-content booking-editor">
       <input type="hidden" name="type" value="${type}" /><input type="hidden" name="categoryId" value="${escapeAttr(initialCategory?.id ?? '')}" /><input type="hidden" name="recurrenceFrequency" value="${escapeAttr(recurrenceFrequency)}" />
       <div class="segmented booking-type" aria-label="Buchungstyp"><button type="button" data-type="expense" class="${type === 'expense' ? 'active' : ''}">Ausgabe</button><button type="button" data-type="income" class="${type === 'income' ? 'active' : ''}">Einnahme</button></div>
-      <div class="field booking-amount-field"><label for="booking-amount">Betrag</label><div class="booking-amount-input"><input id="booking-amount" name="amount" inputmode="decimal" type="number" min="0.01" step="0.01" required value="${booking?.amount ?? ''}" placeholder="0,00" /><span>€</span></div></div>
-      <div class="field booking-title-field"><label for="booking-title">Bezeichnung</label><div class="booking-title-autocomplete"><input id="booking-title" name="title" maxlength="120" required autocomplete="off" aria-autocomplete="list" aria-controls="booking-title-suggestions" value="${escapeAttr(booking?.title ?? '')}" placeholder="Wofür?" /><div id="booking-title-suggestions" class="booking-title-suggestions" data-title-suggestions role="listbox" hidden></div></div></div>
+      <div class="field booking-amount-field"><label for="booking-amount">Betrag</label><div class="booking-amount-input"><input id="booking-amount" name="amount" inputmode="decimal" enterkeyhint="next" type="number" min="0.01" step="0.01" required value="${booking?.amount ?? ''}" placeholder="0,00" /><span>€</span></div></div>
+      <div class="field booking-title-field"><label for="booking-title">Bezeichnung</label><div class="booking-title-autocomplete"><input id="booking-title" name="title" inputmode="text" enterkeyhint="next" maxlength="120" required autocomplete="off" aria-autocomplete="list" aria-controls="booking-title-suggestions" value="${escapeAttr(booking?.title ?? '')}" placeholder="Wofür?" /><div id="booking-title-suggestions" class="booking-title-suggestions" data-title-suggestions role="listbox" hidden></div></div></div>
       <div class="field"><label>Kategorie</label><button class="native-select-row" type="button" data-category-picker><span class="native-select-value" data-category-value></span><span class="native-select-chevron" aria-hidden="true">›</span></button></div>
       <div class="field"><label for="booking-date">Datum</label><input id="booking-date" name="date" type="date" required value="${escapeAttr(booking?.date ?? defaultDate)}" /></div>
       <label class="booking-toggle-row"><span><strong>Wiederholung</strong><small>Regelmäßige Buchung planen</small></span><input class="material-switch" type="checkbox" data-recurrence-toggle ${recurrenceEnabled ? 'checked' : ''} /><span class="material-switch-track" aria-hidden="true"></span></label>
@@ -154,6 +186,15 @@ function buildMarkup(booking, type, categories, defaultDate) {
   </section>`;
 }
 
+function ensureFocusedFieldVisible(element) {
+  if (!element?.isConnected) return;
+  const field = element.closest('.field') ?? element;
+  const rect = field.getBoundingClientRect();
+  const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+  const topSafe = 76;
+  const bottomSafe = 92;
+  if (rect.bottom > viewportHeight - bottomSafe || rect.top < topSafe) field.scrollIntoView({ block: 'center', behavior: 'smooth' });
+}
 function normalizeTitle(value) { return String(value ?? '').trim().toLocaleLowerCase('de-DE').replace(/\s+/g, ' '); }
 function defaultBookingDate() { const today = new Date(); const activeMonth = document.querySelector('[data-active-month]')?.dataset.activeMonth; if (!/^\d{4}-\d{2}$/.test(activeMonth ?? '')) return localIsoDate(today); const [year, month] = activeMonth.split('-').map(Number); const lastDay = new Date(year, month, 0).getDate(); const day = Math.min(today.getDate(), lastDay); return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`; }
 function localIsoDate(date) { return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
