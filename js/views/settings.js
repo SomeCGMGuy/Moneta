@@ -1,5 +1,7 @@
 import { APP_VERSION } from '../version.js';
 
+const CATEGORY_PREVIEW_LIMIT = 5;
+
 export function renderSettings({ categoryMap, theme, financialMonthMode = 'calendar', financialMonthStart = 28 }) {
   const categories = [...categoryMap.values()];
   const expenses = categories.filter((category) => category.type === 'expense').sort(sortCategories);
@@ -19,11 +21,11 @@ export function renderSettings({ categoryMap, theme, financialMonthMode = 'calen
             <button type="button" data-financial-mode="custom" class="${customFinancialMonth ? 'active' : ''}">Finanzmonat</button>
           </div>
         </div>
-        ${customFinancialMonth ? `<div class="card theme-setting">
-          <div><strong>Finanzmonat beginnt am</strong><p>Der Monat wird nach seinem Endmonat benannt. Bei Starttag 28 läuft „September“ z. B. vom 28. August bis 27. September.</p></div>
-          <select class="financial-month-day" data-financial-start aria-label="Starttag des Finanzmonats">
-            ${Array.from({ length: 28 }, (_, index) => index + 1).map((day) => `<option value="${day}" ${Number(financialMonthStart) === day ? 'selected' : ''}>${day}.</option>`).join('')}
-          </select>
+        ${customFinancialMonth ? `<div class="card financial-start-card">
+          <div class="financial-start-copy"><strong>Finanzmonat beginnt am</strong><p>Der Monat wird nach seinem Endmonat benannt. Bei Starttag 28 läuft „September“ z. B. vom 28. August bis 27. September.</p></div>
+          <div class="financial-day-scroller" role="radiogroup" aria-label="Starttag des Finanzmonats">
+            ${Array.from({ length: 28 }, (_, index) => index + 1).map((day) => `<label class="financial-day-chip${Number(financialMonthStart) === day ? ' selected' : ''}"><input type="radio" name="financial-start-day" value="${day}" data-financial-start ${Number(financialMonthStart) === day ? 'checked' : ''} /><span>${day}.</span></label>`).join('')}
+          </div>
         </div>` : ''}
       </section>
 
@@ -65,7 +67,10 @@ export function renderSettings({ categoryMap, theme, financialMonthMode = 'calen
 }
 
 function renderCategoryGroup(title, type, categories) {
-  return `<article class="card category-group"><div class="category-group-header"><div><strong>${title}</strong><span>${categories.length} ${categories.length === 1 ? 'Kategorie' : 'Kategorien'}</span></div><button class="btn btn-secondary category-add-btn" type="button" data-category-add="${type}">+ Neu</button></div><div class="category-list">${categories.length ? categories.map((category) => `<button class="category-row" type="button" data-category-edit="${escapeAttr(category.id)}"><span class="category-row-icon">${escapeHtml(category.icon || '•')}</span><span class="category-row-name">${escapeHtml(category.name)}</span><span class="category-row-action" aria-hidden="true">›</span></button>`).join('') : '<div class="category-empty">Noch keine Kategorien.</div>'}</div></article>`;
+  const search = categories.length > CATEGORY_PREVIEW_LIMIT ? `<label class="category-search"><span aria-hidden="true">⌕</span><input type="search" data-category-search="${type}" placeholder="${title} durchsuchen" autocomplete="off" spellcheck="false" /></label>` : '';
+  const rows = categories.length ? categories.map((category, index) => `<button class="category-row${index >= CATEGORY_PREVIEW_LIMIT ? ' category-row-overflow' : ''}" type="button" data-category-edit="${escapeAttr(category.id)}" data-category-row="${type}" data-category-name="${escapeAttr(category.name.toLocaleLowerCase('de-DE'))}" ${index >= CATEGORY_PREVIEW_LIMIT ? 'hidden' : ''}><span class="category-row-icon">${escapeHtml(category.icon || '•')}</span><span class="category-row-name">${escapeHtml(category.name)}</span><span class="category-row-action" aria-hidden="true">›</span></button>`).join('') : '<div class="category-empty">Noch keine Kategorien.</div>';
+  const showMore = categories.length > CATEGORY_PREVIEW_LIMIT ? `<button class="category-show-more" type="button" data-category-show-more="${type}">Alle ${categories.length} anzeigen</button>` : '';
+  return `<article class="card category-group" data-category-group="${type}"><div class="category-group-header"><div><strong>${title}</strong><span>${categories.length} ${categories.length === 1 ? 'Kategorie' : 'Kategorien'}</span></div><button class="btn btn-secondary category-add-btn" type="button" data-category-add="${type}">+ Neu</button></div>${search}<div class="category-list">${rows}</div>${showMore}<div class="category-empty category-search-empty" data-category-search-empty="${type}" hidden>Keine passende Kategorie gefunden.</div></article>`;
 }
 function sortCategories(a, b) { return a.name.localeCompare(b.name, 'de'); }
 function escapeHtml(value) { return String(value).replace(/[&<>'\"]/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char])); }
