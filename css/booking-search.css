@@ -37,6 +37,7 @@
 }
 
 .booking-row[hidden],
+.booking-day[hidden],
 .booking-search-empty[hidden] { display: none !important; }
 
 .booking-search-empty { margin-top: 12px; }
