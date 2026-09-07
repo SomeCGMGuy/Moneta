@@ -19,7 +19,7 @@ function renderRow(booking, categoryMap) {
   const searchText = [booking.title, booking.note, category.name, booking.amount, money.format(booking.amount), booking.date, booking.type === 'expense' ? 'Ausgabe' : 'Einnahme', booking.isProjected ? 'geplant wiederkehrend prognose' : ''].filter(Boolean).join(' ');
   const tag = booking.isProjected ? 'div' : 'button';
   const interaction = booking.isProjected ? 'aria-label="Geplante wiederkehrende Buchung"' : `type="button" data-booking-id="${escapeAttr(booking.id)}"`;
-  return `<${tag} class="booking-row${booking.isProjected ? ' booking-row-projected' : ''}" ${interaction} data-booking-search="${escapeAttr(searchText)}">
+  return `<${tag} class="booking-row${booking.isProjected ? ' booking-row-projected' : ''}" ${interaction} data-booking-row data-booking-search="${escapeAttr(searchText)}">
     <span class="booking-icon" aria-hidden="true">${escapeHtml(category.icon ?? '•')}</span>
     <span class="booking-copy"><span class="booking-title">${escapeHtml(booking.title)}</span><span class="booking-meta">${escapeHtml(category.name)}${projectedLabel}</span></span>
     <span class="booking-amount ${booking.type}">${sign}${money.format(booking.amount)}</span>
