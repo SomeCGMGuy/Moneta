@@ -1,140 +1,58 @@
-"use strict";
-
-const CACHE_NAME = "moneta-pwa-v4";
-const CACHE_PREFIX = "moneta-pwa-";
-
+const CACHE_NAME = 'moneta-shell-v1';
 const APP_SHELL = [
-    "./index.html",
-    "./manifest.webmanifest",
-    "./css/app.css",
-    "./js/namespace.js",
-    "./js/generated/icons-data.js",
-    "./js/icons.js",
-    "./js/utils.js",
-    "./js/db.js",
-    "./js/transactions.js",
-    "./js/categories.js",
-    "./js/dom.js",
-    "./js/dialog.js",
-    "./js/message-dialog.js",
-    "./js/theme.js",
-    "./js/ui.js",
-    "./js/category-controller.js",
-    "./js/transaction-controller.js",
-    "./js/mobile.js",
-    "./js/app.js",
-    "./js/pwa.js",
-    "./icons/favicon.svg",
-    "./icons/apple-touch-icon.png",
-    "./icons/icon-192.png",
-    "./icons/icon-512.png",
-    "./icons/icon-maskable-512.png"
+  './',
+  './index.html',
+  './manifest.webmanifest',
+  './css/tokens.css',
+  './css/base.css',
+  './css/components.css',
+  './css/views.css',
+  './js/app.js',
+  './js/db/database.js',
+  './js/db/migrations.js',
+  './js/services/booking-service.js',
+  './js/services/category-service.js',
+  './js/services/budget-service.js',
+  './js/services/analysis-service.js',
+  './js/views/overview.js',
+  './js/views/analysis.js',
+  './js/views/budgets.js',
+  './js/views/settings.js',
+  './js/components/bottom-nav.js',
+  './js/components/booking-form.js',
+  './js/components/booking-list.js',
+  './js/components/confirm-dialog.js',
+  './assets/icons/icon.svg',
+  './assets/icons/icon-192.png',
+  './assets/icons/icon-512.png'
 ];
 
-/**
- * Löst einen relativen App-Pfad innerhalb des aktuellen PWA-Scopes auf.
- * Dadurch funktioniert der Cache auch, wenn Moneta in einem Unterordner
- * gehostet wird, z. B. auf GitHub Pages.
- *
- * @param {string} path - Relativer Pfad innerhalb der App.
- * @returns {string} Absolute URL im aktuellen Scope.
- */
-const resolveAppUrl = (path) =>
-    new URL(path, self.registration.scope).href;
-
-self.addEventListener("install", (event) => {
-    event.waitUntil(
-        caches
-            .open(CACHE_NAME)
-            .then((cache) =>
-                cache.addAll(
-                    APP_SHELL.map(resolveAppUrl)
-                )
-            )
-            .then(() => self.skipWaiting())
-    );
+self.addEventListener('install', (event) => {
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
+  self.skipWaiting();
 });
 
-self.addEventListener("activate", (event) => {
-    event.waitUntil(
-        caches
-            .keys()
-            .then((cacheNames) =>
-                Promise.all(
-                    cacheNames
-                        .filter(
-                            (cacheName) =>
-                                cacheName.startsWith(CACHE_PREFIX) &&
-                                cacheName !== CACHE_NAME
-                        )
-                        .map((cacheName) =>
-                            caches.delete(cacheName)
-                        )
-                )
-            )
-            .then(() => self.clients.claim())
-    );
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) => Promise.all(
+      keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+    ))
+  );
+  self.clients.claim();
 });
 
-/**
- * Lädt eine Ressource bevorzugt aus dem Netz und aktualisiert dabei
- * den Offline-Cache. Wenn keine Verbindung besteht, wird die letzte
- * erfolgreiche Version aus dem Cache verwendet.
- *
- * Diese Strategie verhindert, dass beim Entwickeln oder Aktualisieren
- * dauerhaft eine alte JavaScript-Datei aus dem Cache hängen bleibt.
- *
- * @param {Request} request - Eingehende GET-Anfrage.
- * @returns {Promise<Response>} Netzwerk- oder Cache-Antwort.
- */
-const networkFirst = async (request) => {
-    try {
-        const response = await fetch(request);
+self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
 
-        if (response.ok && response.type === "basic") {
-            const cache = await caches.open(CACHE_NAME);
-            await cache.put(request, response.clone());
-        }
-
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
+      return fetch(event.request).then((response) => {
+        if (!response || response.status !== 200 || response.type === 'opaque') return response;
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
         return response;
-    } catch (networkError) {
-        const cachedResponse = await caches.match(
-            request,
-            { ignoreSearch: true }
-        );
-
-        if (cachedResponse) {
-            return cachedResponse;
-        }
-
-        if (request.mode === "navigate") {
-            const fallback = await caches.match(
-                resolveAppUrl("./index.html")
-            );
-
-            if (fallback) {
-                return fallback;
-            }
-        }
-
-        throw networkError;
-    }
-};
-
-self.addEventListener("fetch", (event) => {
-    const { request } = event;
-
-    if (request.method !== "GET") {
-        return;
-    }
-
-    const requestUrl = new URL(request.url);
-
-    if (requestUrl.origin !== self.location.origin) {
-        return;
-    }
-
-    event.respondWith(
-        networkFirst(request)
-    );
+      }).catch(() => caches.match('./index.html'));
+    })
+  );
 });

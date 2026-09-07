@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Moneta Icon">
+  <rect width="512" height="512" rx="112" fill="#214b3b"/>
+  <circle cx="256" cy="256" r="157" fill="#f3e8c8"/>
+  <circle cx="256" cy="256" r="126" fill="none" stroke="#214b3b" stroke-width="18" opacity="0.85"/>
+  <path d="M152 342V170h46l58 82 58-82h46v172h-46V242l-58 78-58-78v100z" fill="#214b3b"/>
+</svg>

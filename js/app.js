@@ -1,452 +1,164 @@
-"use strict";
+import { ensureDefaultCategories, getCategoryMap, listCategories } from './services/category-service.js';
+import { listBookingsForMonth, saveBooking, deleteBooking, getBooking } from './services/booking-service.js';
+import { listBudgetsForMonth, saveBudget, deleteBudget } from './services/budget-service.js';
+import { renderOverview } from './views/overview.js';
+import { renderAnalysis } from './views/analysis.js';
+import { renderBudgets, showBudgetForm } from './views/budgets.js';
+import { renderSettings } from './views/settings.js';
+import { renderBottomNav } from './components/bottom-nav.js';
+import { showBookingForm } from './components/booking-form.js';
+import { showConfirmDialog } from './components/confirm-dialog.js';
 
-const {
-    summary: {
-        currentMonthTitle,
-        monthInput,
-        monthlyBudgetElement,
-        totalExpensesElement,
-        totalIncomeElement,
-        balanceElement,
-        remainingBudgetElement,
-        budgetProgressElement,
-        budgetUsagePercentElement
-    },
+const app = document.querySelector('#app');
+const state = {
+  view: location.hash.replace('#/', '') || 'overview',
+  month: currentMonth(),
+  bookings: [],
+  budgets: [],
+  categoryMap: new Map()
+};
 
-    budget: {
-        form: budgetForm,
-        input: budgetInput
-    },
+await bootstrap();
 
-    expense: {
-        form: expenseForm,
-        dateInput,
-        descriptionInput,
-        amountInput,
-        categoryInput,
-        saveButton,
-        saveButtonLabel,
-        cancelEditButton,
-        newTransactionIcon,
-        closeDrawerIcon,
-        list: expenseList,
-        error: formError
-    },
+async function bootstrap() {
+  await ensureDefaultCategories();
+  await reloadData();
+  bindGlobalEvents();
+  render();
 
-    categories: {
-        summaryElement: categorySummaryElement,
-        mobileFilters: mobileCategoryFilters
-    }
-} = window.App.dom
-
-const {
-    initialize: initializeCategoryController
-} = window.App.categoryController
-
-const {
-    open: openDialog,
-    close: closeDialog,
-    isOpen: isDialogOpen,
-    initialize: initializeDialogs
-} = window.App.dialog
-
-const {
-    show: showMessage
-} = window.App.messageDialog
-
-const {
-    formatCurrency,
-    getToday,
-    formatExpenseDate,
-    formatMonth,
-    getRemainingBudget
-} = window.App.utils
-
-const {
-    saveTransaction,
-    loadTransactions,
-
-    loadSetting,
-    saveSetting,
-} = window.App.db
-
-const {
-    renderSummary,
-    renderTransaction,
-    renderTransactions,
-    renderTransactionGroup,
-    renderCategorySummary,
-    renderCategoryOptions,
-    renderMobileCategoryFilters,
-    renderCategoryDialogList
-} = window.App.ui;
-
-const {
-    getDefaults: getDefaultCategories,
-    setAll: setCategories,
-    getAll: getAllCategories,
-    getByName: getCategoryByName,
-    getById: getCategoryById
-} = window.App.categories
-
-const {
-    initialize: initializeTheme
-} = window.App.theme
-
-const {
-    initialize: initializeMobile,
-    refreshAnalysis: refreshMobileAnalysis
-} = window.App.mobile
-
-const {
-    mount: mountIcon
-} = window.App.icons
-
-const {
-    manageCategories: manageCategoriesIcon,
-    addExpense: addExpenseIcon
-} = window.App.dom.icons
-
-const {
-    initialize: initializeTransactionController,
-    refresh: refreshTransactions,
-    refreshCategoryOptions: refreshTransactionCategoryOptions
-} = window.App.transactionController
-
-// Unsere Beispielausgaben
-/** @type {Transaction[]} */
-const transactions  = [];
-
-// Das aktuelle Monatsbudget
-let monthlyBudgetCents = 270000;
-
-// ausgewählter Monat
-let selectedMonth = getToday().slice(0, 7)
-
-// Optionaler Kategorie-Filter der mobilen Übersicht.
-/** @type {string | null} */
-let selectedCategoryId = null
-
-// Der UI mitteilen welcher Monat ausgewählt wurde
-monthInput.value = selectedMonth
-
-/* ===================================
-// KATEGORIEN-BEREICH
-// ===================================
-*/
-
-/**
- * Aktualisiert die Kategorieübersicht
- * mit dem aktuellen App-State.
- *
- * @returns {void}
- */
-const refreshCategorySummary = () => {
-    renderCategorySummary({
-        transactions,
-        selectedMonth,
-        container: categorySummaryElement
-    })
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    navigator.serviceWorker.register('./service-worker.js').catch((error) => console.warn('Service Worker:', error));
+  }
 }
 
-/**
- * Aktualisiert die horizontale Kategorie-Filterleiste
- * der mobilen PWA-Ansicht.
- *
- * @returns {void}
- */
-const refreshMobileCategoryFilters = () => {
-    const categories =
-        getAllCategories()
+async function reloadData() {
+  [state.bookings, state.budgets, state.categoryMap] = await Promise.all([
+    listBookingsForMonth(state.month),
+    listBudgetsForMonth(state.month),
+    getCategoryMap()
+  ]);
+}
 
-    const selectedCategoryStillExists =
-        selectedCategoryId === null ||
-        categories.some(
-            (category) =>
-                category.id ===
-                selectedCategoryId
-        )
+function render() {
+  const views = {
+    overview: () => renderOverview(state),
+    analysis: () => renderAnalysis(state),
+    budgets: () => renderBudgets(state),
+    settings: () => renderSettings(state)
+  };
+  const content = (views[state.view] ?? views.overview)();
+  app.innerHTML = `${content}${renderBottomNav(state.view)}`;
+}
 
-    if (!selectedCategoryStillExists) {
-        selectedCategoryId = null
+function bindGlobalEvents() {
+  app.addEventListener('click', async (event) => {
+    const nav = event.target.closest('[data-nav]');
+    if (nav) {
+      const target = nav.dataset.nav;
+      if (target === 'add') {
+        await openBookingForm();
+      } else {
+        state.view = target;
+        location.hash = `#/${target}`;
+        render();
+      }
+      return;
     }
 
-    renderMobileCategoryFilters({
-        container: mobileCategoryFilters,
-        categories,
-        selectedCategoryId,
-        onSelect: (categoryId) => {
-            selectedCategoryId =
-                categoryId
-
-            refreshMobileCategoryFilters()
-            refreshTransactions()
-        }
-    })
-}
-
-/* ===================================
-// ENDE -KATEGORIEN-BEREICH
-// ===================================
-*/
-
-/**
- * Überträgt das aktuelle Monatsbudget
- * in das Budget-Eingabefeld.
- *
- * @returns {void}
- */
-const refreshBudgetForm = () => {
-    budgetInput.value =
-        String(monthlyBudgetCents / 100)
-}
-
-/**
- * Initialisiert die statischen Icons
- * der Hauptoberfläche.
- *
- * @returns {void}
- */
-const initializeIcons = () => {
-    mountIcon(
-        manageCategoriesIcon,
-        "settings-2",
-        {
-            className: "h-4 w-4"
-        }
-    )
-
-    mountIcon(
-        addExpenseIcon,
-        "plus",
-        {
-            className: "h-4 w-4"
-        }
-    )
-
-    mountIcon(
-        newTransactionIcon,
-        "plus",
-        {
-            className: "h-[18px] w-[18px]"
-        }
-    )
-
-    mountIcon(
-        closeDrawerIcon,
-        "x",
-        {
-            className: "h-5 w-5"
-        }
-    )
-
-}
-
-/**
- * Aktualisiert alles
- */
-const refreshAndReset = () => {
-    refreshBudgetForm()
-    refreshTransactions()
-    refreshCategorySummary()
-    refreshMobileCategoryFilters()
-}
-
-/**
- * Speichert ein neues Monatsbudget
- * und aktualisiert die Oberfläche.
- */
-budgetForm.addEventListener("submit", async (event) => {
-    event.preventDefault()
-
-    const budgetCents =
-        Math.round(
-            Number(budgetInput.value) * 100
-        )
-
-    if (!Number.isFinite(budgetCents) || budgetCents < 0)
-        return 
-
-    try {
-        await saveSetting(
-            "monthlyBudgetCents",
-            budgetCents
-        )
-        monthlyBudgetCents = budgetCents
-        refreshSummary()
-    } catch (error) {
-        showUnexpectedError(
-            "Budget konnte nicht gespeichert werden",
-            error
-        )
-    }    
-})
-
-// Die Gesamtsummen alle vorhandenen Kategorien ermitteln
-
-const refreshSummary = () => {
-    renderSummary({
-        transactions,
-        selectedMonth,
-        monthlyBudgetCents,
-
-        currentMonthTitle,
-        monthlyBudgetElement,
-        totalExpensesElement,
-        totalIncomeElement,
-        balanceElement,
-        remainingBudgetElement,
-        budgetProgressElement,
-        budgetUsagePercentElement
-    })
-}
-
-
-/**
- * Zeigt einen unerwarteten technischen Fehler
- * als benutzerfreundlichen Meldungsdialog an.
- *
- * Der ursprüngliche Fehler wird zusätzlich
- * in der Konsole protokolliert.
- *
- * @param {string} title - Titel der Fehlermeldung.
- * @param {unknown} error - Aufgetretener Fehler.
- * @returns {void}
- */
-const showUnexpectedError = (
-    title,
-    error
-) => {
-    console.error(
-        title,
-        error
-    )
-
-    const message =
-        error instanceof Error
-            ? error.message
-            : "Ein unbekannter Fehler ist aufgetreten."
-
-    showMessage({
-        title,
-        message,
-        type: "error"
-    })
-}
-
-// Änderung des aktuell ausgewählten Monats
-monthInput.addEventListener(
-    "change",
-    () => {
-    selectedMonth = 
-        monthInput.value
-    refreshTransactions()
-    refreshSummary()
-    refreshCategorySummary()
-    refreshMobileCategoryFilters()
-    refreshMobileAnalysis()
-})
-
-// END /js/logic.js
-
-/**
- * Initialisiert die Anwendung und lädt
- * gespeicherte Daten aus IndexedDB.
- *
- * @returns {Promise<void>}
- */
-const initApp = async () => {
-    try {
-
-        initializeTheme()
-        initializeDialogs()
-        initializeIcons()
-
-        const storedTransactions =
-            await loadTransactions()
-
-        transactions.push(
-            ...storedTransactions
-        )
-
-        await initializeCategoryController({
-            getTransactions: () => transactions,
-
-            onChange: () => {
-                refreshSummary()
-                refreshCategorySummary()
-                refreshMobileCategoryFilters()
-                refreshTransactions()
-                refreshTransactionCategoryOptions()
-                refreshMobileAnalysis()
-            }
-        })
-
-        
-        const storedBudget =
-            await loadSetting(
-                "monthlyBudgetCents"
-            )
-
-        if (typeof storedBudget === "number") {
-            monthlyBudgetCents =
-                storedBudget
-        } else {
-            await saveSetting(
-                "monthlyBudgetCents",
-                monthlyBudgetCents
-            )
-        }
-
-        initializeTransactionController({
-            getTransactions: () =>
-                transactions,
-
-            getSelectedMonth: () =>
-                selectedMonth,
-
-            getCategoryFilter: () =>
-                selectedCategoryId,
-
-            onChange: () => {
-                refreshSummary()
-                refreshCategorySummary()
-                refreshMobileCategoryFilters()
-                refreshMobileAnalysis()
-            }
-        })
-
-        initializeMobile({
-            getTransactions: () => transactions,
-            getSelectedMonth: () => selectedMonth
-        })
-
-        refreshBudgetForm()
-        refreshSummary()
-        refreshCategorySummary()
-        refreshMobileCategoryFilters()
-        refreshTransactions()
-        
-
-    } catch (error) {
-        console.error(
-            "Fehler beim Initialisieren:",
-            error
-        )
-
-        const message =
-            error instanceof Error
-                ? error.message
-                : "Ein unbekannter Fehler ist aufgetreten."
-
-        showMessage({
-            title: "Moneta konnte nicht gestartet werden",
-            message:
-                `Die lokalen Daten konnten nicht geladen werden. ${message}`,
-            type: "critical",
-            dismissible: false
-        })
+    const monthButton = event.target.closest('[data-month]');
+    if (monthButton) {
+      state.month = shiftMonth(state.month, monthButton.dataset.month === 'next' ? 1 : -1);
+      await reloadData();
+      render();
+      return;
     }
+
+    const bookingRow = event.target.closest('[data-booking-id]');
+    if (bookingRow) {
+      const booking = await getBooking(bookingRow.dataset.bookingId);
+      if (booking) await openBookingForm(booking);
+      return;
+    }
+
+    if (event.target.closest('[data-budget-add]')) {
+      await openBudgetForm();
+      return;
+    }
+
+    const budgetEdit = event.target.closest('[data-budget-edit]');
+    if (budgetEdit) {
+      const budget = state.budgets.find((item) => item.id === budgetEdit.dataset.budgetEdit);
+      if (budget) await openBudgetForm(budget);
+    }
+  });
+
+  window.addEventListener('hashchange', () => {
+    state.view = location.hash.replace('#/', '') || 'overview';
+    render();
+  });
 }
 
-initApp()
+async function openBookingForm(booking = null) {
+  const result = await showBookingForm({
+    booking,
+    onDelete: async (row) => {
+      const confirmed = await showConfirmDialog({
+        title: 'Buchung löschen?',
+        message: `„${row.title}“ wird dauerhaft aus Moneta entfernt.`,
+        confirmLabel: 'Endgültig löschen',
+        danger: true
+      });
+      if (!confirmed) return false;
+      await deleteBooking(row.id);
+      await reloadData();
+      render();
+      return true;
+    }
+  });
+
+  if (!result || result.deleted) return;
+  try {
+    await saveBooking(result);
+    await reloadData();
+    render();
+  } catch (error) {
+    alert(error.message ?? 'Die Buchung konnte nicht gespeichert werden.');
+  }
+}
+
+async function openBudgetForm(budget = null) {
+  const categories = await listCategories('expense');
+  const result = await showBudgetForm({ budget, categories, month: state.month });
+  if (!result) return;
+
+  if (result.delete) {
+    const confirmed = await showConfirmDialog({
+      title: 'Budget löschen?',
+      message: 'Das Budget wird entfernt. Deine Buchungen bleiben unverändert erhalten.',
+      confirmLabel: 'Budget löschen',
+      danger: true
+    });
+    if (!confirmed) return;
+    await deleteBudget(result.id);
+  } else {
+    const duplicate = state.budgets.find((item) => item.categoryId === result.categoryId && item.month === result.month && item.id !== result.id);
+    if (duplicate) {
+      alert('Für diese Kategorie existiert in diesem Monat bereits ein Budget.');
+      return;
+    }
+    await saveBudget(result);
+  }
+  await reloadData();
+  render();
+}
+
+function currentMonth() {
+  const date = new Date();
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function shiftMonth(month, delta) {
+  const [year, monthNumber] = month.split('-').map(Number);
+  const date = new Date(year, monthNumber - 1 + delta, 1);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+}
