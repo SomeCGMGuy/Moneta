@@ -27,7 +27,7 @@ export async function showBookingForm({ booking = null }) {
   };
   layer.querySelectorAll('[data-type]').forEach((button) => button.addEventListener('click', () => setType(button.dataset.type)));
   if (booking?.categoryId) categorySelect.value = booking.categoryId;
-  if (!booking) window.setTimeout(() => { if (layer.isConnected) layer.querySelector('#booking-title')?.focus({ preventScroll: true }); }, FOCUS_DELAY_MS);
+  if (!booking) window.setTimeout(() => { if (layer.isConnected) layer.querySelector('#booking-amount')?.focus({ preventScroll: true }); }, FOCUS_DELAY_MS);
   layer.querySelector('[data-back]').addEventListener('click', () => navigation.close(null));
   layer.querySelector('[data-delete]')?.addEventListener('click', () => navigation.close({ deleteRequested: true, booking }));
   form.addEventListener('submit', (event) => {
