@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.4 – 2026-09-07
+
+- Pinch-/Seitenskalierung in der installierten Moneta-App unterbunden, damit die Oberfläche wie eine feste App-UI bedient wird.
+- Ungewolltes Fokus-Zoomen bei Formulareingaben durch mobile 16-px-Eingabeschrift vermieden.
+- Bottom-Navigation auf eine feste Höhe stabilisiert.
+- Navigationsbeschriftungen bleiben einzeilig; der aktive Zustand verändert die Schriftbreite nicht mehr. Dadurch springt der Footer beim Wechsel auf „Einstellungen“ nicht mehr.
+- Service-Worker-Cache auf Version 2.0.4 angehoben.
+
 ## 2.0.3 – 2026-09-07
 
 - Schnellerfassung auf der Übersicht ergänzt: Freitext wie „REWE 12,40“, Kategorie auswählen und direkt buchen.
