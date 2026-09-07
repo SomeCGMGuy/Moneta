@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.0.15 – 2026-09-07
+
+- „App neu laden“ leert jetzt gezielt nur Monetas App-Cache und entfernt die aktuelle Service-Worker-Registrierung, ohne IndexedDB oder lokale Nutzerdaten anzufassen.
+- Danach wird Moneta mit einer Cache-Busting-URL frisch vom Server geladen, der aktuelle Service Worker neu registriert und anschließend ein zweiter sauberer Reload ausgeführt.
+- Der Service Worker lädt App-Dateien online künftig mit `cache: no-store` und nutzt den eigenen Moneta-Cache nur noch als Offline-Fallback. Dadurch bleiben Git-Updates nicht mehr in Braves Browser-Cache hängen.
+- Buchungen, Kategorien, Budgets und Einstellungen bleiben bei diesem Vorgang vollständig erhalten.
+- Service-Worker-Cache und Versionsanzeige auf Version 2.0.15 angehoben.
+
+## 2.0.14 – 2026-09-07
+
+- Live-Suche für Buchungen auf der Übersicht ergänzt.
+- Gesucht wird innerhalb des aktuell ausgewählten Monats nach Bezeichnung, Notiz, Kategorie, Betrag, Datum sowie Einnahme/Ausgabe.
+- Trefferanzahl und Leerzustand reagieren direkt auf die Eingabe.
+
 ## 2.0.13 – 2026-09-07
 
 - Beim Anlegen einer neuen Buchung wird die Bezeichnung nach dem Push-Übergang automatisch fokussiert, sodass direkt mit der Eingabe begonnen werden kann.

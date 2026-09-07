@@ -1,4 +1,4 @@
-const CACHE_NAME = 'moneta-shell-v2.0.14';
+const CACHE_NAME = 'moneta-shell-v2.0.15';
 const APP_SHELL = [
   './',
   './index.html',
@@ -10,6 +10,7 @@ const APP_SHELL = [
   './css/navigation.css',
   './css/booking-search.css',
   './css/mobile-fixes.css',
+  './js/app-reload.js',
   './js/app.js',
   './js/booking-search.js',
   './js/version.js',
@@ -62,7 +63,7 @@ self.addEventListener('fetch', (event) => {
 async function networkFirst(request) {
   const cache = await caches.open(CACHE_NAME);
   try {
-    const response = await fetch(request);
+    const response = await fetch(request, { cache: 'no-store' });
     if (response && response.status === 200) cache.put(request, response.clone());
     return response;
   } catch {
