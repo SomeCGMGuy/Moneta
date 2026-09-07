@@ -26,3 +26,5 @@ a { color: inherit; }
 .section-heading h2 { margin: 0; font-size: 1.05rem; }
 .empty-state { padding: 28px 20px; text-align: center; color: var(--text-muted); }
 .empty-state strong { display: block; color: var(--text); margin-bottom: 5px; }
+
+html { scrollbar-gutter: stable; }

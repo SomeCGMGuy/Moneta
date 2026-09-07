@@ -27,3 +27,14 @@
   --radius-sm: 10px;
   --content-max: 820px;
 }
+
+:root {
+  --chart-1: #214b3b;
+  --chart-2: #d8be78;
+  --chart-3: #6f907e;
+  --chart-4: #b66d55;
+  --chart-5: #8c7aa8;
+  --chart-6: #cf9b58;
+  --chart-7: #5e8791;
+  --chart-8: #9b8e69;
+}

@@ -1,6 +1,6 @@
 import { listCategories } from '../services/category-service.js';
 
-export async function showBookingForm({ booking = null, onDelete = null }) {
+export async function showBookingForm({ booking = null }) {
   const root = document.querySelector('#modal-root');
   const type = booking?.type ?? 'expense';
   const backdrop = document.createElement('div');
@@ -48,10 +48,7 @@ export async function showBookingForm({ booking = null, onDelete = null }) {
 
     const deleteButton = backdrop.querySelector('[data-delete]');
     if (deleteButton) {
-      deleteButton.addEventListener('click', async () => {
-        const deleted = await onDelete?.(booking);
-        if (deleted) close({ deleted: true });
-      });
+      deleteButton.addEventListener('click', () => close({ deleteRequested: true, booking }));
     }
 
     form.addEventListener('submit', (event) => {

@@ -1,4 +1,4 @@
-# Moneta 2.0
+# Moneta 2.0.1
 
 Lokale PWA für **Finanzanalyse und Budgetplanung**. Neu aufgebaut als bewusst schlanke Plain-JavaScript-Anwendung mit IndexedDB.
 
@@ -6,9 +6,9 @@ Lokale PWA für **Finanzanalyse und Budgetplanung**. Neu aufgebaut als bewusst s
 
 - Übersicht mit Einnahmen, Ausgaben, Saldo und Monatswechsel
 - Buchungen anlegen und bearbeiten
-- Einnahmen- und Ausgabenkategorien getrennt
+- Einnahmen- und Ausgabenkategorien getrennt und direkt in den Einstellungen verwaltbar
 - Buchungen nur nach zusätzlicher Bestätigung löschen
-- Kategorieanalyse der Ausgaben
+- Kategorieanalyse der Ausgaben mit Kreis-/Donutdiagramm
 - Monatsbudgets pro Ausgabenkategorie
 - IndexedDB als lokale Datenbank
 - PWA-Manifest und Service Worker für Offline-App-Shell
@@ -65,7 +65,7 @@ Saldo, Summen und Analysewerte werden bewusst **nicht** gespeichert, sondern aus
 
 ## Nächste sinnvolle Schritte
 
-1. Kategorien verwalten (anlegen, bearbeiten, sortieren, archivieren)
+1. Kategorien sortieren/archivieren
 2. Wiederkehrende Buchungen
 3. Datenexport/-import als JSON
 4. Backup-/Restore-Workflow
