@@ -21,11 +21,13 @@ export function renderSettings({ categoryMap, theme, financialMonthMode = 'calen
             <button type="button" data-financial-mode="custom" class="${customFinancialMonth ? 'active' : ''}">Finanzmonat</button>
           </div>
         </div>
-        ${customFinancialMonth ? `<div class="card financial-start-card">
-          <div class="financial-start-copy"><strong>Finanzmonat beginnt am</strong><p>Der Monat wird nach seinem Endmonat benannt. Bei Starttag 28 läuft „September“ z. B. vom 28. August bis 27. September.</p></div>
-          <div class="financial-day-scroller" role="radiogroup" aria-label="Starttag des Finanzmonats">
-            ${Array.from({ length: 28 }, (_, index) => index + 1).map((day) => `<label class="financial-day-chip${Number(financialMonthStart) === day ? ' selected' : ''}"><input type="radio" name="financial-start-day" value="${day}" data-financial-start ${Number(financialMonthStart) === day ? 'checked' : ''} /><span>${day}.</span></label>`).join('')}
-          </div>
+        ${customFinancialMonth ? `<div class="card financial-start-setting">
+          <button class="financial-start-row" type="button" data-financial-start-open aria-haspopup="dialog" aria-label="Starttag des Finanzmonats auswählen, aktuell ${Number(financialMonthStart)}">
+            <span class="financial-start-copy"><strong>Finanzmonat beginnt am</strong><span>Der Monat wird nach seinem Endmonat benannt.</span></span>
+            <span class="financial-start-value"><strong>${Number(financialMonthStart)}.</strong><span aria-hidden="true">›</span></span>
+          </button>
+          <p class="financial-start-example">Bei Starttag ${Number(financialMonthStart)} läuft „September“ z. B. vom ${Number(financialMonthStart)}. August bis ${Number(financialMonthStart) - 1 || 31}. September.</p>
+          <input type="hidden" data-financial-start value="${Number(financialMonthStart)}" />
         </div>` : ''}
       </section>
 

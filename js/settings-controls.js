@@ -7,6 +7,22 @@ document.addEventListener('input', (event) => {
 });
 
 document.addEventListener('click', (event) => {
+  const openFinancial = event.target.closest('[data-financial-start-open]');
+  if (openFinancial) { openFinancialStartSheet(); return; }
+
+  const day = event.target.closest('[data-financial-day]');
+  if (day) {
+    const input = document.querySelector('[data-financial-start]');
+    if (input) {
+      input.value = day.dataset.financialDay;
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    closeFinancialStartSheet();
+    return;
+  }
+
+  if (event.target.matches('[data-financial-sheet-backdrop]') || event.target.closest('[data-financial-sheet-close]')) { closeFinancialStartSheet(); return; }
+
   const button = event.target.closest('[data-category-show-more]');
   if (!button) return;
   const type = button.dataset.categoryShowMore;
@@ -18,6 +34,29 @@ document.addEventListener('click', (event) => {
   button.dataset.expanded = expanded ? 'false' : 'true';
   button.textContent = expanded ? `Alle ${rows.length} anzeigen` : 'Weniger anzeigen';
 });
+
+document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeFinancialStartSheet(); });
+
+function openFinancialStartSheet() {
+  closeFinancialStartSheet();
+  const current = Number(document.querySelector('[data-financial-start]')?.value || 28);
+  const sheet = document.createElement('div');
+  sheet.className = 'financial-sheet-backdrop';
+  sheet.dataset.financialSheetBackdrop = '';
+  sheet.innerHTML = `<section class="financial-sheet" role="dialog" aria-modal="true" aria-labelledby="financial-sheet-title">
+    <div class="financial-sheet-handle" aria-hidden="true"></div>
+    <header class="financial-sheet-header"><div><span class="financial-sheet-kicker">Finanzmonat</span><h2 id="financial-sheet-title">Starttag wählen</h2></div><button type="button" class="financial-sheet-close" data-financial-sheet-close aria-label="Schließen">×</button></header>
+    <div class="financial-day-grid" role="radiogroup" aria-label="Starttag des Finanzmonats">${Array.from({ length: 28 }, (_, index) => index + 1).map((value) => `<button type="button" role="radio" aria-checked="${value === current}" class="financial-day-option${value === current ? ' selected' : ''}" data-financial-day="${value}">${value}</button>`).join('')}</div>
+    <p class="financial-sheet-hint">Die Auswahl wird sofort übernommen.</p>
+  </section>`;
+  document.body.append(sheet);
+  requestAnimationFrame(() => sheet.classList.add('open'));
+  sheet.querySelector('.financial-day-option.selected')?.focus({ preventScroll: true });
+}
+
+function closeFinancialStartSheet() {
+  document.querySelector('[data-financial-sheet-backdrop]')?.remove();
+}
 
 function updateCategoryGroup(type, value) {
   const group = document.querySelector(`[data-category-group="${CSS.escape(type)}"]`);
@@ -38,6 +77,4 @@ function updateCategoryGroup(type, value) {
   if (empty) empty.hidden = visible > 0;
 }
 
-function normalize(value) {
-  return String(value ?? '').trim().toLocaleLowerCase('de-DE');
-}
+function normalize(value) { return String(value ?? '').trim().toLocaleLowerCase('de-DE'); }
