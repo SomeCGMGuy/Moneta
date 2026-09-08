@@ -2,21 +2,26 @@ const money = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR
 const fullDate = new Intl.DateTimeFormat('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
 const monthName = new Intl.DateTimeFormat('de-DE', { month: 'long', year: 'numeric' });
 
-export function renderBookingList(bookings, categoryMap, { timeline = false, hasMore = false } = {}) {
+export function renderBookingList(bookings, categoryMap, { timeline = false, pageSize = 3 } = {}) {
   if (!bookings.length) return `<div class="card empty-state"><strong>Noch keine Buchungen</strong>Über das Plus kannst du deine erste Einnahme oder Ausgabe anlegen.</div>`;
   if (!timeline) return renderDays(bookings, categoryMap);
 
   const months = groupByMonth(bookings);
-  return `<div class="booking-timeline" data-booking-timeline>${months.map(({ month, bookings: rows }) => `
+  const pages = chunk(months, Math.max(1, pageSize));
+  const firstPage = pages.shift() ?? [];
+  return `<div class="booking-timeline" data-booking-timeline>
+    ${renderMonths(firstPage, categoryMap)}
+    ${pages.map((page) => `<template data-booking-timeline-page>${renderMonths(page, categoryMap)}</template>`).join('')}
+    ${pages.length ? `<div class="booking-timeline-loader" data-booking-timeline-sentinel aria-label="Ältere Buchungen werden geladen"><span class="timeline-skeleton-line"></span><span class="timeline-skeleton-line short"></span><span class="timeline-skeleton-line"></span></div>` : ''}
+  </div>`;
+}
+
+function renderMonths(months, categoryMap) {
+  return months.map(({ month, bookings: rows }) => `
     <section class="booking-month" data-booking-month="${escapeAttr(month)}">
       <div class="booking-month-heading"><span>${escapeHtml(monthLabel(month))}</span></div>
       ${renderDays(rows, categoryMap)}
-    </section>`).join('')}${hasMore ? `
-    <div class="booking-timeline-loader" data-booking-timeline-sentinel aria-label="Ältere Buchungen werden geladen">
-      <span class="timeline-skeleton-line"></span>
-      <span class="timeline-skeleton-line short"></span>
-      <span class="timeline-skeleton-line"></span>
-    </div>` : ''}</div>`;
+    </section>`).join('');
 }
 
 function renderDays(bookings, categoryMap) {
@@ -61,11 +66,15 @@ function groupByMonth(bookings) {
   return [...groups.entries()].sort(([a], [b]) => b.localeCompare(a)).map(([month, rows]) => ({ month, bookings: rows }));
 }
 
+function chunk(items, size) {
+  const pages = [];
+  for (let index = 0; index < items.length; index += size) pages.push(items.slice(index, index + size));
+  return pages;
+}
 function monthLabel(month) {
   const value = new Date(`${month}-01T12:00:00`);
   return monthName.format(value).replace(/^./, (c) => c.toUpperCase());
 }
-
 function dayLabel(iso) {
   const value = new Date(`${iso}T12:00:00`);
   const today = startOfDay(new Date());
