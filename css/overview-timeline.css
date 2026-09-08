@@ -1,7 +1,17 @@
+.booking-sticky-sentinel { height: 1px; margin-bottom: -1px; }
+.booking-sticky-header { position: sticky; top: 0; z-index: 12; margin: 0 -2px 10px; padding: 0 2px 2px; background: color-mix(in srgb, var(--bg) 96%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); transition: box-shadow .18s ease, padding .18s ease, background .18s ease; }
+.booking-sticky-header.is-stuck { padding-top: max(6px, env(safe-area-inset-top)); box-shadow: 0 8px 18px rgb(0 0 0 / .06); }
+.booking-sticky-header .section-heading { margin-bottom: 10px; }
+.booking-sticky-summary { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; max-height: 0; opacity: 0; overflow: hidden; transform: translateY(-4px); transition: max-height .18s ease, opacity .14s ease, transform .18s ease, margin .18s ease; }
+.booking-sticky-header.is-stuck .booking-sticky-summary { max-height: 38px; margin-bottom: 4px; opacity: 1; transform: translateY(0); }
+.booking-sticky-summary span { color: var(--text-muted); font-size: .78rem; font-weight: 650; }
+.booking-sticky-summary strong { color: var(--forest-950); font-size: .92rem; font-weight: 800; }
+.booking-sticky-summary strong.negative { color: var(--danger); }
+.booking-sticky-header .booking-search { margin-bottom: 0; }
 .booking-timeline { position: relative; display: grid; gap: 10px; }
-.timeline-month { display: grid; gap: 10px; scroll-margin-top: 96px; }
+.timeline-month { display: grid; gap: 10px; scroll-margin-top: 132px; }
 .timeline-month + .timeline-month { margin-top: 8px; }
-.timeline-month-heading { position: sticky; top: calc(env(safe-area-inset-top) + 8px); z-index: 4; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 42px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 14px; background: color-mix(in srgb, var(--surface) 92%, transparent); box-shadow: var(--shadow-soft); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.timeline-month-heading { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 42px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); box-shadow: var(--shadow-soft); }
 .timeline-month-heading strong { color: var(--forest-950); font-size: .86rem; letter-spacing: -.01em; }
 .timeline-month-heading span { min-width: 28px; height: 28px; display: grid; place-items: center; border-radius: 999px; background: var(--forest-050); color: var(--forest-800); font-size: .74rem; font-weight: 760; }
 .timeline-sentinel { min-height: 1px; overflow: hidden; opacity: 0; transform: translateY(4px); transition: opacity .18s ease, transform .18s ease; pointer-events: none; }
@@ -16,5 +26,5 @@
 .timeline-skeleton-copy i:last-child { width: min(48%, 120px); height: 9px; }
 .timeline-skeleton-amount { width: 70px; height: 12px; justify-self: end; }
 @keyframes timeline-shimmer { from { background-position: 120% 0; } to { background-position: -120% 0; } }
-@media (prefers-reduced-motion: reduce) { .timeline-sentinel { transition: none; } .timeline-skeleton-icon, .timeline-skeleton-copy i, .timeline-skeleton-amount { animation: none; } }
-@media (max-width: 560px) { .timeline-month-heading { top: calc(env(safe-area-inset-top) + 6px); border-radius: 12px; } .timeline-skeleton { grid-template-columns: 40px minmax(0, 1fr) 66px; gap: 10px; padding: 12px; } .timeline-skeleton-icon { width: 40px; height: 40px; } .timeline-skeleton-amount { width: 62px; } }
+@media (prefers-reduced-motion: reduce) { .booking-sticky-header, .booking-sticky-summary, .timeline-sentinel { transition: none; } .timeline-skeleton-icon, .timeline-skeleton-copy i, .timeline-skeleton-amount { animation: none; } }
+@media (max-width: 560px) { .booking-sticky-header.is-stuck { padding-top: max(4px, env(safe-area-inset-top)); } .timeline-month-heading { border-radius: 12px; } .timeline-skeleton { grid-template-columns: 40px minmax(0, 1fr) 66px; gap: 10px; padding: 12px; } .timeline-skeleton-icon { width: 40px; height: 40px; } .timeline-skeleton-amount { width: 62px; } }
