@@ -1,0 +1,22 @@
+.booking-row-projected {
+  opacity: .52;
+  cursor: default;
+}
+
+.booking-row-projected .booking-meta::after {
+  content: '';
+}
+
+.recurrence-field .form-hint {
+  margin-top: 2px;
+}
+
+.recurrence-end-field[hidden] {
+  display: none;
+}
+
+@media (hover: hover) {
+  .booking-row-projected:hover {
+    background: transparent;
+  }
+}

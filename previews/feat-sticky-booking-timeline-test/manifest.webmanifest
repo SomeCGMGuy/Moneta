@@ -1,0 +1,11 @@
+{
+  "name": "Moneta. – Finanzanalyse & Budget",
+  "short_name": "Moneta.",
+  "description": "Lokale Finanzanalyse und Budgetplanung – offline und ohne Cloud-Zwang.",
+  "lang": "de", "start_url": "./", "scope": "./", "display": "standalone",
+  "background_color": "#f6f2e9", "theme_color": "#214b3b",
+  "icons": [
+    { "src": "./assets/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "./assets/icons/icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
