@@ -1,11 +1,10 @@
-name: Build Capacitor APK 2.6.5
+name: Build signed Capacitor APK 2.6.6
 
 on:
   workflow_dispatch:
   push:
     branches:
-      - feat/capacitor-apk-2.6.3-test
-      - feat/biometric-lock-test
+      - feat/stable-apk-signing
 
 permissions:
   contents: read
@@ -29,6 +28,26 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      - name: Verify signing secrets
+        env:
+          MONETA_ANDROID_KEYSTORE_BASE64: ${{ secrets.MONETA_ANDROID_KEYSTORE_BASE64 }}
+          MONETA_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.MONETA_ANDROID_KEYSTORE_PASSWORD }}
+          MONETA_ANDROID_KEY_ALIAS: ${{ secrets.MONETA_ANDROID_KEY_ALIAS }}
+          MONETA_ANDROID_KEY_PASSWORD: ${{ secrets.MONETA_ANDROID_KEY_PASSWORD }}
+        run: |
+          test -n "$MONETA_ANDROID_KEYSTORE_BASE64" || { echo "Missing secret: MONETA_ANDROID_KEYSTORE_BASE64"; exit 1; }
+          test -n "$MONETA_ANDROID_KEYSTORE_PASSWORD" || { echo "Missing secret: MONETA_ANDROID_KEYSTORE_PASSWORD"; exit 1; }
+          test -n "$MONETA_ANDROID_KEY_ALIAS" || { echo "Missing secret: MONETA_ANDROID_KEY_ALIAS"; exit 1; }
+          test -n "$MONETA_ANDROID_KEY_PASSWORD" || { echo "Missing secret: MONETA_ANDROID_KEY_PASSWORD"; exit 1; }
+
+      - name: Restore Android signing keystore
+        env:
+          MONETA_ANDROID_KEYSTORE_BASE64: ${{ secrets.MONETA_ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/moneta-signing"
+          printf '%s' "$MONETA_ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/moneta-signing/moneta-release.jks"
+          chmod 600 "$RUNNER_TEMP/moneta-signing/moneta-release.jks"
+
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
@@ -41,19 +60,41 @@ jobs:
       - name: Sync Capacitor plugins
         run: npx cap sync android
 
-      - name: Set Android app version
+      - name: Configure Android release signing and version
+        env:
+          MONETA_ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/moneta-signing/moneta-release.jks
+          MONETA_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.MONETA_ANDROID_KEYSTORE_PASSWORD }}
+          MONETA_ANDROID_KEY_ALIAS: ${{ secrets.MONETA_ANDROID_KEY_ALIAS }}
+          MONETA_ANDROID_KEY_PASSWORD: ${{ secrets.MONETA_ANDROID_KEY_PASSWORD }}
         run: |
           python <<'PY'
           from pathlib import Path
+
           path = Path('android/app/build.gradle')
           text = path.read_text(encoding='utf-8')
-          text = text.replace('versionCode 1', 'versionCode 265')
-          text = text.replace('versionName "1.0"', 'versionName "2.6.5"')
+          text = text.replace('versionCode 1', 'versionCode 266')
+          text = text.replace('versionName "1.0"', 'versionName "2.6.6"')
+
+          marker = '    buildTypes {'
+          signing = '''    signingConfigs {
+              release {
+                  storeFile file(System.getenv("MONETA_ANDROID_KEYSTORE_PATH"))
+                  storePassword System.getenv("MONETA_ANDROID_KEYSTORE_PASSWORD")
+                  keyAlias System.getenv("MONETA_ANDROID_KEY_ALIAS")
+                  keyPassword System.getenv("MONETA_ANDROID_KEY_PASSWORD")
+              }
+          }\n'''
+          if marker not in text:
+              raise SystemExit('Could not locate buildTypes block in generated Android project')
+          text = text.replace(marker, signing + marker, 1)
+          release_marker = '        release {'
+          if release_marker not in text:
+              raise SystemExit('Could not locate release build type in generated Android project')
+          text = text.replace(release_marker, release_marker + '\n            signingConfig signingConfigs.release', 1)
           path.write_text(text, encoding='utf-8')
           PY
 
       - name: Enable Android biometric permission
-        if: github.ref_name == 'feat/biometric-lock-test'
         run: |
           python <<'PY'
           from pathlib import Path
@@ -84,14 +125,23 @@ jobs:
           <resources><color name="ic_launcher_background">#214B3B</color></resources>
           EOF
 
-      - name: Build debug APK
+      - name: Build signed release APK
         working-directory: android
-        run: ./gradlew assembleDebug
+        env:
+          MONETA_ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/moneta-signing/moneta-release.jks
+          MONETA_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.MONETA_ANDROID_KEYSTORE_PASSWORD }}
+          MONETA_ANDROID_KEY_ALIAS: ${{ secrets.MONETA_ANDROID_KEY_ALIAS }}
+          MONETA_ANDROID_KEY_PASSWORD: ${{ secrets.MONETA_ANDROID_KEY_PASSWORD }}
+        run: ./gradlew assembleRelease
+
+      - name: Verify APK signature
+        run: |
+          "$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/apksigner" verify --verbose --print-certs android/app/build/outputs/apk/release/app-release.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: moneta-2.6.5-${{ github.ref_name == 'feat/biometric-lock-test' && 'biometric-' || '' }}capacitor-debug
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: moneta-2.6.6-signed-release
+          path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 14
