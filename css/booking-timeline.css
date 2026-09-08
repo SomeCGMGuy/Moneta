@@ -1,0 +1,87 @@
+.booking-timeline {
+  display: grid;
+  gap: 0;
+}
+
+.booking-month {
+  position: relative;
+  padding-top: 2px;
+}
+
+.booking-month + .booking-month {
+  margin-top: 18px;
+}
+
+.booking-month-heading {
+  position: sticky;
+  top: env(safe-area-inset-top);
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  margin: 0 -4px 8px;
+  padding: 5px 4px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  pointer-events: none;
+}
+
+.booking-month-heading span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-strong);
+  color: var(--forest-950);
+  box-shadow: var(--shadow-soft);
+  font-size: .78rem;
+  font-weight: 780;
+  letter-spacing: -.01em;
+}
+
+.booking-month .booking-groups {
+  display: grid;
+  gap: 14px;
+}
+
+.booking-month .booking-day-heading {
+  margin: 0 4px 6px;
+  color: var(--text-muted);
+  font-size: .76rem;
+  font-weight: 700;
+}
+
+.booking-timeline-loader {
+  display: grid;
+  gap: 9px;
+  margin: 18px 0 4px;
+  padding: 18px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.timeline-skeleton-line {
+  display: block;
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--surface-muted) 20%, var(--forest-050) 50%, var(--surface-muted) 80%);
+  background-size: 220% 100%;
+  animation: timeline-skeleton 1.15s ease-in-out infinite;
+}
+
+.timeline-skeleton-line.short { width: 58%; }
+
+@keyframes timeline-skeleton {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timeline-skeleton-line { animation: none; }
+}
