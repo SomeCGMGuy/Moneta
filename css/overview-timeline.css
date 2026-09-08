@@ -1,0 +1,20 @@
+.booking-timeline { position: relative; display: grid; gap: 10px; }
+.timeline-month { display: grid; gap: 10px; scroll-margin-top: 96px; }
+.timeline-month + .timeline-month { margin-top: 8px; }
+.timeline-month-heading { position: sticky; top: calc(env(safe-area-inset-top) + 8px); z-index: 4; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 42px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 14px; background: color-mix(in srgb, var(--surface) 92%, transparent); box-shadow: var(--shadow-soft); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.timeline-month-heading strong { color: var(--forest-950); font-size: .86rem; letter-spacing: -.01em; }
+.timeline-month-heading span { min-width: 28px; height: 28px; display: grid; place-items: center; border-radius: 999px; background: var(--forest-050); color: var(--forest-800); font-size: .74rem; font-weight: 760; }
+.timeline-sentinel { min-height: 1px; overflow: hidden; opacity: 0; transform: translateY(4px); transition: opacity .18s ease, transform .18s ease; pointer-events: none; }
+.timeline-sentinel.loading { opacity: 1; transform: translateY(0); }
+.timeline-sentinel-top { margin-bottom: -2px; }
+.timeline-sentinel-bottom { margin-top: -2px; }
+.timeline-skeleton { min-height: 74px; display: grid; grid-template-columns: 42px minmax(0, 1fr) 76px; align-items: center; gap: 12px; padding: 14px; margin-bottom: 8px; overflow: hidden; }
+.timeline-skeleton-icon, .timeline-skeleton-copy i, .timeline-skeleton-amount { display: block; border-radius: 999px; background: linear-gradient(90deg, var(--forest-050) 20%, var(--surface-strong) 45%, var(--forest-050) 70%); background-size: 220% 100%; animation: timeline-shimmer 1.15s ease-in-out infinite; }
+.timeline-skeleton-icon { width: 42px; height: 42px; border-radius: 13px; }
+.timeline-skeleton-copy { display: grid; gap: 8px; }
+.timeline-skeleton-copy i:first-child { width: min(72%, 190px); height: 12px; }
+.timeline-skeleton-copy i:last-child { width: min(48%, 120px); height: 9px; }
+.timeline-skeleton-amount { width: 70px; height: 12px; justify-self: end; }
+@keyframes timeline-shimmer { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+@media (prefers-reduced-motion: reduce) { .timeline-sentinel { transition: none; } .timeline-skeleton-icon, .timeline-skeleton-copy i, .timeline-skeleton-amount { animation: none; } }
+@media (max-width: 560px) { .timeline-month-heading { top: calc(env(safe-area-inset-top) + 6px); border-radius: 12px; } .timeline-skeleton { grid-template-columns: 40px minmax(0, 1fr) 66px; gap: 10px; padding: 12px; } .timeline-skeleton-icon { width: 40px; height: 40px; } .timeline-skeleton-amount { width: 62px; } }
