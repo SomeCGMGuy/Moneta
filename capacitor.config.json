@@ -3,6 +3,7 @@
   "appName": "moneta.",
   "webDir": "dist",
   "android": {
-    "backgroundColor": "#214b3b"
+    "backgroundColor": "#214b3b",
+    "adjustMarginsForEdgeToEdge": "force"
   }
 }
