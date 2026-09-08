@@ -1,9 +1,25 @@
 const money = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
 const fullDate = new Intl.DateTimeFormat('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+const monthName = new Intl.DateTimeFormat('de-DE', { month: 'long', year: 'numeric' });
 
-export function renderBookingList(bookings, categoryMap) {
+export function renderBookingList(bookings, categoryMap, { timeline = false, hasMore = false } = {}) {
   if (!bookings.length) return `<div class="card empty-state"><strong>Noch keine Buchungen</strong>Über das Plus kannst du deine erste Einnahme oder Ausgabe anlegen.</div>`;
+  if (!timeline) return renderDays(bookings, categoryMap);
 
+  const months = groupByMonth(bookings);
+  return `<div class="booking-timeline" data-booking-timeline>${months.map(({ month, bookings: rows }) => `
+    <section class="booking-month" data-booking-month="${escapeAttr(month)}">
+      <div class="booking-month-heading"><span>${escapeHtml(monthLabel(month))}</span></div>
+      ${renderDays(rows, categoryMap)}
+    </section>`).join('')}${hasMore ? `
+    <div class="booking-timeline-loader" data-booking-timeline-sentinel aria-label="Ältere Buchungen werden geladen">
+      <span class="timeline-skeleton-line"></span>
+      <span class="timeline-skeleton-line short"></span>
+      <span class="timeline-skeleton-line"></span>
+    </div>` : ''}</div>`;
+}
+
+function renderDays(bookings, categoryMap) {
   const groups = groupByDate(bookings);
   return `<div class="booking-groups">${groups.map(({ date, bookings: rows }) => `
     <section class="booking-day" data-booking-day>
@@ -33,6 +49,21 @@ function groupByDate(bookings) {
     groups.get(booking.date).push(booking);
   });
   return [...groups.entries()].sort(([a], [b]) => b.localeCompare(a)).map(([date, rows]) => ({ date, bookings: rows }));
+}
+
+function groupByMonth(bookings) {
+  const groups = new Map();
+  bookings.forEach((booking) => {
+    const month = String(booking.date).slice(0, 7);
+    if (!groups.has(month)) groups.set(month, []);
+    groups.get(month).push(booking);
+  });
+  return [...groups.entries()].sort(([a], [b]) => b.localeCompare(a)).map(([month, rows]) => ({ month, bookings: rows }));
+}
+
+function monthLabel(month) {
+  const value = new Date(`${month}-01T12:00:00`);
+  return monthName.format(value).replace(/^./, (c) => c.toUpperCase());
 }
 
 function dayLabel(iso) {
