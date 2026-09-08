@@ -1,0 +1,8 @@
+{
+  "appId": "de.somecgmguy.moneta",
+  "appName": "moneta.",
+  "webDir": "dist",
+  "android": {
+    "backgroundColor": "#214b3b"
+  }
+}
