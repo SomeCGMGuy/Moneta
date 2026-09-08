@@ -1,4 +1,5 @@
 import { registerOverlayHistory } from './components/overlay-history.js';
+import { setSetting } from './services/settings-service.js';
 
 const PREVIEW_LIMIT = 5;
 const FINANCIAL_SHEET_EXIT_MS = 180;
@@ -9,6 +10,15 @@ document.addEventListener('input', (event) => {
   const input = event.target.closest('[data-category-search]');
   if (!input) return;
   updateCategoryGroup(input.dataset.categorySearch, input.value);
+});
+
+document.addEventListener('change', async (event) => {
+  const biometricToggle = event.target.closest('[data-biometric-toggle]');
+  if (!biometricToggle) return;
+  const enabled = Boolean(biometricToggle.checked);
+  localStorage.setItem('moneta-biometric-enabled', String(enabled));
+  await setSetting('biometricEnabled', enabled);
+  window.dispatchEvent(new CustomEvent('moneta:biometric-setting-changed', { detail: { enabled } }));
 });
 
 document.addEventListener('click', (event) => {
