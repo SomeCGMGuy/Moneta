@@ -1,0 +1,65 @@
+name: Branch Preview
+
+on:
+  push:
+    branches:
+      - 'feat/**'
+      - 'fix/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: branch-preview-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+
+      - name: Build isolated preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          BRANCH="${GITHUB_REF_NAME}"
+          SLUG=$(printf '%s' "$BRANCH" | sed -E 's#[^A-Za-z0-9._-]+#-#g')
+          mkdir -p preview
+          rsync -a --delete \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude 'preview/' \
+            ./ preview/
+          printf '%s' "$SLUG" > preview-slug.txt
+
+      - name: Publish preview to gh-pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          SLUG=$(cat preview-slug.txt)
+          git fetch origin gh-pages || true
+          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
+            git worktree add pages origin/gh-pages
+          else
+            git worktree add --detach pages
+            cd pages
+            git checkout --orphan gh-pages
+            git rm -rf . || true
+            touch .nojekyll
+            git add .nojekyll
+            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'chore: initialize preview pages'
+            cd ..
+          fi
+          rm -rf "pages/previews/$SLUG"
+          mkdir -p "pages/previews/$SLUG"
+          cp -a preview/. "pages/previews/$SLUG/"
+          touch pages/.nojekyll
+          cd pages
+          git checkout -B gh-pages
+          git add .
+          if git diff --cached --quiet; then exit 0; fi
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m "preview: ${GITHUB_REF_NAME}"
+          git push origin gh-pages
