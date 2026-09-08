@@ -1,0 +1,91 @@
+name: Build Capacitor APK 2.6.3
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feat/capacitor-apk-2.6.3-test
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Prepare web assets
+        run: npm run build:web
+
+      - name: Create Android project
+        run: npx cap add android
+
+      - name: Sync Capacitor plugins
+        run: npx cap sync android
+
+      - name: Apply Moneta launcher icon
+        run: |
+          python -m pip install --quiet pillow
+          python <<'PY'
+          from pathlib import Path
+          from PIL import Image
+
+          source = Image.open('assets/icons/icon-512-v2.png').convert('RGBA')
+          base = Path('android/app/src/main/res')
+          launcher_sizes = {
+              'mipmap-mdpi': 48,
+              'mipmap-hdpi': 72,
+              'mipmap-xhdpi': 96,
+              'mipmap-xxhdpi': 144,
+              'mipmap-xxxhdpi': 192,
+          }
+          foreground_sizes = {
+              'mipmap-mdpi': 108,
+              'mipmap-hdpi': 162,
+              'mipmap-xhdpi': 216,
+              'mipmap-xxhdpi': 324,
+              'mipmap-xxxhdpi': 432,
+          }
+          for folder, size in launcher_sizes.items():
+              target = base / folder
+              target.mkdir(parents=True, exist_ok=True)
+              image = source.resize((size, size), Image.Resampling.LANCZOS)
+              image.save(target / 'ic_launcher.png')
+              image.save(target / 'ic_launcher_round.png')
+          for folder, size in foreground_sizes.items():
+              target = base / folder
+              target.mkdir(parents=True, exist_ok=True)
+              source.resize((size, size), Image.Resampling.LANCZOS).save(target / 'ic_launcher_foreground.png')
+          values = base / 'values'
+          values.mkdir(parents=True, exist_ok=True)
+          (values / 'ic_launcher_background.xml').write_text('<?xml version="1.0" encoding="utf-8"?>\n<resources><color name="ic_launcher_background">#214B3B</color></resources>\n', encoding='utf-8')
+          PY
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: moneta-2.6.3-capacitor-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
