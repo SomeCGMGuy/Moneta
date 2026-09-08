@@ -1,0 +1,13 @@
+.biometric-setting { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 16px; }
+.biometric-setting-copy { min-width: 0; }
+.biometric-setting-copy strong { display: block; color: var(--forest-950); }
+.biometric-setting-copy p { margin: 4px 0 0; color: var(--text-muted); font-size: .82rem; line-height: 1.4; }
+.settings-switch { position: relative; flex: 0 0 auto; width: 52px; height: 32px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.settings-switch input { position: absolute; opacity: 0; pointer-events: none; }
+.settings-switch-track { position: absolute; inset: 0; border-radius: 999px; background: var(--surface-muted); border: 1px solid var(--border); transition: background 160ms linear, border-color 160ms linear; }
+.settings-switch-thumb { position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: var(--surface-strong); box-shadow: 0 1px 4px rgb(0 0 0 / .22); transition: transform 180ms cubic-bezier(.2,0,0,1); }
+.settings-switch input:checked + .settings-switch-track { background: var(--forest-900); border-color: var(--forest-900); }
+.settings-switch input:checked + .settings-switch-track .settings-switch-thumb { transform: translateX(20px); }
+.settings-switch input:focus-visible + .settings-switch-track { outline: 2px solid var(--forest-700); outline-offset: 3px; }
+@media (max-width: 390px) { .biometric-setting { align-items: flex-start; } }
+@media (prefers-reduced-motion: reduce) { .settings-switch-track, .settings-switch-thumb { transition: none; } }
