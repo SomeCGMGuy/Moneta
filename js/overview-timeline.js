@@ -14,11 +14,6 @@ document.addEventListener('input', (event) => {
   if (!event.target.closest('[data-booking-search]')) return;
   requestAnimationFrame(() => controller?.syncSearchVisibility());
 });
-document.addEventListener('click', (event) => {
-  const nav = event.target.closest('[data-nav="overview"]');
-  if (!nav || !document.querySelector('[data-active-month]')) return;
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}, { capture: true });
 
 scheduleInit();
 
@@ -40,26 +35,19 @@ class OverviewTimeline {
     this.baseMonth = this.page?.dataset.activeMonth;
     this.futureSentinel = root.querySelector('[data-timeline-sentinel="future"]');
     this.currentSection = root.querySelector('.timeline-month-current');
-    this.stickyHeader = this.section?.querySelector('[data-booking-sticky-header]');
-    this.stickySentinel = this.section?.querySelector('[data-booking-sticky-sentinel]');
     this.categoryMap = null;
-    this.boundStickyState = () => this.updateStickyState();
   }
 
   async init() {
     this.root.dataset.timelineReady = 'true';
     if (!this.baseMonth) return;
     this.categoryMap = await getCategoryMap();
-    window.addEventListener('scroll', this.boundStickyState, { passive: true });
-    this.updateStickyState();
     await this.loadFutureMonth();
     this.syncSearchVisibility();
     this.anchorLatestRealBooking();
   }
 
-  destroy() {
-    window.removeEventListener('scroll', this.boundStickyState);
-  }
+  destroy() {}
 
   async loadFutureMonth() {
     if (!this.futureSentinel || !this.currentSection || MAX_FUTURE_MONTHS < 1) return;
@@ -91,21 +79,14 @@ class OverviewTimeline {
   }
 
   anchorLatestRealBooking() {
-    const row = this.root.querySelector('.booking-row:not(.booking-row-projected)');
+    const currentRealRows = [...(this.currentSection?.querySelectorAll('.booking-row:not(.booking-row-projected)') ?? [])];
+    const row = currentRealRows[0] ?? this.root.querySelector('.booking-row:not(.booking-row-projected)');
     const day = row?.closest('[data-booking-day]');
     if (!day) return;
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      const headerHeight = this.stickyHeader?.offsetHeight ?? 0;
-      const top = window.scrollY + day.getBoundingClientRect().top - headerHeight - 10;
+      const top = window.scrollY + day.getBoundingClientRect().top - 12;
       window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
-      this.updateStickyState();
     }));
-  }
-
-  updateStickyState() {
-    if (!this.stickyHeader || !this.stickySentinel) return;
-    const stuck = this.stickySentinel.getBoundingClientRect().top <= 0;
-    this.stickyHeader.classList.toggle('is-stuck', stuck);
   }
 
   applyCurrentSearch(scope = this.root) {
