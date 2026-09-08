@@ -38,6 +38,8 @@ jobs:
         with:
           path: site
 
+      # Re-run the workflow as a fresh run instead of re-running this job,
+      # because Pages artifacts keep the fixed name "github-pages" per run.
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
