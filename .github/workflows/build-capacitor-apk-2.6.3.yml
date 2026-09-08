@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - feat/capacitor-apk-2.6.3-test
+      - feat/biometric-lock-test
 
 permissions:
   contents: read
@@ -40,6 +41,22 @@ jobs:
       - name: Sync Capacitor plugins
         run: npx cap sync android
 
+      - name: Enable Android biometric permission
+        if: github.ref_name == 'feat/biometric-lock-test'
+        run: |
+          manifest="android/app/src/main/AndroidManifest.xml"
+          python <<'PY'
+          from pathlib import Path
+          path = Path('android/app/src/main/AndroidManifest.xml')
+          text = path.read_text(encoding='utf-8')
+          permission = '<uses-permission android:name="android.permission.USE_BIOMETRIC" />'
+          if permission not in text:
+              text = text.replace('<manifest ', '<manifest ', 1)
+              insert_at = text.find('>') + 1
+              text = text[:insert_at] + '\n    ' + permission + text[insert_at:]
+              path.write_text(text, encoding='utf-8')
+          PY
+
       - name: Apply Moneta launcher icon
         run: |
           sudo apt-get update -qq
@@ -64,7 +81,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: moneta-2.6.3-capacitor-debug
+          name: moneta-2.6.3-${{ github.ref_name == 'feat/biometric-lock-test' && 'biometric-' || '' }}capacitor-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
