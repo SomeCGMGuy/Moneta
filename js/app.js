@@ -33,11 +33,6 @@ async function bootstrap() {
   applyTheme(state.theme, false);
   await reloadData(); mountShell(); bindGlobalEvents(); render();
   requestAnimationFrame(() => showOnboarding());
-  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-    const hadController = Boolean(navigator.serviceWorker.controller);
-    if (hadController) navigator.serviceWorker.addEventListener('controllerchange', () => { if (sessionStorage.getItem('moneta-sw-reloaded') === '1') return; sessionStorage.setItem('moneta-sw-reloaded', '1'); location.reload(); }, { once: true });
-    navigator.serviceWorker.register('./service-worker.js', { updateViaCache: 'none' }).then((registration) => registration.update()).catch((error) => console.warn('Service Worker:', error));
-  }
 }
 
 function mountShell() {
