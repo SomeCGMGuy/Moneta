@@ -44,16 +44,15 @@ jobs:
       - name: Enable Android biometric permission
         if: github.ref_name == 'feat/biometric-lock-test'
         run: |
-          manifest="android/app/src/main/AndroidManifest.xml"
           python <<'PY'
           from pathlib import Path
           path = Path('android/app/src/main/AndroidManifest.xml')
           text = path.read_text(encoding='utf-8')
           permission = '<uses-permission android:name="android.permission.USE_BIOMETRIC" />'
           if permission not in text:
-              text = text.replace('<manifest ', '<manifest ', 1)
-              insert_at = text.find('>') + 1
-              text = text[:insert_at] + '\n    ' + permission + text[insert_at:]
+              manifest_start = text.find('<manifest')
+              manifest_open_end = text.find('>', manifest_start) + 1
+              text = text[:manifest_open_end] + '\n    ' + permission + text[manifest_open_end:]
               path.write_text(text, encoding='utf-8')
           PY
 
