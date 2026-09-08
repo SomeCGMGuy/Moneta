@@ -1,4 +1,4 @@
-name: Build signed Capacitor APK 2.6.6
+name: Build signed Capacitor APK 2.6.7
 
 on:
   workflow_dispatch:
@@ -72,8 +72,8 @@ jobs:
 
           path = Path('android/app/build.gradle')
           text = path.read_text(encoding='utf-8')
-          text = text.replace('versionCode 1', 'versionCode 266')
-          text = text.replace('versionName "1.0"', 'versionName "2.6.6"')
+          text = text.replace('versionCode 1', 'versionCode 267')
+          text = text.replace('versionName "1.0"', 'versionName "2.6.7"')
 
           marker = '    buildTypes {'
           signing = '''    signingConfigs {
@@ -141,7 +141,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: moneta-2.6.6-signed-release
+          name: moneta-2.6.7-signed-release
           path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 14
