@@ -55,12 +55,10 @@ function setupBiometricSetting() {
     section.innerHTML = `
       <div class="section-heading"><div><h2>Sicherheit</h2><p class="section-subtitle">Schütze Moneta auf diesem Gerät mit der Android-Biometrie.</p></div></div>
       <div class="card theme-setting">
-        <label class="booking-toggle-row" for="biometric-lock-toggle">
+        <label class="booking-toggle-row">
           <span><strong>Biometrische Sperre</strong><small>Beim App-Start Fingerabdruck oder Gerätebiometrie verlangen.</small></span>
-          <span>
-            <input id="biometric-lock-toggle" class="material-switch" type="checkbox" data-biometric-toggle ${biometricEnabled() ? 'checked' : ''} />
-            <span class="material-switch-track" aria-hidden="true"></span>
-          </span>
+          <input id="biometric-lock-toggle" class="material-switch" type="checkbox" data-biometric-toggle ${biometricEnabled() ? 'checked' : ''} />
+          <span class="material-switch-track" aria-hidden="true"></span>
         </label>
         <p data-biometric-setting-status style="margin:0 0 4px;color:var(--text-muted);font-size:.78rem;" hidden></p>
       </div>`;
