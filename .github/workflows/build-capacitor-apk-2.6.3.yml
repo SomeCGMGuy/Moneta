@@ -64,9 +64,9 @@ jobs:
           for spec in "mipmap-mdpi:48:108" "mipmap-hdpi:72:162" "mipmap-xhdpi:96:216" "mipmap-xxhdpi:144:324" "mipmap-xxxhdpi:192:432"; do
             IFS=: read -r folder launcher foreground <<< "$spec"
             mkdir -p "$base/$folder"
-            rsvg-convert -w "$launcher" -h "$launcher" assets/icons/icon.svg -o "$base/$folder/ic_launcher.png"
+            rsvg-convert -w "$launcher" -h "$launcher" assets/icons/icon-android-launcher.svg -o "$base/$folder/ic_launcher.png"
             cp "$base/$folder/ic_launcher.png" "$base/$folder/ic_launcher_round.png"
-            rsvg-convert -w "$foreground" -h "$foreground" assets/icons/icon.svg -o "$base/$folder/ic_launcher_foreground.png"
+            rsvg-convert -w "$foreground" -h "$foreground" assets/icons/icon-android-foreground.svg -o "$base/$folder/ic_launcher_foreground.png"
           done
           cat > "$base/values/ic_launcher_background.xml" <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
