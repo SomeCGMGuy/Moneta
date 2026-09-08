@@ -7,6 +7,7 @@ const money = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR
 const monthName = new Intl.DateTimeFormat('de-DE', { month: 'long', year: 'numeric' });
 const RESTORE_MONTH_KEY = 'moneta-overview-timeline-month';
 const RESTORE_SCROLL_KEY = 'moneta-overview-timeline-scroll';
+const MAX_EMPTY_MONTH_SCAN = 36;
 let controller = null;
 
 const observer = new MutationObserver(() => scheduleInit());
@@ -107,10 +108,15 @@ class OverviewTimeline {
 
   async loadAdjacent(direction) {
     if (!['prev', 'next'].includes(direction)) return;
-    const months = [...this.loaded.keys()].sort();
-    if (!months.length) return;
-    const edge = direction === 'prev' ? months[0] : months[months.length - 1];
-    await this.ensureMonth(shiftMonth(edge, direction === 'prev' ? -1 : 1), direction);
+    for (let attempt = 0; attempt < MAX_EMPTY_MONTH_SCAN; attempt += 1) {
+      const months = [...this.loaded.keys()].sort();
+      if (!months.length) return;
+      const edge = direction === 'prev' ? months[0] : months[months.length - 1];
+      const month = shiftMonth(edge, direction === 'prev' ? -1 : 1);
+      const section = await this.ensureMonth(month, direction);
+      const bookings = this.loaded.get(month)?.bookings;
+      if (section && bookings?.length) return;
+    }
   }
 
   async ensureMonth(month, direction = 'next') {
@@ -138,8 +144,9 @@ class OverviewTimeline {
     if (!section) return;
     const bookings = await this.fetchMonth(month);
     this.loaded.set(month, { section, bookings });
+    section.hidden = bookings.length === 0;
     const listHost = section.querySelector('[data-timeline-list]');
-    if (listHost) listHost.innerHTML = renderBookingList(bookings, this.categoryMap);
+    if (listHost) listHost.innerHTML = bookings.length ? renderBookingList(bookings, this.categoryMap) : '';
     const count = section.querySelector('[data-timeline-month-count]');
     if (count) count.textContent = String(bookings.length);
   }
@@ -156,7 +163,8 @@ class OverviewTimeline {
     const section = document.createElement('section');
     section.className = 'timeline-month';
     section.dataset.timelineMonth = month;
-    section.innerHTML = `<div class="timeline-month-heading"><strong>${escapeHtml(label)}</strong><span data-timeline-month-count>${bookings.length}</span></div><div data-timeline-list>${renderBookingList(bookings, this.categoryMap)}</div>`;
+    section.hidden = bookings.length === 0;
+    section.innerHTML = `<div class="timeline-month-heading"><strong>${escapeHtml(label)}</strong><span data-timeline-month-count>${bookings.length}</span></div><div data-timeline-list>${bookings.length ? renderBookingList(bookings, this.categoryMap) : ''}</div>`;
     return section;
   }
 
@@ -169,6 +177,10 @@ class OverviewTimeline {
     }
     if (!section) return;
     this.updateActiveMonth(month);
+    if (section.hidden) {
+      window.scrollTo({ top: 0, behavior: restore ? 'auto' : behavior });
+      return;
+    }
     const top = window.scrollY + section.getBoundingClientRect().top - 94;
     window.scrollTo({ top: Math.max(0, top), behavior: restore ? 'auto' : behavior });
   }
@@ -206,6 +218,8 @@ class OverviewTimeline {
   syncSearchVisibility() {
     const query = this.page?.querySelector('[data-booking-search]')?.value.trim();
     this.root.querySelectorAll('[data-timeline-month]').forEach((section) => {
+      const bookings = this.loaded.get(section.dataset.timelineMonth)?.bookings;
+      if (!bookings?.length) { section.hidden = true; return; }
       if (!query) { section.hidden = false; return; }
       section.hidden = ![...section.querySelectorAll('[data-booking-row]')].some((row) => !row.hidden);
     });
