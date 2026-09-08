@@ -23,7 +23,7 @@ jobs:
           node-version: '22'
 
       - name: Set up Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
@@ -42,41 +42,20 @@ jobs:
 
       - name: Apply Moneta launcher icon
         run: |
-          python -m pip install --quiet pillow
-          python <<'PY'
-          from pathlib import Path
-          from PIL import Image
-
-          source = Image.open('assets/icons/icon-512-v2.png').convert('RGBA')
-          base = Path('android/app/src/main/res')
-          launcher_sizes = {
-              'mipmap-mdpi': 48,
-              'mipmap-hdpi': 72,
-              'mipmap-xhdpi': 96,
-              'mipmap-xxhdpi': 144,
-              'mipmap-xxxhdpi': 192,
-          }
-          foreground_sizes = {
-              'mipmap-mdpi': 108,
-              'mipmap-hdpi': 162,
-              'mipmap-xhdpi': 216,
-              'mipmap-xxhdpi': 324,
-              'mipmap-xxxhdpi': 432,
-          }
-          for folder, size in launcher_sizes.items():
-              target = base / folder
-              target.mkdir(parents=True, exist_ok=True)
-              image = source.resize((size, size), Image.Resampling.LANCZOS)
-              image.save(target / 'ic_launcher.png')
-              image.save(target / 'ic_launcher_round.png')
-          for folder, size in foreground_sizes.items():
-              target = base / folder
-              target.mkdir(parents=True, exist_ok=True)
-              source.resize((size, size), Image.Resampling.LANCZOS).save(target / 'ic_launcher_foreground.png')
-          values = base / 'values'
-          values.mkdir(parents=True, exist_ok=True)
-          (values / 'ic_launcher_background.xml').write_text('<?xml version="1.0" encoding="utf-8"?>\n<resources><color name="ic_launcher_background">#214B3B</color></resources>\n', encoding='utf-8')
-          PY
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends librsvg2-bin
+          base="android/app/src/main/res"
+          for spec in "mipmap-mdpi:48:108" "mipmap-hdpi:72:162" "mipmap-xhdpi:96:216" "mipmap-xxhdpi:144:324" "mipmap-xxxhdpi:192:432"; do
+            IFS=: read -r folder launcher foreground <<< "$spec"
+            mkdir -p "$base/$folder"
+            rsvg-convert -w "$launcher" -h "$launcher" assets/icons/icon.svg -o "$base/$folder/ic_launcher.png"
+            cp "$base/$folder/ic_launcher.png" "$base/$folder/ic_launcher_round.png"
+            rsvg-convert -w "$foreground" -h "$foreground" assets/icons/icon.svg -o "$base/$folder/ic_launcher_foreground.png"
+          done
+          cat > "$base/values/ic_launcher_background.xml" <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources><color name="ic_launcher_background">#214B3B</color></resources>
+          EOF
 
       - name: Build debug APK
         working-directory: android
