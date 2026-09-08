@@ -1,4 +1,4 @@
-name: Build Capacitor APK 2.6.4
+name: Build Capacitor APK 2.6.5
 
 on:
   workflow_dispatch:
@@ -47,8 +47,8 @@ jobs:
           from pathlib import Path
           path = Path('android/app/build.gradle')
           text = path.read_text(encoding='utf-8')
-          text = text.replace('versionCode 1', 'versionCode 264')
-          text = text.replace('versionName "1.0"', 'versionName "2.6.4"')
+          text = text.replace('versionCode 1', 'versionCode 265')
+          text = text.replace('versionName "1.0"', 'versionName "2.6.5"')
           path.write_text(text, encoding='utf-8')
           PY
 
@@ -91,7 +91,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: moneta-2.6.4-${{ github.ref_name == 'feat/biometric-lock-test' && 'biometric-' || '' }}capacitor-debug
+          name: moneta-2.6.5-${{ github.ref_name == 'feat/biometric-lock-test' && 'biometric-' || '' }}capacitor-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
