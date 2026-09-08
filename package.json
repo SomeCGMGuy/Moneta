@@ -1,7 +1,7 @@
 {
   "name": "moneta-capacitor-test",
   "private": true,
-  "version": "2.6.3",
+  "version": "2.6.4",
   "scripts": {
     "build:web": "rm -rf dist && mkdir -p dist && cp index.html manifest.webmanifest service-worker.js dist/ && cp -R assets css js dist/",
     "cap:add:android": "npx cap add android",
