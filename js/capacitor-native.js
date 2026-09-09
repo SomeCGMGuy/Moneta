@@ -43,8 +43,10 @@ function biometricEnabled() {
 }
 
 function biometricTimeoutMinutes() {
-  const stored = Number(localStorage.getItem(BIOMETRIC_TIMEOUT_KEY));
-  return Number.isFinite(stored) && stored >= 0 ? stored : DEFAULT_BIOMETRIC_TIMEOUT_MINUTES;
+  const stored = localStorage.getItem(BIOMETRIC_TIMEOUT_KEY);
+  if (stored === null) return DEFAULT_BIOMETRIC_TIMEOUT_MINUTES;
+  const minutes = Number(stored);
+  return Number.isFinite(minutes) && minutes >= 0 ? minutes : DEFAULT_BIOMETRIC_TIMEOUT_MINUTES;
 }
 
 function setupBiometricRelock() {
