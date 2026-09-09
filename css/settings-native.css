@@ -9,6 +9,8 @@
 .financial-start-value span { color: var(--text-muted); font-size: 1.35rem; }
 .financial-start-example { margin: 0; padding: 0 16px 14px; color: var(--text-muted); font-size: .78rem; line-height: 1.45; }
 
+[data-biometric-timeout] { appearance: auto; -webkit-appearance: menulist; font: inherit; }
+
 .financial-sheet-backdrop { position: fixed; inset: 0; z-index: 220; display: flex; align-items: flex-end; justify-content: center; background: rgb(5 14 11 / .56); opacity: 0; transition: opacity 180ms linear; }
 .financial-sheet-backdrop.open { opacity: 1; }
 .financial-sheet-backdrop.closing { opacity: 0; }
