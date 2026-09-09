@@ -49,6 +49,12 @@ function biometricTimeoutMinutes() {
   return Number.isFinite(minutes) && minutes >= 0 ? minutes : DEFAULT_BIOMETRIC_TIMEOUT_MINUTES;
 }
 
+function biometricTimeoutLabel(minutes) {
+  if (minutes === 0) return 'Sofort';
+  if (minutes === 1) return '1 Min.';
+  return `${minutes} Min.`;
+}
+
 function setupBiometricRelock() {
   if (!appPlugin?.addListener) return;
 
@@ -94,8 +100,9 @@ function setupBiometricSetting() {
           <input id="biometric-lock-toggle" class="material-switch" type="checkbox" data-biometric-toggle ${biometricEnabled() ? 'checked' : ''} />
           <span class="material-switch-track" aria-hidden="true"></span>
         </label>
-        <label class="booking-toggle-row" data-biometric-timeout-row>
-          <span><strong>Erneut sperren</strong><small>Nach dem Verlassen von Moneta.</small></span>
+        <label class="booking-toggle-row biometric-timeout-row" data-biometric-timeout-row>
+          <span><strong>Erneut sperren</strong><small>Nach Verlassen von Moneta.</small></span>
+          <span class="biometric-timeout-value" data-biometric-timeout-value aria-hidden="true">5 Min. <span>›</span></span>
           <select data-biometric-timeout aria-label="Zeit bis zur erneuten biometrischen Sperre">
             <option value="0">Sofort</option>
             <option value="1">Nach 1 Minute</option>
@@ -110,12 +117,24 @@ function setupBiometricSetting() {
 
     const toggle = section.querySelector('[data-biometric-toggle]');
     const timeout = section.querySelector('[data-biometric-timeout]');
+    const timeoutRow = section.querySelector('[data-biometric-timeout-row]');
+    const timeoutValue = section.querySelector('[data-biometric-timeout-value]');
     const status = section.querySelector('[data-biometric-setting-status]');
+
+    const syncTimeoutSetting = () => {
+      if (!timeout) return;
+      const enabled = biometricEnabled();
+      timeout.disabled = !enabled;
+      if (timeoutRow) timeoutRow.dataset.disabled = enabled ? 'false' : 'true';
+      if (timeoutValue) timeoutValue.firstChild.textContent = `${biometricTimeoutLabel(Number(timeout.value))} `;
+    };
+
     if (timeout) {
       timeout.value = String(biometricTimeoutMinutes());
-      timeout.disabled = !biometricEnabled();
+      syncTimeoutSetting();
       timeout.addEventListener('change', () => {
         localStorage.setItem(BIOMETRIC_TIMEOUT_KEY, timeout.value);
+        syncTimeoutSetting();
       });
     }
 
@@ -124,7 +143,7 @@ function setupBiometricSetting() {
         localStorage.setItem(BIOMETRIC_KEY, 'false');
         biometricUnlocked = false;
         biometricBackgroundSince = null;
-        if (timeout) timeout.disabled = true;
+        syncTimeoutSetting();
         setStatus(status, 'Biometrische Sperre deaktiviert.', false);
         return;
       }
@@ -137,7 +156,7 @@ function setupBiometricSetting() {
       localStorage.setItem(BIOMETRIC_KEY, enabled ? 'true' : 'false');
       biometricUnlocked = enabled;
       biometricBackgroundSince = null;
-      if (timeout) timeout.disabled = !enabled;
+      syncTimeoutSetting();
       setStatus(status, enabled ? 'Biometrische Sperre aktiviert.' : 'Biometrie konnte nicht aktiviert werden.', !enabled);
     });
   };
