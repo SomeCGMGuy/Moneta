@@ -9,7 +9,12 @@
 .financial-start-value span { color: var(--text-muted); font-size: 1.35rem; }
 .financial-start-example { margin: 0; padding: 0 16px 14px; color: var(--text-muted); font-size: .78rem; line-height: 1.45; }
 
-[data-biometric-timeout] { appearance: auto; -webkit-appearance: menulist; font: inherit; }
+.biometric-timeout-row { position: relative; overflow: hidden; }
+.biometric-timeout-value { margin-left: auto; display: inline-flex; align-items: center; gap: 7px; color: var(--forest-900); font-weight: 700; white-space: nowrap; pointer-events: none; }
+.biometric-timeout-value > span { color: var(--text-muted); font-size: 1.35rem; font-weight: 400; line-height: 1; }
+[data-biometric-timeout] { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+[data-biometric-timeout-row][data-disabled='true'] .biometric-timeout-value { opacity: .42; }
+[data-biometric-timeout]:disabled { pointer-events: none; }
 
 .financial-sheet-backdrop { position: fixed; inset: 0; z-index: 220; display: flex; align-items: flex-end; justify-content: center; background: rgb(5 14 11 / .56); opacity: 0; transition: opacity 180ms linear; }
 .financial-sheet-backdrop.open { opacity: 1; }
