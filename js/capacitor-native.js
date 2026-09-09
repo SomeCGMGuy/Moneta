@@ -3,9 +3,12 @@ const appPlugin = capacitor?.Plugins?.App;
 const biometricPlugin = capacitor?.Plugins?.NativeBiometric;
 const isNative = Boolean(capacitor?.isNativePlatform?.());
 const BIOMETRIC_KEY = 'moneta-biometric-enabled';
+const BIOMETRIC_TIMEOUT_KEY = 'moneta-biometric-timeout';
+const DEFAULT_BIOMETRIC_TIMEOUT_MINUTES = 5;
 
 let biometricUnlocked = false;
 let biometricBusy = false;
+let biometricBackgroundSince = null;
 let settingsObserver = null;
 
 if (isNative) {
@@ -15,6 +18,7 @@ if (isNative) {
 async function initNativeShell() {
   setupBackButton();
   setupBiometricSetting();
+  setupBiometricRelock();
   await setupBiometricLock();
 }
 
@@ -38,6 +42,34 @@ function biometricEnabled() {
   return localStorage.getItem(BIOMETRIC_KEY) === 'true';
 }
 
+function biometricTimeoutMinutes() {
+  const stored = Number(localStorage.getItem(BIOMETRIC_TIMEOUT_KEY));
+  return Number.isFinite(stored) && stored >= 0 ? stored : DEFAULT_BIOMETRIC_TIMEOUT_MINUTES;
+}
+
+function setupBiometricRelock() {
+  if (!appPlugin?.addListener) return;
+
+  appPlugin.addListener('appStateChange', async ({ isActive }) => {
+    if (biometricBusy || !biometricEnabled()) return;
+
+    if (!isActive) {
+      biometricBackgroundSince = Date.now();
+      return;
+    }
+
+    if (biometricBackgroundSince === null) return;
+
+    const elapsed = Date.now() - biometricBackgroundSince;
+    biometricBackgroundSince = null;
+    const timeoutMs = biometricTimeoutMinutes() * 60 * 1000;
+    if (elapsed < timeoutMs) return;
+
+    biometricUnlocked = false;
+    await showBiometricLock();
+  });
+}
+
 function setupBiometricSetting() {
   const mountSetting = () => {
     const view = document.querySelector('#view-root');
@@ -56,20 +88,41 @@ function setupBiometricSetting() {
       <div class="section-heading"><div><h2>Sicherheit</h2><p class="section-subtitle">Schütze Moneta auf diesem Gerät mit der Android-Biometrie.</p></div></div>
       <div class="card theme-setting">
         <label class="booking-toggle-row">
-          <span><strong>Biometrische Sperre</strong><small>Beim App-Start Fingerabdruck oder Gerätebiometrie verlangen.</small></span>
+          <span><strong>Biometrische Sperre</strong><small>Beim App-Start und nach längerer Abwesenheit Biometrie verlangen.</small></span>
           <input id="biometric-lock-toggle" class="material-switch" type="checkbox" data-biometric-toggle ${biometricEnabled() ? 'checked' : ''} />
           <span class="material-switch-track" aria-hidden="true"></span>
+        </label>
+        <label class="booking-toggle-row" data-biometric-timeout-row>
+          <span><strong>Erneut sperren</strong><small>Nach dem Verlassen von Moneta.</small></span>
+          <select data-biometric-timeout aria-label="Zeit bis zur erneuten biometrischen Sperre">
+            <option value="0">Sofort</option>
+            <option value="1">Nach 1 Minute</option>
+            <option value="5">Nach 5 Minuten</option>
+            <option value="15">Nach 15 Minuten</option>
+            <option value="30">Nach 30 Minuten</option>
+          </select>
         </label>
         <p data-biometric-setting-status style="margin:0 0 4px;color:var(--text-muted);font-size:.78rem;" hidden></p>
       </div>`;
     appSection.before(section);
 
     const toggle = section.querySelector('[data-biometric-toggle]');
+    const timeout = section.querySelector('[data-biometric-timeout]');
     const status = section.querySelector('[data-biometric-setting-status]');
+    if (timeout) {
+      timeout.value = String(biometricTimeoutMinutes());
+      timeout.disabled = !biometricEnabled();
+      timeout.addEventListener('change', () => {
+        localStorage.setItem(BIOMETRIC_TIMEOUT_KEY, timeout.value);
+      });
+    }
+
     toggle?.addEventListener('change', async () => {
       if (!toggle.checked) {
         localStorage.setItem(BIOMETRIC_KEY, 'false');
         biometricUnlocked = false;
+        biometricBackgroundSince = null;
+        if (timeout) timeout.disabled = true;
         setStatus(status, 'Biometrische Sperre deaktiviert.', false);
         return;
       }
@@ -80,6 +133,9 @@ function setupBiometricSetting() {
       toggle.disabled = false;
       toggle.checked = enabled;
       localStorage.setItem(BIOMETRIC_KEY, enabled ? 'true' : 'false');
+      biometricUnlocked = enabled;
+      biometricBackgroundSince = null;
+      if (timeout) timeout.disabled = !enabled;
       setStatus(status, enabled ? 'Biometrische Sperre aktiviert.' : 'Biometrie konnte nicht aktiviert werden.', !enabled);
     });
   };
@@ -133,8 +189,18 @@ async function setupBiometricLock() {
     return;
   }
 
-  const lock = createBiometricLock();
-  document.body.append(lock);
+  await showBiometricLock();
+}
+
+async function showBiometricLock() {
+  if (!biometricEnabled() || biometricBusy) return;
+
+  let lock = document.querySelector('[data-biometric-lock]');
+  if (!lock) {
+    lock = createBiometricLock();
+    document.body.append(lock);
+  }
+
   await requestBiometricUnlock(lock);
 }
 
@@ -181,6 +247,7 @@ async function requestBiometricUnlock(lock) {
       reason: 'Bestätige deine Identität, um Moneta zu öffnen.'
     });
     biometricUnlocked = true;
+    biometricBackgroundSince = null;
     lock.remove();
   } catch (failure) {
     console.warn('Biometric authentication failed:', failure);
