@@ -244,19 +244,20 @@ function createBiometricLock() {
       </div>
 
       <button type="button" class="biometric-lock-button" data-biometric-retry aria-label="Moneta mit Fingerabdruck entsperren">
-        <svg class="biometric-lock-fingerprint" viewBox="0 0 96 112" aria-hidden="true">
-          <path d="M18 42c0-18 13.4-32 30-32s30 14 30 32"/>
-          <path d="M12 48c0-22.5 16.1-40 36-40s36 17.5 36 40"/>
-          <path d="M24 46c0-14.2 10.7-25 24-25s24 10.8 24 25c0 12.8-1.4 24.2-5.4 34.7"/>
-          <path d="M30 50c0-10.2 8-18 18-18s18 7.8 18 18c0 18-3.7 35.1-10.8 49.2"/>
-          <path d="M36 52c0-6.6 5.2-12 12-12s12 5.4 12 12c0 18.6-4 35.1-12 49"/>
-          <path d="M42 54c0-3.6 2.7-6.5 6-6.5s6 2.9 6 6.5c0 20.2-5.2 37-15.7 50.5"/>
-          <path d="M24 55c.2 14.5-2.7 27.7-9.8 39.6"/>
-          <path d="M31 61c-.4 15-3.4 27.4-9.1 37.6"/>
-          <path d="M38 66c-.8 14-3.5 25.2-8.2 34.6"/>
-          <path d="M67 58c-.4 14.9-3.2 28.4-8.2 40.4"/>
-          <path d="M74 52c.2 10.6-.7 20.8-2.8 30.5"/>
-          <path d="M17 60c.5 10.2-1.1 20.7-5.1 31.5"/>
+        <svg class="biometric-lock-fingerprint" viewBox="0 0 100 100" aria-hidden="true">
+          <path d="M18 46C18 28.3 32.3 14 50 14S82 28.3 82 46"/>
+          <path d="M24 49C24 34.6 35.6 23 50 23S76 34.6 76 49c0 18.2-4.2 32.5-12.7 43"/>
+          <path d="M30 52C30 41 39 32 50 32s20 9 20 20c0 16.7-3.8 29.8-11.3 39.5"/>
+          <path d="M36 55c0-7.7 6.3-14 14-14s14 6.3 14 14c0 14.8-3.3 26.5-9.8 35.2"/>
+          <path d="M42 57c0-4.4 3.6-8 8-8s8 3.6 8 8c0 13.2-2.8 23.5-8.3 31.2"/>
+          <path d="M18 55c0 14.6-3.5 26.8-10.4 36.5"/>
+          <path d="M24 58c0 14-3.1 25.2-9.4 33.7"/>
+          <path d="M30 61c0 12.8-2.7 22.9-8.1 30.4"/>
+          <path d="M36 64c0 11.4-2.3 20.4-7 27"/>
+          <path d="M42 66c0 9.7-1.9 17.4-5.7 23.2"/>
+          <path d="M82 55c0 11.8-2.1 22-6.4 30.7"/>
+          <path d="M76 58c0 12.4-2.5 22.8-7.5 31.1"/>
+          <path d="M70 61c0 12-2.4 21.7-7.1 29.2"/>
         </svg>
       </button>
 
@@ -328,7 +329,7 @@ function createBiometricLock() {
     .biometric-lock-button:active { transform: scale(.965); background: #e2eee7; }
     .biometric-lock-button:disabled { opacity: .68; }
     .biometric-lock-fingerprint {
-      width: 72px; height: 84px; fill: none; stroke: currentColor; stroke-width: 4.1;
+      width: 76px; height: 76px; fill: none; stroke: currentColor; stroke-width: 3.1;
       stroke-linecap: round; stroke-linejoin: round;
     }
     .biometric-lock-trust {
@@ -390,7 +391,7 @@ function createBiometricLock() {
       .biometric-lock-brand { margin-top: 10px; }
       .biometric-lock-heading { margin-top: 30px; }
       .biometric-lock-button { width: 118px; height: 118px; margin-top: 28px; }
-      .biometric-lock-fingerprint { width: 60px; height: 70px; }
+      .biometric-lock-fingerprint { width: 64px; height: 64px; }
       .biometric-lock-icon { width: 42px; height: 42px; margin-bottom: 6px; }
       .biometric-lock-local { margin-top: 18px; padding-block: 13px; }
     }
