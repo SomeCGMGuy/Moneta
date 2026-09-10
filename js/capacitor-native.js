@@ -231,6 +231,10 @@ function createBiometricLock() {
   lock.setAttribute('role', 'dialog');
   lock.setAttribute('aria-modal', 'true');
   lock.innerHTML = `
+    <div class="biometric-lock-wave biometric-lock-wave-a" aria-hidden="true"></div>
+    <div class="biometric-lock-wave biometric-lock-wave-b" aria-hidden="true"></div>
+    <div class="biometric-lock-wave biometric-lock-wave-c" aria-hidden="true"></div>
+
     <div class="biometric-lock-card">
       <div class="biometric-lock-brand">moneta<span>.</span></div>
 
@@ -239,49 +243,44 @@ function createBiometricLock() {
         <p>Entsperre Moneta mit deinem<br>Fingerabdruck.</p>
       </div>
 
-      <button type="button" class="biometric-lock-button" data-biometric-retry aria-label="Moneta mit Biometrie entsperren">
-        <svg class="biometric-lock-fingerprint" viewBox="0 0 64 64" aria-hidden="true">
-          <path d="M32 8c-13.2 0-24 10.8-24 24"/>
-          <path d="M56 32C56 18.8 45.2 8 32 8"/>
-          <path d="M14 34c0-10 8-18 18-18s18 8 18 18"/>
-          <path d="M20 36c0-6.6 5.4-12 12-12s12 5.4 12 12c0 8.2-2.3 14.6-6.6 20"/>
-          <path d="M26 38c0-3.3 2.7-6 6-6s6 2.7 6 6c0 7.8-1.5 13.7-4.7 18"/>
-          <path d="M12 40c.8 8.2 3.8 14.4 8.7 19"/>
-          <path d="M18 40c.6 6.2 2.6 11 6.4 15.3"/>
-          <path d="M25 45c.8 5 2.4 8.6 5 11.5"/>
-          <path d="M47 40c-.5 8.5-2.9 14.8-7.3 19"/>
+      <button type="button" class="biometric-lock-button" data-biometric-retry aria-label="Moneta mit Fingerabdruck entsperren">
+        <svg class="biometric-lock-fingerprint" viewBox="0 0 96 112" aria-hidden="true">
+          <path d="M18 42c0-18 13.4-32 30-32s30 14 30 32"/>
+          <path d="M12 48c0-22.5 16.1-40 36-40s36 17.5 36 40"/>
+          <path d="M24 46c0-14.2 10.7-25 24-25s24 10.8 24 25c0 12.8-1.4 24.2-5.4 34.7"/>
+          <path d="M30 50c0-10.2 8-18 18-18s18 7.8 18 18c0 18-3.7 35.1-10.8 49.2"/>
+          <path d="M36 52c0-6.6 5.2-12 12-12s12 5.4 12 12c0 18.6-4 35.1-12 49"/>
+          <path d="M42 54c0-3.6 2.7-6.5 6-6.5s6 2.9 6 6.5c0 20.2-5.2 37-15.7 50.5"/>
+          <path d="M24 55c.2 14.5-2.7 27.7-9.8 39.6"/>
+          <path d="M31 61c-.4 15-3.4 27.4-9.1 37.6"/>
+          <path d="M38 66c-.8 14-3.5 25.2-8.2 34.6"/>
+          <path d="M67 58c-.4 14.9-3.2 28.4-8.2 40.4"/>
+          <path d="M74 52c.2 10.6-.7 20.8-2.8 30.5"/>
+          <path d="M17 60c.5 10.2-1.1 20.7-5.1 31.5"/>
         </svg>
       </button>
 
       <div class="biometric-lock-trust" aria-label="Datenschutz in Moneta">
         <div class="biometric-lock-trust-item">
-          <span class="biometric-lock-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.8 2.9 8.1 7 10 4.1-1.9 7-5.2 7-10V6l-7-3Z"/><path d="m9.3 12.2 1.7 1.7 3.8-4"/></svg>
-          </span>
+          <span class="biometric-lock-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.8 2.9 8.1 7 10 4.1-1.9 7-5.2 7-10V6l-7-3Z"/><path d="m9.3 12.2 1.7 1.7 3.8-4"/></svg></span>
           <strong>Nur auf<br>diesem Gerät</strong>
         </div>
         <div class="biometric-lock-trust-item">
-          <span class="biometric-lock-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.2"/><path d="M6 20v-2.3c0-3.1 2.7-5.7 6-5.7s6 2.6 6 5.7V20H6Z"/></svg>
-          </span>
+          <span class="biometric-lock-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.2"/><path d="M6 20v-2.3c0-3.1 2.7-5.7 6-5.7s6 2.6 6 5.7V20H6Z"/></svg></span>
           <strong>Nur für dich</strong>
         </div>
         <div class="biometric-lock-trust-item">
-          <span class="biometric-lock-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M20 4C12.5 4 6 8.4 6 15c0 2.8 2.2 5 5 5 6.6 0 9-7.3 9-16Z"/><path d="M4 21c2.6-5.3 6.4-8.8 11.5-11"/></svg>
-          </span>
+          <span class="biometric-lock-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 4C12.5 4 6 8.4 6 15c0 2.8 2.2 5 5 5 6.6 0 9-7.3 9-16Z"/><path d="M4 21c2.6-5.3 6.4-8.8 11.5-11"/></svg></span>
           <strong>Volle Kontrolle<br>über deine Daten</strong>
         </div>
       </div>
 
       <div class="biometric-lock-local">
-        <span class="biometric-lock-local-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><rect x="6" y="10" width="12" height="10" rx="2"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/></svg>
-        </span>
+        <span class="biometric-lock-local-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="6" y="10" width="12" height="10" rx="2"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/></svg></span>
         <p>Deine Finanzdaten bleiben lokal<br>auf diesem Gerät – sicher und privat.</p>
       </div>
 
-      <p class="biometric-lock-error" data-biometric-error hidden>Entsperren nicht erfolgreich. Tippe erneut auf das Biometrie-Symbol.</p>
+      <p class="biometric-lock-error" data-biometric-error hidden>Entsperren nicht erfolgreich. Tippe erneut auf das Fingerabdruck-Symbol.</p>
     </div>`;
 
   const style = document.createElement('style');
@@ -289,68 +288,57 @@ function createBiometricLock() {
     [data-biometric-lock] {
       position: fixed; inset: 0; z-index: 2147483647; overflow: hidden;
       display: grid; place-items: stretch center;
-      padding: max(24px, env(safe-area-inset-top)) 22px max(24px, env(safe-area-inset-bottom));
-      background: #f8f6ef; color: #133a2e;
-      font-family: inherit;
+      padding: max(24px, env(safe-area-inset-top)) 22px max(22px, env(safe-area-inset-bottom));
+      background: #fbfaf5; color: #10392d; font-family: inherit;
     }
-    [data-biometric-lock]::before,
-    [data-biometric-lock]::after {
-      content: ''; position: absolute; pointer-events: none;
-      left: -22%; width: 144%; height: 29%; border-radius: 50%;
-      transform-origin: center;
-      background: #dcebe3;
-    }
-    [data-biometric-lock]::before { bottom: 10.5%; transform: rotate(8deg); opacity: .92; }
-    [data-biometric-lock]::after { bottom: -4%; transform: rotate(-6deg); opacity: .62; }
+    .biometric-lock-wave { position: absolute; left: -18%; width: 136%; border-radius: 50%; pointer-events: none; }
+    .biometric-lock-wave-a { height: 28%; bottom: 22%; background: #e7f0eb; transform: rotate(8deg); opacity: .98; }
+    .biometric-lock-wave-b { height: 25%; bottom: 8%; background: #dcebe3; transform: rotate(-7deg); opacity: .72; }
+    .biometric-lock-wave-c { height: 20%; bottom: -6%; background: #d3e6dc; transform: rotate(5deg); opacity: .55; }
 
     .biometric-lock-card {
       position: relative; z-index: 1; width: min(100%, 430px); height: 100%;
       display: flex; flex-direction: column; align-items: center; text-align: center;
     }
     .biometric-lock-brand {
-      margin-top: clamp(20px, 5.2vh, 52px);
-      color: #10392d; font-size: clamp(2.15rem, 8.4vw, 3rem); line-height: 1;
+      margin-top: clamp(24px, 6vh, 58px); color: #10392d;
+      font-size: clamp(2.35rem, 9vw, 3.15rem); line-height: 1;
       font-weight: 780; letter-spacing: -.055em;
     }
     .biometric-lock-brand span { color: #64bd88; }
-
-    .biometric-lock-heading { margin-top: clamp(48px, 7.2vh, 76px); }
+    .biometric-lock-heading { margin-top: clamp(54px, 7.7vh, 82px); }
     .biometric-lock-heading h1 {
-      margin: 0; color: #12392e; font-size: clamp(1.7rem, 6.2vw, 2.15rem);
-      line-height: 1.12; font-weight: 760; letter-spacing: -.025em;
+      margin: 0; color: #12392e; font-size: clamp(1.78rem, 6.6vw, 2.22rem);
+      line-height: 1.1; font-weight: 760; letter-spacing: -.025em;
     }
     .biometric-lock-heading p {
-      margin: 13px 0 0; color: #6e7873; font-size: clamp(.98rem, 4vw, 1.12rem);
+      margin: 14px 0 0; color: #6e7873; font-size: clamp(1rem, 4vw, 1.15rem);
       line-height: 1.42; font-weight: 430;
     }
-
     .biometric-lock-button {
-      width: clamp(132px, 34vw, 154px); height: clamp(132px, 34vw, 154px);
-      margin-top: clamp(42px, 6.1vh, 66px); padding: 0;
+      width: clamp(142px, 36vw, 160px); height: clamp(142px, 36vw, 160px);
+      margin-top: clamp(44px, 6.2vh, 68px); padding: 0;
       display: grid; place-items: center; border-radius: 50%;
-      border: 1px solid rgba(255,255,255,.78);
-      background: rgba(232,243,237,.84); color: #123f32;
-      box-shadow: 0 12px 38px rgba(38,90,68,.13), inset 0 0 0 1px rgba(91,168,125,.10);
+      border: 1px solid rgba(255,255,255,.95);
+      background: rgba(239,247,242,.90); color: #113f32;
+      box-shadow: 0 16px 42px rgba(42,91,72,.14), inset 0 0 0 1px rgba(107,170,136,.10);
       -webkit-tap-highlight-color: transparent;
       transition: transform 120ms ease-out, background 140ms linear, box-shadow 140ms linear;
     }
-    .biometric-lock-button:active { transform: scale(.965); background: #dcece4; }
+    .biometric-lock-button:active { transform: scale(.965); background: #e2eee7; }
     .biometric-lock-button:disabled { opacity: .68; }
     .biometric-lock-fingerprint {
-      width: 74px; height: 74px; fill: none; stroke: currentColor; stroke-width: 3.1;
+      width: 72px; height: 84px; fill: none; stroke: currentColor; stroke-width: 4.1;
       stroke-linecap: round; stroke-linejoin: round;
     }
-
     .biometric-lock-trust {
       width: 100%; margin-top: auto; padding: 0 2px;
-      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;
-      align-items: start;
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; align-items: start;
     }
     .biometric-lock-trust-item { min-width: 0; color: #143b30; }
     .biometric-lock-icon {
-      width: 48px; height: 48px; margin: 0 auto 9px;
-      display: grid; place-items: center; border-radius: 50%;
-      background: rgba(224,239,231,.88); color: #184737;
+      width: 48px; height: 48px; margin: 0 auto 9px; display: grid; place-items: center;
+      border-radius: 50%; background: rgba(224,239,231,.88); color: #184737;
     }
     .biometric-lock-icon svg,
     .biometric-lock-local-icon svg {
@@ -358,46 +346,40 @@ function createBiometricLock() {
       stroke-linecap: round; stroke-linejoin: round;
     }
     .biometric-lock-trust strong {
-      display: block; font-size: clamp(.72rem, 3vw, .84rem); line-height: 1.22;
-      font-weight: 560;
+      display: block; font-size: clamp(.72rem, 3vw, .84rem); line-height: 1.22; font-weight: 560;
     }
-
     .biometric-lock-local {
       width: 100%; margin-top: 30px; padding: 17px 20px;
       display: flex; align-items: center; justify-content: center; gap: 13px;
-      border-radius: 24px; background: rgba(224,239,231,.80); color: #153c30;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.36);
+      border-radius: 24px; background: rgba(224,239,231,.82); color: #153c30;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.42);
     }
-    .biometric-lock-local-icon {
-      flex: 0 0 auto; width: 34px; height: 34px; display: grid; place-items: center;
-      color: #174536;
-    }
-    .biometric-lock-local p {
-      margin: 0; text-align: left; font-size: clamp(.8rem, 3.2vw, .94rem); line-height: 1.42; font-weight: 450;
-    }
-    .biometric-lock-error {
-      margin: 11px 0 0; color: var(--danger, #b13b35); font-size: .8rem; line-height: 1.3;
-    }
+    .biometric-lock-local-icon { flex: 0 0 auto; width: 34px; height: 34px; display: grid; place-items: center; color: #174536; }
+    .biometric-lock-local p { margin: 0; text-align: left; font-size: clamp(.8rem, 3.2vw, .94rem); line-height: 1.42; font-weight: 450; }
+    .biometric-lock-error { margin: 11px 0 0; color: var(--danger, #b13b35); font-size: .8rem; line-height: 1.3; }
 
     :root[data-theme='dark'] [data-biometric-lock] {
-      background: #073027; color: #f2f6f3;
+      background:
+        radial-gradient(circle at 74% 9%, rgba(24,87,67,.34) 0, rgba(24,87,67,0) 31%),
+        radial-gradient(circle at 26% 34%, rgba(10,63,49,.26) 0, rgba(10,63,49,0) 37%),
+        linear-gradient(180deg, #07382e 0%, #062f27 45%, #052920 100%);
+      color: #f2f6f3;
     }
-    :root[data-theme='dark'] [data-biometric-lock]::before { background: #164a3b; opacity: .72; }
-    :root[data-theme='dark'] [data-biometric-lock]::after { background: #1b5745; opacity: .50; }
+    :root[data-theme='dark'] .biometric-lock-wave-a { background: #164b3c; opacity: .70; }
+    :root[data-theme='dark'] .biometric-lock-wave-b { background: #0e3e32; opacity: .84; }
+    :root[data-theme='dark'] .biometric-lock-wave-c { background: #1a5645; opacity: .46; }
     :root[data-theme='dark'] .biometric-lock-brand,
     :root[data-theme='dark'] .biometric-lock-heading h1 { color: #f5f7f5; }
     :root[data-theme='dark'] .biometric-lock-brand span { color: #67d28f; }
     :root[data-theme='dark'] .biometric-lock-heading p { color: rgba(239,246,242,.76); }
     :root[data-theme='dark'] .biometric-lock-button {
       background: rgba(255,255,255,.075); color: #6ed594;
-      border-color: rgba(255,255,255,.22);
-      box-shadow: 0 14px 42px rgba(0,0,0,.22), inset 0 0 0 1px rgba(255,255,255,.045);
+      border-color: rgba(255,255,255,.24);
+      box-shadow: 0 18px 46px rgba(0,0,0,.25), 0 0 0 18px rgba(62,132,101,.035), inset 0 0 0 1px rgba(255,255,255,.045);
     }
     :root[data-theme='dark'] .biometric-lock-button:active { background: rgba(255,255,255,.12); }
     :root[data-theme='dark'] .biometric-lock-trust-item { color: #f1f6f3; }
-    :root[data-theme='dark'] .biometric-lock-icon {
-      background: rgba(255,255,255,.07); color: #68d392;
-    }
+    :root[data-theme='dark'] .biometric-lock-icon { background: rgba(255,255,255,.07); color: #68d392; }
     :root[data-theme='dark'] .biometric-lock-local {
       background: rgba(255,255,255,.07); color: #eef6f1;
       box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
@@ -407,14 +389,12 @@ function createBiometricLock() {
     @media (max-height: 760px) {
       .biometric-lock-brand { margin-top: 10px; }
       .biometric-lock-heading { margin-top: 30px; }
-      .biometric-lock-button { width: 116px; height: 116px; margin-top: 28px; }
-      .biometric-lock-fingerprint { width: 62px; height: 62px; }
+      .biometric-lock-button { width: 118px; height: 118px; margin-top: 28px; }
+      .biometric-lock-fingerprint { width: 60px; height: 70px; }
       .biometric-lock-icon { width: 42px; height: 42px; margin-bottom: 6px; }
       .biometric-lock-local { margin-top: 18px; padding-block: 13px; }
     }
-    @media (prefers-reduced-motion: reduce) {
-      .biometric-lock-button { transition: none; }
-    }
+    @media (prefers-reduced-motion: reduce) { .biometric-lock-button { transition: none; } }
   `;
   lock.append(style);
   lock.querySelector('[data-biometric-retry]')?.addEventListener('click', () => requestBiometricUnlock(lock));
