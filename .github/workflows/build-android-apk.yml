@@ -111,13 +111,19 @@ jobs:
           replacement = textwrap.dedent(f'''
           package {package_name};
 
+          import android.app.Activity;
+          import android.content.Intent;
           import android.graphics.Color;
+          import android.net.Uri;
           import android.os.Bundle;
           import android.view.Gravity;
           import android.view.View;
           import android.view.ViewGroup;
+          import android.webkit.JavascriptInterface;
           import android.widget.FrameLayout;
+          import android.widget.Toast;
 
+          import androidx.annotation.Nullable;
           import androidx.core.view.ViewCompat;
           import androidx.core.view.WindowCompat;
           import androidx.core.view.WindowInsetsCompat;
@@ -125,14 +131,20 @@ jobs:
 
           import com.getcapacitor.BridgeActivity;
 
+          import java.io.OutputStream;
+          import java.nio.charset.StandardCharsets;
+
           public class MainActivity extends BridgeActivity {{
+              private static final int BACKUP_SAVE_REQUEST = 27117;
               private View navigationBarProtection;
+              private String pendingBackupContent;
 
               @Override
               protected void onCreate(Bundle savedInstanceState) {{
                   super.onCreate(savedInstanceState);
 
                   getBridge().getWebView().setOverScrollMode(View.OVER_SCROLL_NEVER);
+                  getBridge().getWebView().addJavascriptInterface(new BackupBridge(), "MonetaNative");
 
                   getWindow().setNavigationBarColor(Color.TRANSPARENT);
                   if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {{
@@ -167,6 +179,39 @@ jobs:
                       return insets;
                   }});
                   ViewCompat.requestApplyInsets(decor);
+              }}
+
+              private final class BackupBridge {{
+                  @JavascriptInterface
+                  public void saveBackup(String content, String fileName) {{
+                      runOnUiThread(() -> {{
+                          pendingBackupContent = content;
+                          Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                          intent.addCategory(Intent.CATEGORY_OPENABLE);
+                          intent.setType("application/json");
+                          intent.putExtra(Intent.EXTRA_TITLE, fileName);
+                          startActivityForResult(intent, BACKUP_SAVE_REQUEST);
+                      }});
+                  }}
+              }}
+
+              @Override
+              protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {{
+                  super.onActivityResult(requestCode, resultCode, data);
+                  if (requestCode != BACKUP_SAVE_REQUEST) return;
+                  String content = pendingBackupContent;
+                  pendingBackupContent = null;
+                  if (resultCode != Activity.RESULT_OK || data == null || data.getData() == null || content == null) return;
+
+                  Uri target = data.getData();
+                  try (OutputStream stream = getContentResolver().openOutputStream(target, "w")) {{
+                      if (stream == null) throw new IllegalStateException("No output stream available");
+                      stream.write(content.getBytes(StandardCharsets.UTF_8));
+                      stream.flush();
+                      Toast.makeText(this, "Backup gespeichert.", Toast.LENGTH_SHORT).show();
+                  }} catch (Exception error) {{
+                      Toast.makeText(this, "Backup konnte nicht gespeichert werden.", Toast.LENGTH_LONG).show();
+                  }}
               }}
           }}
           ''').lstrip()

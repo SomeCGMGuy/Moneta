@@ -8,17 +8,48 @@ const MONTH_RE = /^\d{4}-\d{2}$/;
 
 export async function createBackup() {
   const [bookings, categories, budgets, settings, recurringRules] = await Promise.all(STORES.map((store) => getAll(store)));
+  const now = new Date().toISOString();
   return {
-    app: 'Moneta', appVersion: APP_VERSION, formatVersion: BACKUP_FORMAT_VERSION,
-    exportedAt: new Date().toISOString(), data: { bookings, categories, budgets, settings, recurringRules }
+    format: 'moneta-backup', formatVersion: BACKUP_FORMAT_VERSION, app: 'Moneta', appVersion: APP_VERSION,
+    createdAt: now, exportedAt: now, data: { bookings, categories, budgets, settings, recurringRules }
   };
 }
 
-export function downloadBackup(backup) {
-  const stamp = new Date().toISOString().slice(0, 10);
-  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json;charset=utf-8' });
+export async function downloadBackup(backup, { prefix = 'moneta-backup', preferSaveDialog = true } = {}) {
+  const fileName = backupFileName(backup, prefix);
+  const content = JSON.stringify(backup, null, 2);
+  const capacitor = window.Capacitor;
+
+  if (capacitor?.isNativePlatform?.() && preferSaveDialog && window.MonetaNative?.saveBackup) {
+    window.MonetaNative.saveBackup(content, fileName);
+    return;
+  }
+
+  if (capacitor?.isNativePlatform?.()) {
+    const filesystem = capacitor?.Plugins?.Filesystem;
+    const share = capacitor?.Plugins?.Share;
+    if (!filesystem?.writeFile || !share?.share) throw new Error('Die native Android-Datensicherung ist nicht verfügbar.');
+
+    const result = await filesystem.writeFile({
+      path: fileName,
+      data: content,
+      directory: 'CACHE',
+      encoding: 'utf8'
+    });
+    if (!result?.uri) throw new Error('Die Backup-Datei konnte auf dem Gerät nicht vorbereitet werden.');
+
+    await share.share({
+      title: 'Moneta-Backup',
+      text: 'Moneta-Datensicherung',
+      files: [result.uri],
+      dialogTitle: 'Backup sichern'
+    });
+    return;
+  }
+
+  const blob = new Blob([content], { type: 'application/json;charset=utf-8' });
   const url = URL.createObjectURL(blob); const anchor = document.createElement('a');
-  anchor.href = url; anchor.download = `moneta-backup-${stamp}.json`; document.body.append(anchor); anchor.click(); anchor.remove();
+  anchor.href = url; anchor.download = fileName; document.body.append(anchor); anchor.click(); anchor.remove();
   setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
@@ -33,6 +64,8 @@ export function parseBackup(text) {
 }
 
 export async function restoreBackup(backup) {
+  // Keep the existing share-based safety copy blocking before destructive replacement.
+  await downloadBackup(await createBackup(), { prefix: 'moneta-sicherheitsbackup', preferSaveDialog: false });
   const db = await getDatabase();
   await new Promise((resolve, reject) => {
     const tx = db.transaction(STORES, 'readwrite');
@@ -42,9 +75,14 @@ export async function restoreBackup(backup) {
 }
 
 export function summarizeBackup(backup) {
-  return { bookings: backup.data.bookings.length, categories: backup.data.categories.length, budgets: backup.data.budgets.length, settings: backup.data.settings.length, recurringRules: backup.data.recurringRules.length };
+  return { createdAt: backup.createdAt || backup.exportedAt || null, appVersion: backup.appVersion || null, bookings: backup.data.bookings.length, categories: backup.data.categories.length, budgets: backup.data.budgets.length, settings: backup.data.settings.length, recurringRules: backup.data.recurringRules.length };
 }
 
+function backupFileName(backup, prefix) {
+  const date = new Date(backup.createdAt || backup.exportedAt || Date.now());
+  const stamp = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}-${String(date.getHours()).padStart(2, '0')}${String(date.getMinutes()).padStart(2, '0')}`;
+  return `${prefix}-${stamp}.json`;
+}
 function validateBookings(rows) {
   assertUnique(rows, 'id', 'Buchungen');
   for (const row of rows) if (!isNonEmptyString(row?.id) || !['income', 'expense'].includes(row.type) || !isPositiveNumber(row.amount) || !isNonEmptyString(row.categoryId) || !isNonEmptyString(row.title) || !DATE_RE.test(row.date ?? '')) throw new Error('Mindestens eine Buchung im Backup ist ungültig oder unvollständig.');
