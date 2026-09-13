@@ -9,16 +9,17 @@ const MONTH_RE = /^\d{4}-\d{2}$/;
 export async function createBackup() {
   const [bookings, categories, budgets, settings, recurringRules] = await Promise.all(STORES.map((store) => getAll(store)));
   return {
-    app: 'Moneta', appVersion: APP_VERSION, formatVersion: BACKUP_FORMAT_VERSION,
-    exportedAt: new Date().toISOString(), data: { bookings, categories, budgets, settings, recurringRules }
+    format: 'moneta-backup', formatVersion: BACKUP_FORMAT_VERSION, app: 'Moneta', appVersion: APP_VERSION,
+    createdAt: new Date().toISOString(), exportedAt: new Date().toISOString(), data: { bookings, categories, budgets, settings, recurringRules }
   };
 }
 
-export function downloadBackup(backup) {
-  const stamp = new Date().toISOString().slice(0, 10);
+export function downloadBackup(backup, { prefix = 'moneta-backup' } = {}) {
+  const date = new Date(backup.createdAt || backup.exportedAt || Date.now());
+  const stamp = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}-${String(date.getHours()).padStart(2, '0')}${String(date.getMinutes()).padStart(2, '0')}`;
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json;charset=utf-8' });
   const url = URL.createObjectURL(blob); const anchor = document.createElement('a');
-  anchor.href = url; anchor.download = `moneta-backup-${stamp}.json`; document.body.append(anchor); anchor.click(); anchor.remove();
+  anchor.href = url; anchor.download = `${prefix}-${stamp}.json`; document.body.append(anchor); anchor.click(); anchor.remove();
   setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
@@ -42,7 +43,7 @@ export async function restoreBackup(backup) {
 }
 
 export function summarizeBackup(backup) {
-  return { bookings: backup.data.bookings.length, categories: backup.data.categories.length, budgets: backup.data.budgets.length, settings: backup.data.settings.length, recurringRules: backup.data.recurringRules.length };
+  return { createdAt: backup.createdAt || backup.exportedAt || null, appVersion: backup.appVersion || null, bookings: backup.data.bookings.length, categories: backup.data.categories.length, budgets: backup.data.budgets.length, settings: backup.data.settings.length, recurringRules: backup.data.recurringRules.length };
 }
 
 function validateBookings(rows) {
