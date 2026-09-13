@@ -1,96 +1,217 @@
-# Moneta 2.0.2
+# moneta.
 
-Lokale PWA für **Finanzanalyse und Budgetplanung**. Bewusst schlank als Plain-JavaScript-Anwendung mit IndexedDB, ohne Framework, Cloud oder Build-Pipeline.
+**moneta.** ist eine lokale, mobile Finanz-App für Finanzanalyse, Budgetplanung und die Frage, die im Alltag wirklich zählt:
 
-## Neu in 2.0.2
+> **Wie viel Geld steht mir tatsächlich zur Verfügung – heute, diesen Monat und in Zukunft?**
 
-- Vollständiger JSON-Backup-Export für Buchungen, Kategorien, Budgets und Einstellungen
-- Wiederherstellungs-Import mit Prüfung und ausdrücklicher Bestätigung vor dem Ersetzen der lokalen Daten
-- Backup-Metadaten mit App- und Formatversion für spätere Kompatibilität
-- Erweiterte Analyse mit Zeitraumwahl: Monat, letztes Quartal, dieses Jahr und letztes Jahr
-- Anklickbare Kategorien mit Buchungs-Drilldown
-- Animiertes Donutdiagramm, Fortschrittsbalken und monatlicher Ausgabenverlauf
-- Hell-/Dunkelmodus, lokal gespeichert und ebenfalls im Backup enthalten
-- „Über Moneta“ auf die Versionsanzeige reduziert
-- Mobile Tap-Highlights in Navigation und Buchungslisten entfernt; stattdessen dezentes App-Feedback
-- Lange Buchungstexte bleiben sicher im Textbereich und überlagern den Betrag nicht mehr
-- Service Worker auf Network-first umgestellt, damit neue Releases online schneller den aktuellen Stand laden und offline weiterhin aus dem Cache funktionieren
-- Visuelle Referenzdateien unter `docs/mockups/`
+Der Fokus liegt auf verständlicher Finanzplanung, einer ruhigen Oberfläche und einem möglichst nativen Android-Erlebnis. Moneta ist keine Banking-App und benötigt für seine Kernfunktionen keine Cloud- oder Bankanbindung.
 
-## Grundfunktionen
+## Produktprinzipien
 
-- Übersicht mit Einnahmen, Ausgaben, Saldo und Monatswechsel
-- Buchungen anlegen, bearbeiten und nach zusätzlicher Bestätigung löschen
-- Einnahmen- und Ausgabenkategorien getrennt verwalten
-- Kategorieanalyse der Ausgaben mit Donutdiagramm
-- Monatsbudgets pro Ausgabenkategorie
-- IndexedDB als lokale Datenbank
-- PWA-Manifest und Service Worker für Offline-Nutzung
-- Moneta-Icon im reduzierten Münzstil
+- **Local first:** Finanzdaten bleiben lokal auf dem Gerät.
+- **Offline nutzbar:** Kernfunktionen benötigen keine Internetverbindung.
+- **Einfach vor vollständig:** Funktionen müssen verständlich bleiben.
+- **Mobile first:** Bedienung und Layout werden für Smartphones entwickelt.
+- **App statt Webseite:** Verhalten, Navigation und Komponenten sollen sich möglichst nativ anfühlen.
+- **Vorausschauend:** Zukünftige und wiederkehrende Buchungen gehören zur finanziellen Planung.
+- **Ruhige UI:** Keine unnötigen Effekte, Dialoge oder dekorativen Elemente.
 
-## Starten
+## Aktueller technischer Stand
 
-ES-Module und Service Worker sollten über HTTP geladen werden. Im Projektordner zum Beispiel:
+Moneta wird als **Capacitor-App für Android** weiterentwickelt.
 
-```bash
-python -m http.server 8080
-```
+Aktuell verwendet das Projekt unter anderem:
 
-Danach im Browser öffnen:
+- Plain JavaScript / ES Modules
+- HTML / CSS
+- IndexedDB für lokale Datenhaltung
+- Capacitor 8
+- `@capacitor/app`
+- `@capgo/capacitor-native-biometric`
+- Android als primäres Deployment-Ziel
 
-```text
-http://localhost:8080
-```
+Die frühere GitHub-Pages-/PWA-Ausrichtung ist nicht mehr das primäre Produktziel.
 
-Für GitHub Pages kann der Inhalt des Projektordners direkt als statische Website veröffentlicht werden.
+Die aktuelle Paketversion ist in `package.json` definiert.
 
-## Datensicherung
+## Kernfunktionen
 
-Unter **Einstellungen → Datensicherung** kann ein vollständiges Backup als JSON-Datei exportiert werden. Der Import ersetzt nach einer Sicherheitsabfrage den aktuellen lokalen Datenbestand atomar durch den Inhalt der Sicherung.
+### Übersicht
 
-Enthalten sind die IndexedDB-Stores:
+Die Übersicht zeigt den gewählten Finanzzeitraum mit:
 
-- `bookings`
-- `categories`
-- `budgets`
-- `settings`
+- Einnahmen
+- Ausgaben
+- verfügbarem Saldo
+- Buchungen
+- Tagesgruppierung wie **Heute** und **Gestern**
+- zukünftigen bzw. prognostizierten Buchungen
 
-Das Backupformat enthält zusätzlich `appVersion`, `formatVersion` und `exportedAt`.
+Negative Salden werden eindeutig hervorgehoben.
 
-## Datenmodell
+Größere Buchungslisten werden schrittweise geladen. Skeleton-Zustände sollen sichtbare Layoutsprünge vermeiden.
 
-### bookings
+### Buchungen
 
-- `id`
-- `type`: `income | expense`
-- `amount`
-- `categoryId`
-- `title`
-- `note`
-- `date`
-- `createdAt`
-- `updatedAt`
+Eine Buchung enthält mindestens:
 
-### categories
+- Bezeichnung
+- Betrag
+- Typ: `income` oder `expense`
+- Kategorie
+- Datum
 
-- `id`
-- `type`: `income | expense`
-- `name`
-- `icon`
+Optional können unter anderem Notizen und Wiederholungen ergänzt werden.
 
-### budgets
+Der Erstellungsdialog soll kompakt bleiben. Optionale Bereiche werden nur eingeblendet, wenn sie benötigt werden.
 
-- `id`
-- `month`: `YYYY-MM`
-- `categoryId`
-- `limit`
+### Finanzmonat
 
-### settings
+Kalendermonate bilden persönliche Finanzen nicht immer sinnvoll ab. Wenn z. B. das Gehalt am Monatsanfang eingeht, die Miete aber bereits kurz vor Monatsende abgebucht wird, kann eine reine Kalendermonatsbetrachtung irreführend sein.
 
-Key-/Value-Einstellungen, aktuell unter anderem das gewählte Farbschema.
+Moneta unterstützt deshalb einen verschiebbaren **Finanzmonat**. Auswertungen, Salden und Monatsansichten sollen sich an diesem Finanzzeitraum orientieren.
 
-Saldo, Summen und Analysewerte werden bewusst **nicht** gespeichert, sondern aus den Buchungen berechnet.
+### Wiederkehrende Buchungen
 
-## Visuelle Referenz
+Buchungen können wiederkehrend angelegt werden.
 
-Die vereinbarte Designsprache ist als statische Referenz unter `docs/mockups/` im Release enthalten. Diese Dateien enthalten nur Beispieldaten und dienen bei späteren Änderungen zum visuellen Abgleich mit dem Soll-Zustand.
+Zukünftige, aus Wiederholungen abgeleitete Buchungen werden bereits in relevanten:
+
+- Salden
+- Monatsplanungen
+- Analysen
+- Statistiken
+
+berücksichtigt.
+
+Da sie noch nicht tatsächlich erfolgt sind, werden sie visuell zurückhaltender dargestellt, insbesondere mit reduzierter Opazität.
+
+Damit unterscheidet Moneta klar zwischen **gebucht** und **prognostiziert**.
+
+### Kategorien
+
+Einnahmen- und Ausgabenkategorien werden getrennt verwaltet.
+
+Kategorien besitzen unter anderem:
+
+- Name
+- Typ
+- Icon
+
+Auswahl- und Suchoberflächen sollen sich wie mobile App-Komponenten und nicht wie klassische Desktop-Webformulare verhalten.
+
+### Analyse
+
+Die Analyse unterstützt unterschiedliche Betrachtungszeiträume, unter anderem:
+
+- Monat
+- letztes Quartal
+- dieses Jahr
+- letztes Jahr
+
+Kategorien können interaktiv ausgewählt werden. Das zugehörige Diagrammsegment wird hervorgehoben und die Auswahl verständlich in den Kontext gesetzt.
+
+Charts dienen der Erklärung der Finanzen und nicht als dekoratives Dashboard.
+
+### Budgets
+
+Budgets können pro Ausgabenkategorie verwaltet und dem jeweiligen Finanzzeitraum gegenübergestellt werden.
+
+### Suche
+
+Buchungen und Kategorien müssen zuverlässig durchsuchbar bleiben. Suche ist Kernfunktion und bei Änderungen an Navigation, Datenfluss oder Filtern regressionskritisch.
+
+### Datensicherung
+
+Moneta unterstützt Export und Import lokaler Daten.
+
+Backups dienen sowohl der Datensicherung als auch als Migrationsmöglichkeit für spätere Änderungen an der Persistenz.
+
+Bestehende Nutzerdaten dürfen durch App-Updates nicht verloren gehen.
+
+## Datenhaltung
+
+Die aktuelle Persistenz basiert auf IndexedDB.
+
+Die UI soll nicht unnötig eng an IndexedDB gekoppelt werden, damit eine spätere Migration auf eine andere lokale oder servergestützte Datenbank möglich bleibt.
+
+Berechnete Werte wie Salden und Summen sollen nach Möglichkeit aus den Buchungsdaten abgeleitet und nicht redundant gespeichert werden.
+
+## Hauptnavigation
+
+Die Hauptnavigation besteht aus:
+
+1. Übersicht
+2. Analyse
+3. Neue Buchung (`+`)
+4. Budgets
+5. Einstellungen
+
+Das zentrale Plus ist eine Aktion und keine eigenständige Inhaltsseite.
+
+Die Bottom Navigation muss über Hauptansichten hinweg geometrisch stabil bleiben.
+
+## Navigation und App-Verhalten
+
+Navigation soll sich wie eine mobile Anwendung verhalten.
+
+- Vorwärtsnavigation: neue Ansicht bewegt sich von rechts herein.
+- Rückwärtsnavigation: vorherige Ansicht erscheint in Gegenrichtung.
+- Android-Zurück muss sinnvoll funktionieren.
+- Fokus und Soft Keyboard müssen sauber verwaltet werden.
+- Systemleisten und Safe Areas müssen berücksichtigt werden.
+- Browser-typische Effekte wie Textselektion auf Controls oder Seitenzoom sind zu vermeiden.
+
+## Onboarding
+
+Beim ersten Start erhält der Benutzer eine kurze Einführung in die wesentlichen Konzepte der App.
+
+Das Onboarding verwendet dieselbe Typografie, Farbwelt und Komponentenlogik wie die Hauptanwendung.
+
+Die Wortmarke wird konsistent als **moneta.** dargestellt.
+
+## Biometrische Sperre
+
+Biometrie ist optional.
+
+Beim ersten Start ist keine biometrische Einrichtung erforderlich. Die Funktion kann später in den Einstellungen aktiviert oder deaktiviert werden.
+
+Zusätzlich kann ein Zeitraum definiert werden, nach dem Moneta erneut gesperrt wird.
+
+Der Lockscreen folgt der verbindlichen Designsprache aus `UI-GUIDANCE.md` und vorhandenen freigegebenen Referenz-Mockups.
+
+## App-Icon
+
+Das Android-App-Icon muss visuell mit dem innerhalb der App verwendeten Moneta-Symbol übereinstimmen.
+
+Bei Adaptive/Maskable Icons ist insbesondere auf eine ausreichende Safe Zone zu achten, damit das Motiv vom Launcher nicht sichtbar hineingezoomt oder abgeschnitten wird.
+
+## Entwicklung
+
+Vor Änderungen gilt grundsätzlich:
+
+> **Verstehen → Auswirkungen bestimmen → minimal ändern → testen → Version aktualisieren → committen**
+
+Kleine Bugfixes sollen einen möglichst engen Scope behalten.
+
+Größere Features werden auf einem separaten Branch entwickelt und erst nach erfolgreicher Prüfung übernommen.
+
+Ein Bugfix ist kein Anlass für ein ungefragtes Refactoring oder Redesign.
+
+Die verbindlichen Arbeitsregeln für Coding-Agents stehen in [`AGENTS.md`](AGENTS.md).
+
+Die verbindliche Designsprache steht in [`UI-GUIDANCE.md`](UI-GUIDANCE.md).
+
+## Visuelle Referenzen
+
+Vorhandene freigegebene Mockups unter `docs/mockups/` sind bei entsprechenden Screens die visuelle Soll-Referenz.
+
+Wenn ausdrücklich eine exakte Umsetzung eines Mockups verlangt wird, ist dieses nicht gestalterisch neu zu interpretieren.
+
+## Ziel
+
+Moneta soll keine überladene Banking-App werden.
+
+Das Ziel ist eine Finanz-App, die verständlich beantwortet:
+
+> **Was habe ich – und was kann ich tatsächlich noch ausgeben?**
