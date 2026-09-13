@@ -13,12 +13,13 @@ let selectionHistoryActive = false;
 let selectionChildOverlayActive = false;
 
 const rowFromEvent = (event) => event.target.closest('[data-booking-id]');
+const visibleBookingRows = () => [...document.querySelectorAll('[data-booking-id]')].filter((row) => row.getClientRects().length && getComputedStyle(row).visibility !== 'hidden');
 
-async function getSelectableBooking(row) {
+async function getSelectableBooking(row, { quiet = false } = {}) {
   const booking = row?.dataset.bookingId ? await getBooking(row.dataset.bookingId) : null;
   if (!booking) return null;
   if (booking.recurrenceRuleId) {
-    showToast('Wiederkehrende Buchungen bitte einzeln bearbeiten.');
+    if (!quiet) showToast('Wiederkehrende Buchungen bitte einzeln bearbeiten.');
     return null;
   }
   return booking;
@@ -44,7 +45,19 @@ async function toggleSelection(row) {
     if (!booking) return;
     selected.set(id, booking);
   }
-  if (!selected.size) return requestClose();
+  renderSelection();
+}
+
+async function toggleAllVisible() {
+  const selectable = [];
+  for (const row of visibleBookingRows()) {
+    const booking = await getSelectableBooking(row, { quiet: true });
+    if (booking) selectable.push(booking);
+  }
+  if (!selectable.length) return;
+  const allSelected = selectable.every((booking) => selected.has(booking.id));
+  if (allSelected) selected.clear();
+  else selectable.forEach((booking) => selected.set(booking.id, booking));
   renderSelection();
 }
 
@@ -71,19 +84,30 @@ function ensureToolbar() {
   bar = document.createElement('aside');
   bar.className = 'bulk-action-bar';
   bar.dataset.bulkToolbar = '';
-  bar.innerHTML = `<div class="bulk-action-head"><button type="button" class="bulk-close" data-bulk-close aria-label="Auswahl beenden"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button><strong data-bulk-count></strong></div><div class="bulk-action-buttons"><button type="button" class="bulk-action-button" data-bulk-date><svg viewBox="0 0 24 24"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"/></svg><span>Datum</span></button><button type="button" class="bulk-action-button" data-bulk-category><svg viewBox="0 0 24 24"><path d="M4 5h7l9 9-6 6-9-9V5Z"/><circle cx="8.2" cy="8.2" r="1.2"/></svg><span>Kategorie</span></button></div>`;
+  bar.innerHTML = `<div class="bulk-action-head"><button type="button" class="bulk-close" data-bulk-close aria-label="Auswahl beenden"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button><strong data-bulk-count></strong><button type="button" class="bulk-toggle-all" data-bulk-toggle-all>Alle</button></div><div class="bulk-action-buttons"><button type="button" class="bulk-action-button" data-bulk-date><svg viewBox="0 0 24 24"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"/></svg><span>Datum</span></button><button type="button" class="bulk-action-button" data-bulk-category><svg viewBox="0 0 24 24"><path d="M4 5h7l9 9-6 6-9-9V5Z"/><circle cx="8.2" cy="8.2" r="1.2"/></svg><span>Kategorie</span></button></div>`;
   document.body.append(bar);
   bar.querySelector('[data-bulk-close]').addEventListener('click', requestClose);
+  bar.querySelector('[data-bulk-toggle-all]').addEventListener('click', toggleAllVisible);
   bar.querySelector('[data-bulk-date]').addEventListener('click', changeDate);
   bar.querySelector('[data-bulk-category]').addEventListener('click', changeCategory);
   return bar;
 }
 
-function updateToolbar() {
+async function updateToolbar() {
   const bar = ensureToolbar();
   bar.querySelector('[data-bulk-count]').textContent = `${selected.size} ausgewählt`;
   const types = new Set([...selected.values()].map((booking) => booking.type));
-  bar.querySelector('[data-bulk-category]').disabled = types.size !== 1;
+  bar.querySelector('[data-bulk-date]').disabled = selected.size === 0;
+  bar.querySelector('[data-bulk-category]').disabled = selected.size === 0 || types.size !== 1;
+  const selectableIds = [];
+  for (const row of visibleBookingRows()) {
+    const booking = await getSelectableBooking(row, { quiet: true });
+    if (booking) selectableIds.push(booking.id);
+  }
+  const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selected.has(id));
+  const toggle = bar.querySelector('[data-bulk-toggle-all]');
+  toggle.textContent = allSelected ? 'Aufheben' : 'Alle';
+  toggle.setAttribute('aria-label', allSelected ? 'Markierung aufheben' : 'Alle sichtbaren Buchungen auswählen');
 }
 
 function cleanupSelection() {
@@ -111,6 +135,7 @@ window.addEventListener('popstate', (event) => {
 });
 
 async function changeCategory() {
+  if (!selected.size) return;
   const types = new Set([...selected.values()].map((booking) => booking.type));
   if (types.size !== 1) return showToast('Einnahmen und Ausgaben können nicht gemeinsam einer Kategorie zugeordnet werden.');
   const type = [...types][0];
@@ -126,6 +151,7 @@ async function changeCategory() {
 }
 
 async function changeDate() {
+  if (!selected.size) return;
   const dates = new Set([...selected.values()].map((booking) => booking.date));
   const initialDate = dates.size === 1 ? [...dates][0] : localIsoDate(new Date());
   selectionChildOverlayActive = true;
