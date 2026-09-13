@@ -4,6 +4,16 @@ body.bulk-selection-active .bottom-nav {
   transform: translateY(100%);
 }
 
+/* Booking rows are touch controls. Text selection/callouts interfere with
+   the long-press gesture used to enter multi-selection. Keep this scoped to
+   the list so selectable text elsewhere in Moneta remains unaffected. */
+.booking-row,
+.booking-row * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
 .bulk-selection-active .booking-row {
   grid-template-columns: 46px minmax(0, 1fr) auto;
   transition: background .16s ease;
