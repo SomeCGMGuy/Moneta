@@ -90,6 +90,32 @@ jobs:
       - name: Sync Capacitor plugins
         run: npx cap sync android
 
+      - name: Force dark Android navigation bar
+        run: |
+          python <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+
+          path = Path('android/app/src/main/res/values/styles.xml')
+          tree = ET.parse(path)
+          root = tree.getroot()
+
+          for style in root.findall('style'):
+              existing = {item.get('name'): item for item in style.findall('item')}
+              for name, value in (
+                  ('android:navigationBarColor', '#000000'),
+                  ('android:navigationBarDividerColor', '#000000'),
+                  ('android:windowLightNavigationBar', 'false'),
+              ):
+                  item = existing.get(name)
+                  if item is None:
+                      item = ET.SubElement(style, 'item', {'name': name})
+                  item.text = value
+
+          ET.indent(tree, space='    ')
+          tree.write(path, encoding='utf-8', xml_declaration=True)
+          PY
+
       - name: Configure Android release signing and version
         env:
           MONETA_ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/moneta-signing/moneta-release.jks
