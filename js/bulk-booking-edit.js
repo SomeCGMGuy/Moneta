@@ -100,8 +100,9 @@ function requestClose() {
   else cleanupSelection();
 }
 
-window.addEventListener('popstate', () => {
+window.addEventListener('popstate', (event) => {
   if (!selectionActive) return;
+  if (event.state?.monetaBulkSelection) return;
   selectionHistoryActive = false;
   cleanupSelection();
 });
