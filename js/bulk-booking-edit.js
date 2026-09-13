@@ -10,6 +10,7 @@ let pressTimer = null;
 let pressStart = null;
 let suppressClickUntil = 0;
 let selectionHistoryActive = false;
+let selectionChildOverlayActive = false;
 
 const rowFromEvent = (event) => event.target.closest('[data-booking-id]');
 
@@ -87,6 +88,7 @@ function updateToolbar() {
 
 function cleanupSelection() {
   selectionActive = false;
+  selectionChildOverlayActive = false;
   selected.clear();
   document.body.classList.remove('bulk-selection-active');
   document.querySelector('[data-bulk-toolbar]')?.remove();
@@ -102,6 +104,7 @@ function requestClose() {
 
 window.addEventListener('popstate', (event) => {
   if (!selectionActive) return;
+  if (selectionChildOverlayActive) return;
   if (event.state?.monetaBulkSelection) return;
   selectionHistoryActive = false;
   cleanupSelection();
@@ -112,17 +115,27 @@ async function changeCategory() {
   if (types.size !== 1) return showToast('Einnahmen und Ausgaben können nicht gemeinsam einer Kategorie zugeordnet werden.');
   const type = [...types][0];
   const categories = await listCategories(type);
-  const categoryId = await showChoiceSheet({ title: `Kategorie für ${selected.size} Buchungen`, options: categories.map((category) => ({ value: category.id, label: category.name, icon: category.icon || '•' })), searchable: categories.length > 5, searchPlaceholder: 'Kategorien durchsuchen' });
-  if (!categoryId) return;
-  await applyBulkChange((booking) => ({ ...booking, categoryId }));
+  selectionChildOverlayActive = true;
+  try {
+    const categoryId = await showChoiceSheet({ title: `Kategorie für ${selected.size} Buchungen`, options: categories.map((category) => ({ value: category.id, label: category.name, icon: category.icon || '•' })), searchable: categories.length > 5, searchPlaceholder: 'Kategorien durchsuchen' });
+    if (!categoryId) return;
+    await applyBulkChange((booking) => ({ ...booking, categoryId }));
+  } finally {
+    selectionChildOverlayActive = false;
+  }
 }
 
 async function changeDate() {
   const dates = new Set([...selected.values()].map((booking) => booking.date));
   const initialDate = dates.size === 1 ? [...dates][0] : localIsoDate(new Date());
-  const date = await showDateSheet(initialDate, selected.size);
-  if (!date) return;
-  await applyBulkChange((booking) => ({ ...booking, date }));
+  selectionChildOverlayActive = true;
+  try {
+    const date = await showDateSheet(initialDate, selected.size);
+    if (!date) return;
+    await applyBulkChange((booking) => ({ ...booking, date }));
+  } finally {
+    selectionChildOverlayActive = false;
+  }
 }
 
 async function applyBulkChange(transform) {
