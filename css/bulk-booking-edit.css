@@ -45,9 +45,7 @@ body.bulk-selection-active .bottom-nav {
   stroke-linejoin: round;
 }
 
-.booking-row.bulk-selected {
-  background: var(--forest-050);
-}
+.booking-row.bulk-selected { background: var(--forest-050); }
 
 .booking-row.bulk-selected .bulk-select-control {
   background: var(--forest-900);
@@ -83,7 +81,7 @@ body.bulk-selection-active .bottom-nav {
 .bulk-action-head {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
 }
 
@@ -105,6 +103,21 @@ body.bulk-selection-active .bottom-nav {
   color: var(--forest-950);
   display: grid;
   place-items: center;
+}
+
+.bulk-toggle-all {
+  appearance: none;
+  border: 0;
+  min-height: 44px;
+  padding: 0 8px;
+  background: transparent;
+  color: var(--forest-900);
+  font: inherit;
+  font-size: .84rem;
+  font-weight: 750;
+  white-space: nowrap;
+  border-radius: 12px;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .bulk-close svg,
@@ -143,25 +156,16 @@ body.bulk-selection-active .bottom-nav {
 }
 
 .bulk-action-button:active,
-.bulk-close:active { background: var(--forest-050); }
+.bulk-close:active,
+.bulk-toggle-all:active { background: var(--forest-050); }
 
 .bulk-action-button:disabled {
   opacity: .36;
   pointer-events: none;
 }
 
-.bulk-date-field {
-  display: grid;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.bulk-date-field span {
-  color: var(--text-muted);
-  font-size: .84rem;
-  font-weight: 700;
-}
-
+.bulk-date-field { display: grid; gap: 8px; margin-top: 8px; }
+.bulk-date-field span { color: var(--text-muted); font-size: .84rem; font-weight: 700; }
 .bulk-date-field input {
   width: 100%;
   min-height: 52px;
@@ -172,13 +176,7 @@ body.bulk-selection-active .bottom-nav {
   color: var(--text);
   font: inherit;
 }
-
-.bulk-date-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 18px;
-}
+.bulk-date-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
 
 .bulk-toast {
   position: fixed;
@@ -211,14 +209,13 @@ body.bulk-selection-active .bottom-nav {
   pointer-events: all;
 }
 
-@keyframes bulk-bar-in {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
-}
+@keyframes bulk-bar-in { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
 @media (max-width: 420px) {
   .bulk-selection-active .booking-row { grid-template-columns: 42px minmax(0, 1fr) auto; }
   .bulk-select-control { margin-inline: 9px; }
-  .bulk-action-bar { padding-inline: 8px; gap: 6px; }
-  .bulk-action-button { min-width: 62px; padding-inline: 7px; }
+  .bulk-action-bar { padding-inline: 8px; gap: 4px; }
+  .bulk-action-head { gap: 4px; }
+  .bulk-toggle-all { padding-inline: 5px; font-size: .78rem; }
+  .bulk-action-button { min-width: 60px; padding-inline: 6px; }
 }
