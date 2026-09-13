@@ -90,6 +90,87 @@ jobs:
       - name: Sync Capacitor plugins
         run: npx cap sync android
 
+      - name: Add Android 15+ navigation bar protection
+        run: |
+          python <<'PY'
+          from pathlib import Path
+          import re
+          import textwrap
+
+          candidates = list(Path('android/app/src/main/java').rglob('MainActivity.java'))
+          if len(candidates) != 1:
+              raise SystemExit(f'Expected exactly one MainActivity.java, found {len(candidates)}')
+
+          path = candidates[0]
+          text = path.read_text(encoding='utf-8')
+          package_match = re.search(r'^package\s+([^;]+);', text, re.MULTILINE)
+          if not package_match:
+              raise SystemExit('Could not determine MainActivity package')
+          package_name = package_match.group(1)
+
+          replacement = textwrap.dedent(f'''
+          package {package_name};
+
+          import android.graphics.Color;
+          import android.os.Bundle;
+          import android.view.Gravity;
+          import android.view.View;
+          import android.view.ViewGroup;
+          import android.widget.FrameLayout;
+
+          import androidx.core.view.ViewCompat;
+          import androidx.core.view.WindowCompat;
+          import androidx.core.view.WindowInsetsCompat;
+          import androidx.core.view.WindowInsetsControllerCompat;
+
+          import com.getcapacitor.BridgeActivity;
+
+          public class MainActivity extends BridgeActivity {{
+              private View navigationBarProtection;
+
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {{
+                  super.onCreate(savedInstanceState);
+
+                  getWindow().setNavigationBarColor(Color.TRANSPARENT);
+                  if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {{
+                      getWindow().setNavigationBarContrastEnforced(false);
+                  }}
+
+                  WindowInsetsControllerCompat controller =
+                          WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+                  controller.setAppearanceLightNavigationBars(false);
+
+                  ViewGroup decor = (ViewGroup) getWindow().getDecorView();
+                  navigationBarProtection = new View(this);
+                  navigationBarProtection.setBackgroundColor(Color.BLACK);
+                  navigationBarProtection.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+                  decor.addView(
+                          navigationBarProtection,
+                          new FrameLayout.LayoutParams(
+                                  ViewGroup.LayoutParams.MATCH_PARENT,
+                                  0,
+                                  Gravity.BOTTOM
+                          )
+                  );
+
+                  ViewCompat.setOnApplyWindowInsetsListener(decor, (view, insets) -> {{
+                      int bottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom;
+                      ViewGroup.LayoutParams params = navigationBarProtection.getLayoutParams();
+                      if (params.height != bottom) {{
+                          params.height = bottom;
+                          navigationBarProtection.setLayoutParams(params);
+                      }}
+                      navigationBarProtection.setVisibility(bottom > 0 ? View.VISIBLE : View.GONE);
+                      return insets;
+                  }});
+                  ViewCompat.requestApplyInsets(decor);
+              }}
+          }}
+          ''').lstrip()
+          path.write_text(replacement, encoding='utf-8')
+          PY
+
       - name: Configure Android release signing and version
         env:
           MONETA_ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/moneta-signing/moneta-release.jks
