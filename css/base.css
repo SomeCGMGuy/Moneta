@@ -1,7 +1,4 @@
-* {
-  box-sizing: border-box;
-  overscroll-behavior: none;
-}
+* { box-sizing: border-box; }
 html { min-height: 100%; background: var(--bg); scrollbar-gutter: stable; }
 body {
   margin: 0;
