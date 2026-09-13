@@ -8,9 +8,10 @@ const MONTH_RE = /^\d{4}-\d{2}$/;
 
 export async function createBackup() {
   const [bookings, categories, budgets, settings, recurringRules] = await Promise.all(STORES.map((store) => getAll(store)));
+  const now = new Date().toISOString();
   return {
     format: 'moneta-backup', formatVersion: BACKUP_FORMAT_VERSION, app: 'Moneta', appVersion: APP_VERSION,
-    createdAt: new Date().toISOString(), exportedAt: new Date().toISOString(), data: { bookings, categories, budgets, settings, recurringRules }
+    createdAt: now, exportedAt: now, data: { bookings, categories, budgets, settings, recurringRules }
   };
 }
 
@@ -34,6 +35,8 @@ export function parseBackup(text) {
 }
 
 export async function restoreBackup(backup) {
+  // Always preserve the exact current state before destructive replacement.
+  downloadBackup(await createBackup(), { prefix: 'moneta-sicherheitsbackup' });
   const db = await getDatabase();
   await new Promise((resolve, reject) => {
     const tx = db.transaction(STORES, 'readwrite');
