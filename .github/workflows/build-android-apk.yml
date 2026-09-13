@@ -90,7 +90,7 @@ jobs:
       - name: Sync Capacitor plugins
         run: npx cap sync android
 
-      - name: Add Android 15+ navigation bar protection
+      - name: Add Android system UI protections
         run: |
           python <<'PY'
           from pathlib import Path
@@ -131,6 +131,8 @@ jobs:
               @Override
               protected void onCreate(Bundle savedInstanceState) {{
                   super.onCreate(savedInstanceState);
+
+                  getBridge().getWebView().setOverScrollMode(View.OVER_SCROLL_NEVER);
 
                   getWindow().setNavigationBarColor(Color.TRANSPARENT);
                   if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {{
