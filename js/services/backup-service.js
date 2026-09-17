@@ -15,15 +15,10 @@ export async function createBackup() {
   };
 }
 
-export async function downloadBackup(backup, { prefix = 'moneta-backup', preferSaveDialog = true } = {}) {
+export async function downloadBackup(backup, { prefix = 'moneta-backup' } = {}) {
   const fileName = backupFileName(backup, prefix);
   const content = JSON.stringify(backup, null, 2);
   const capacitor = window.Capacitor;
-
-  if (capacitor?.isNativePlatform?.() && preferSaveDialog && window.MonetaNative?.saveBackup) {
-    window.MonetaNative.saveBackup(content, fileName);
-    return;
-  }
 
   if (capacitor?.isNativePlatform?.()) {
     const filesystem = capacitor?.Plugins?.Filesystem;
@@ -65,7 +60,7 @@ export function parseBackup(text) {
 
 export async function restoreBackup(backup) {
   // Keep the existing share-based safety copy blocking before destructive replacement.
-  await downloadBackup(await createBackup(), { prefix: 'moneta-sicherheitsbackup', preferSaveDialog: false });
+  await downloadBackup(await createBackup(), { prefix: 'moneta-sicherheitsbackup' });
   const db = await getDatabase();
   await new Promise((resolve, reject) => {
     const tx = db.transaction(STORES, 'readwrite');
