@@ -36,8 +36,14 @@
   box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
+.booking-search-filters { display: flex; gap: 7px; overflow-x: auto; margin: -2px 0 12px; padding-bottom: 2px; scrollbar-width: none; }
+.booking-search-filters::-webkit-scrollbar { display: none; }
+.booking-search-filters button { flex: 0 0 auto; min-height: 36px; padding: 0 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--text-muted); font: inherit; font-size: .78rem; font-weight: 700; -webkit-tap-highlight-color: transparent; }
+.booking-search-filters button.active { background: var(--forest-900); border-color: var(--forest-900); color: #fff; }
+
 .booking-row[hidden],
 .booking-day[hidden],
-.booking-search-empty[hidden] { display: none !important; }
+.booking-search-empty[hidden],
+.booking-search-filters[hidden] { display: none !important; }
 
 .booking-search-empty { margin-top: 12px; }
