@@ -31,7 +31,8 @@ export function renderAnalysis({ allBookings, categoryMap, month, analysisRange 
   const selectedBookings = selectedCategory
     ? bookings.filter((booking) => booking.type === 'expense' && booking.categoryId === selectedCategory.id)
     : [];
-  const series = analysisRange === 'month' ? [] : monthlyExpenseSeries(bookings, period);
+  const trendBookings = selectedCategory ? selectedBookings : bookings;
+  const series = analysisRange === 'month' ? [] : monthlyExpenseSeries(trendBookings, period);
   const activeMonthDate = new Date(`${month}-01T12:00:00`);
 
   return `
@@ -58,7 +59,7 @@ export function renderAnalysis({ allBookings, categoryMap, month, analysisRange 
       </section>
 
       ${groups.length ? renderPieChart(groups, summary.expense, categoryMap, analysisCategoryId) : ''}
-      ${series.length ? renderTrend(series) : ''}
+      ${series.length ? renderTrend(series, selectedCategory) : ''}
 
       <section class="section">
         <div class="section-heading"><div><h2>Nach Kategorien</h2><p class="section-subtitle">Kategorie antippen, um die zugehörigen Buchungen zu sehen.</p></div>${selectedCategory ? '<button class="btn btn-ghost analysis-reset" type="button" data-analysis-category="">Alle</button>' : ''}</div>
@@ -129,13 +130,20 @@ function renderPieChart(groups, total, categoryMap, selectedCategoryId) {
   </section>`;
 }
 
-function renderTrend(series) {
+function renderTrend(series, selectedCategory) {
   const max = Math.max(...series.map((row) => row.amount), 1);
+  const title = selectedCategory ? `${escapeHtml(selectedCategory.name)} pro Monat` : 'Ausgaben pro Monat';
+  const description = selectedCategory
+    ? `Kostenentwicklung für ${escapeHtml(selectedCategory.name)} im ausgewählten Zeitraum.`
+    : 'So verteilt sich der ausgewählte Zeitraum über die einzelnen Monate.';
+  const ariaLabel = selectedCategory
+    ? `Monatlicher Kostenverlauf für ${escapeAttr(selectedCategory.name)}`
+    : 'Monatlicher Ausgabenverlauf';
   return `<section class="card analysis-trend-card">
-    <div class="analysis-chart-copy"><span class="analysis-chart-kicker">Verlauf</span><strong>Ausgaben pro Monat</strong><p>So verteilt sich der ausgewählte Zeitraum über die einzelnen Monate.</p></div>
-    <div class="trend-chart" aria-label="Monatlicher Ausgabenverlauf">
+    <div class="analysis-chart-copy"><span class="analysis-chart-kicker">Verlauf</span><strong>${title}</strong><p>${description}</p></div>
+    <div class="trend-chart" aria-label="${ariaLabel}">
       ${series.map((row) => `<div class="trend-column" title="${escapeAttr(`${row.label}: ${money.format(row.amount)}`)}">
-        <div class="trend-value">${row.amount ? compactMoney(row.amount) : '–'}</div>
+        <div class="trend-value">${row.amount ? compactMoney(row.amount) : '0 €'}</div>
         <div class="trend-bar-wrap"><div class="trend-bar" style="--trend-height:${Math.max(row.amount ? 7 : 0, (row.amount / max) * 100).toFixed(1)}%"></div></div>
         <div class="trend-label">${escapeHtml(row.label)}</div>
       </div>`).join('')}
