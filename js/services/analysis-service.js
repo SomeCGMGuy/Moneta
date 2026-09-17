@@ -77,6 +77,36 @@ export function monthlyExpenseSeries(bookings, period) {
   return rows;
 }
 
+export function compareCategoryMonths(bookings, categoryId, month) {
+  const previousMonth = shiftMonth(month, -1);
+  const rows = bookings.filter((booking) => booking.type === 'expense' && booking.categoryId === categoryId && !booking.isProjected);
+  const current = rows.filter((booking) => booking.date.slice(0, 7) === month);
+  const previous = rows.filter((booking) => booking.date.slice(0, 7) === previousMonth);
+  const currentTotal = total(current);
+  const previousTotal = total(previous);
+  const delta = currentTotal - previousTotal;
+  const percent = previousTotal > 0 ? (delta / previousTotal) * 100 : null;
+  const currentAverage = current.length ? currentTotal / current.length : 0;
+  const previousAverage = previous.length ? previousTotal / previous.length : 0;
+  const byTitle = new Map();
+  for (const booking of previous) {
+    const key = normalizeTitle(booking.title);
+    const row = byTitle.get(key) ?? { title: booking.title || 'Ohne Bezeichnung', current: 0, previous: 0 };
+    row.previous += booking.amount; byTitle.set(key, row);
+  }
+  for (const booking of current) {
+    const key = normalizeTitle(booking.title);
+    const row = byTitle.get(key) ?? { title: booking.title || 'Ohne Bezeichnung', current: 0, previous: 0 };
+    row.current += booking.amount; byTitle.set(key, row);
+  }
+  const drivers = [...byTitle.values()].map((row) => ({ ...row, delta: row.current - row.previous })).filter((row) => row.delta > 0).sort((a, b) => b.delta - a.delta).slice(0, 3);
+  const largestBooking = [...current].sort((a, b) => b.amount - a.amount)[0] ?? null;
+  return { month, previousMonth, currentTotal, previousTotal, delta, percent, currentCount: current.length, previousCount: previous.length, currentAverage, previousAverage, drivers, largestBooking };
+}
+
+function total(rows) { return rows.reduce((sum, row) => sum + row.amount, 0); }
+function normalizeTitle(value) { return String(value || 'Ohne Bezeichnung').trim().toLocaleLowerCase('de-DE'); }
+function shiftMonth(month, delta) { const date = new Date(`${month}-01T12:00:00`); date.setMonth(date.getMonth() + delta); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; }
 function getConfiguredStartDay() { if (localStorage.getItem('moneta-financial-month-mode') !== 'custom') return 1; return normalizeStartDay(localStorage.getItem('moneta-financial-month-start')); }
 function normalizeStartDay(value) { const day = Number.parseInt(value, 10); return Number.isFinite(day) ? Math.min(28, Math.max(1, day)) : 1; }
 function periodFromDates(start, end, label) { return { start: localIsoDate(start), end: localIsoDate(end), label }; }
