@@ -44,6 +44,8 @@
 .booking-row[hidden],
 .booking-day[hidden],
 .booking-search-empty[hidden],
-.booking-search-filters[hidden] { display: none !important; }
+.booking-search-filters[hidden],
+.booking-list-sentinel[hidden] { display: none !important; }
 
 .booking-search-empty { margin-top: 12px; }
+.booking-list-sentinel { height: 1px; width: 100%; pointer-events: none; }
