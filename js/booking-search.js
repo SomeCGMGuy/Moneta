@@ -1,39 +1,73 @@
+import { renderBookingList } from './components/booking-list.js';
+
+const PAGE_SIZE = 25;
 const normalize = (value) => String(value ?? '').toLocaleLowerCase('de-DE').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-const scopes = new WeakMap();
+let observer = null;
 
-function applySearch(section) {
+export function setupBookingList({ bookings, allBookings, categoryMap, month }) {
+  observer?.disconnect();
+  const section = document.querySelector('[data-booking-section]');
+  if (!section) return;
+  const list = section.querySelector('[data-booking-list]');
+  const sentinel = section.querySelector('[data-booking-list-sentinel]');
   const input = section.querySelector('[data-booking-search]');
-  if (!input) return;
-  const query = normalize(input.value);
-  const scope = scopes.get(section) || 'all';
-  const activeMonth = section.dataset.searchMonth || '';
-  const activeYear = activeMonth.slice(0, 4);
-  const rows = [...section.querySelectorAll('[data-booking-row]')];
-  let visible = 0;
+  const filters = section.querySelector('[data-booking-search-filters]');
+  const empty = section.querySelector('[data-booking-search-empty]');
+  const count = section.querySelector('[data-booking-visible-count]');
+  const realBookings = allBookings.filter((booking) => !booking.isProjected);
+  let scope = 'all';
+  let source = bookings;
+  let rendered = 0;
 
-  rows.forEach((row) => {
-    const date = row.dataset.bookingDate || '';
-    const inScope = scope === 'month' ? date.startsWith(activeMonth) : scope === 'year' ? date.startsWith(activeYear) : true;
-    const matches = query ? inScope && normalize(row.dataset.bookingSearch).includes(query) : row.dataset.bookingCurrent === 'true';
-    row.hidden = !matches;
-    if (matches) visible += 1;
+  const searchText = (booking) => {
+    const category = categoryMap.get(booking.categoryId);
+    return normalize([booking.title, booking.note, category?.name, booking.amount, money(booking.amount), booking.date, booking.type === 'expense' ? 'Ausgabe' : 'Einnahme'].filter(Boolean).join(' '));
+  };
+
+  function matchingBookings() {
+    const query = normalize(input?.value);
+    if (!query) return bookings;
+    const year = month.slice(0, 4);
+    return realBookings.filter((booking) => {
+      const inScope = scope === 'month' ? booking.date?.startsWith(month) : scope === 'year' ? booking.date?.startsWith(year) : true;
+      return inScope && searchText(booking).includes(query);
+    });
+  }
+
+  function renderNext(reset = false) {
+    if (reset) { source = matchingBookings(); rendered = 0; list.innerHTML = ''; }
+    const next = source.slice(rendered, rendered + PAGE_SIZE);
+    if (next.length) {
+      const holder = document.createElement('div');
+      holder.innerHTML = renderBookingList(next, categoryMap);
+      while (holder.firstChild) list.append(holder.firstChild);
+      rendered += next.length;
+      document.dispatchEvent(new CustomEvent('moneta:booking-rows-added'));
+    }
+    const queryActive = Boolean(normalize(input?.value));
+    if (count) count.textContent = String(queryActive ? source.length : bookings.length);
+    if (empty) empty.hidden = !queryActive || source.length > 0;
+    if (sentinel) sentinel.hidden = rendered >= source.length;
+  }
+
+  input?.addEventListener('input', () => {
+    if (filters) filters.hidden = !normalize(input.value);
+    renderNext(true);
   });
-  section.querySelectorAll('[data-booking-day]').forEach((group) => { group.hidden = ![...group.querySelectorAll('[data-booking-row]')].some((row) => !row.hidden); });
-  const count = section.querySelector('[data-booking-visible-count]'); if (count) count.textContent = String(visible);
-  const empty = section.querySelector('[data-booking-search-empty]'); if (empty) empty.hidden = !query || visible > 0;
-  const filters = section.querySelector('[data-booking-search-filters]'); if (filters) filters.hidden = !query;
+
+  filters?.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-booking-search-scope]');
+    if (!button) return;
+    scope = button.dataset.bookingSearchScope || 'all';
+    filters.querySelectorAll('[data-booking-search-scope]').forEach((item) => item.classList.toggle('active', item === button));
+    renderNext(true);
+  });
+
+  observer = new IntersectionObserver((entries) => {
+    if (entries.some((entry) => entry.isIntersecting) && rendered < source.length) renderNext();
+  }, { rootMargin: '320px 0px' });
+  if (sentinel) observer.observe(sentinel);
+  renderNext(true);
 }
 
-document.addEventListener('input', (event) => {
-  const input = event.target.closest('[data-booking-search]'); if (!input) return;
-  const section = input.closest('[data-booking-section]'); if (!section) return;
-  applySearch(section);
-});
-
-document.addEventListener('click', (event) => {
-  const button = event.target.closest('[data-booking-search-scope]'); if (!button) return;
-  const section = button.closest('[data-booking-section]'); if (!section) return;
-  scopes.set(section, button.dataset.bookingSearchScope || 'all');
-  section.querySelectorAll('[data-booking-search-scope]').forEach((item) => item.classList.toggle('active', item === button));
-  applySearch(section);
-});
+function money(value) { return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value); }
