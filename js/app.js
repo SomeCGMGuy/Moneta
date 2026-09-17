@@ -13,6 +13,7 @@ import { showBookingForm } from './components/booking-form.js';
 import { showCategoryForm } from './components/category-form.js';
 import { showConfirmDialog } from './components/confirm-dialog.js';
 import { showOnboarding } from './components/onboarding.js';
+import { showAnalysisCategoryDetail } from './components/analysis-category-detail.js';
 
 const app = document.querySelector('#app');
 const state = {
@@ -40,6 +41,7 @@ function bindGlobalEvents() {
     const nav=event.target.closest('[data-nav]'); if(nav){const target=nav.dataset.nav;if(target==='add')await openBookingForm();else if(target!==state.view){state.view=target;location.hash=`#/${target}`;render();}return;}
     const monthButton=event.target.closest('[data-month]'); if(monthButton){state.month=shiftMonth(state.month,monthButton.dataset.month==='next'?1:-1);resetAnalysisSelection();await reloadData();render();return;}
     const analysisRange=event.target.closest('[data-analysis-range]'); if(analysisRange){state.analysisRange=analysisRange.dataset.analysisRange;resetAnalysisSelection();render();return;}
+    const analysisRow=event.target.closest('.analysis-row-button[data-analysis-category]'); if(analysisRow){await showAnalysisCategoryDetail({categoryId:analysisRow.dataset.analysisCategory,allBookings:state.allBookings,categoryMap:state.categoryMap,month:state.month,analysisRange:state.analysisRange});return;}
     const analysisCategory=event.target.closest('[data-analysis-category]'); if(analysisCategory){const categoryId=analysisCategory.dataset.analysisCategory||null;state.analysisCategoryId=state.analysisCategoryId===categoryId?null:categoryId;state.analysisMonth=null;render();return;}
     const analysisMonth=event.target.closest('[data-analysis-month]'); if(analysisMonth){state.analysisMonth=state.analysisMonth===analysisMonth.dataset.analysisMonth?null:analysisMonth.dataset.analysisMonth;render();requestAnimationFrame(()=>document.querySelector('.analysis-insight-card')?.scrollIntoView({behavior:'smooth',block:'nearest'}));return;}
     const financialMode=event.target.closest('[data-financial-mode]'); if(financialMode){state.financialMonthMode=financialMode.dataset.financialMode==='custom'?'custom':'calendar';await setSetting('financialMonthMode',state.financialMonthMode);syncFinancialMonthStorage();resetAnalysisSelection();await reloadData();render();return;}
